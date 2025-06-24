@@ -1,0 +1,41 @@
+{
+  "name": "otr-baseball-backend",
+  "version": "1.0.0",
+  "description": "OTR Baseball Analytics Platform Backend",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "form-data": "^4.0.3",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "pdfkit": "^0.14.0",
+    "pg": "^8.11.3",
+    "sequelize": "^6.35.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
+  },
+  "keywords": [
+    "baseball",
+    "analytics",
+    "metrics",
+    "otr"
+  ],
+  "author": "OTR Baseball",
+  "license": "MIT"
+}

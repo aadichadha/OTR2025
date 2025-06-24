@@ -1,0 +1,8 @@
+   {
+     "name": "otrbaseballv5",
+     "private": true,
+     "workspaces": [
+       "backend",
+       "frontend"
+     ]
+   }
