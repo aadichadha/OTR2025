@@ -281,11 +281,17 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
       const response = await axios.get(`${API_URL}/sessions/${sessionId}/report-data`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('[DEBUG] handleViewReport - Raw response:', response.data);
+      console.log('[DEBUG] handleViewReport - Metrics structure:', response.data?.metrics);
+      console.log('[DEBUG] handleViewReport - Exit velocity metrics:', response.data?.metrics?.exitVelocity);
+      
       setCurrentReport(response.data);
       setReportModalOpen(true);
     } catch (err) {
       setError('Failed to load report');
       console.error('Error loading report:', err);
+      console.error('Response:', err.response?.data);
     }
   };
 
@@ -988,6 +994,10 @@ function ReportDisplay({ report, player }) {
   const [swingsLoading, setSwingsLoading] = useState(false);
   const [selectedSwing, setSelectedSwing] = useState(null);
 
+  // Add debugging logs
+  console.log('[DEBUG] ReportDisplay received report:', report);
+  console.log('[DEBUG] Report metrics structure:', report?.metrics);
+
   // Load swings automatically when report is displayed - using same logic as analytics screen
   useEffect(() => {
     if (player?.id) {
@@ -1011,11 +1021,28 @@ function ReportDisplay({ report, player }) {
     }
   };
 
-  if (!report) return null;
+  // Add proper error handling
+  if (!report) {
+    console.error('No report data available');
+    return <div>No report data available</div>;
+  }
+
+  if (!report.metrics) {
+    console.error('No report metrics available');
+    return <div>No report metrics available</div>;
+  }
+
+  const exitVelocityMetrics = report.metrics.exitVelocity;
+  if (!exitVelocityMetrics) {
+    console.error('No exit velocity metrics available');
+    return <div>No exit velocity metrics available</div>;
+  }
+
+  console.log('[DEBUG] Exit velocity metrics:', exitVelocityMetrics);
 
   return (
     <Box>
-      {/* Metrics Grid */}
+      {/* Performance Metrics */}
       <Card sx={{ 
         mb: 4, 
         p: 3, 
@@ -1029,11 +1056,76 @@ function ReportDisplay({ report, player }) {
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 700, color: '#1c2c4d', letterSpacing: 0.5 }}>
           Performance Metrics
         </Typography>
-        {renderMetrics()}
+        
+        <Grid container spacing={3}>
+          {/* Exit Velocity */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', boxShadow: '0 4px 20px rgba(79, 172, 254, 0.3)' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                {exitVelocityMetrics.avgExitVelocity ? exitVelocityMetrics.avgExitVelocity.toFixed(1) : 'N/A'}
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Exit Velocity (MPH)
+              </Typography>
+              {exitVelocityMetrics.grades?.avgExitVelocity && (
+                <Chip
+                  label={exitVelocityMetrics.grades.avgExitVelocity}
+                  color={getGradeColor(exitVelocityMetrics.grades.avgExitVelocity)}
+                  size="small"
+                  sx={{ mt: 1, color: 'white' }}
+                />
+              )}
+            </Card>
+          </Grid>
+
+          {/* Launch Angle */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white', boxShadow: '0 4px 20px rgba(67, 233, 123, 0.3)' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                {exitVelocityMetrics.avgLaunchAngle ? exitVelocityMetrics.avgLaunchAngle.toFixed(1) : 'N/A'}
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Launch Angle (°)
+              </Typography>
+              {exitVelocityMetrics.grades?.avgLaunchAngle && (
+                <Chip
+                  label={exitVelocityMetrics.grades.avgLaunchAngle}
+                  color={getGradeColor(exitVelocityMetrics.grades.avgLaunchAngle)}
+                  size="small"
+                  sx={{ mt: 1, color: 'white' }}
+                />
+              )}
+            </Card>
+          </Grid>
+
+          {/* Distance */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                {exitVelocityMetrics.avgDistance ? exitVelocityMetrics.avgDistance.toFixed(1) : 'N/A'}
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Distance (FT)
+              </Typography>
+            </Card>
+          </Grid>
+
+          {/* Total Swings */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white', boxShadow: '0 4px 20px rgba(240, 147, 251, 0.3)' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                {exitVelocityMetrics.dataPoints || 0}
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Total Swings
+              </Typography>
+            </Card>
+          </Grid>
+        </Grid>
       </Card>
 
       {/* Strike Zone Heat Map */}
-      {(report.metrics?.batSpeed?.hotZoneEVs || report.metrics?.exitVelocity?.hotZoneEVs) && (
+      {exitVelocityMetrics.hotZoneEVs && (
         <Card sx={{ 
           p: 3, 
           textAlign: 'center', 
@@ -1049,17 +1141,37 @@ function ReportDisplay({ report, player }) {
           </Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, maxWidth: 350, mx: 'auto' }}>
             {[10, null, 11].map((zone, idx) => zone ? (
-              <HotZoneCell key={zone} zone={zone} ev={(report.metrics?.batSpeed?.hotZoneEVs || report.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />
+              <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />
             ) : <Box key={idx} />)}
-            {[1, 2, 3].map(zone => <HotZoneCell key={zone} zone={zone} ev={(report.metrics?.batSpeed?.hotZoneEVs || report.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />)}
-            {[4, 5, 6].map(zone => <HotZoneCell key={zone} zone={zone} ev={(report.metrics?.batSpeed?.hotZoneEVs || report.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />)}
-            {[7, 8, 9].map(zone => <HotZoneCell key={zone} zone={zone} ev={(report.metrics?.batSpeed?.hotZoneEVs || report.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />)}
+            {[1, 2, 3].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
+            {[4, 5, 6].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
+            {[7, 8, 9].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
             {[12, null, 13].map((zone, idx) => zone ? (
-              <HotZoneCell key={zone} zone={zone} ev={(report.metrics?.batSpeed?.hotZoneEVs || report.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />
+              <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />
             ) : <Box key={idx + 'b'} />)}
           </Box>
           <Typography variant="body2" color="textSecondary" sx={{ mt: 2, color: '#1c2c4d' }}>
             Each zone shows the average exit velocity (mph) for that strike zone
+          </Typography>
+        </Card>
+      )}
+
+      {/* Detailed Analysis */}
+      {report.summaryText && (
+        <Card sx={{ 
+          p: 3, 
+          mb: 4,
+          bgcolor: '#fff',
+          border: '1.5px solid #e0e3e8',
+          borderRadius: 4,
+          boxShadow: '0 4px 16px rgba(28,44,77,0.08)',
+          color: '#1c2c4d'
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#1c2c4d' }}>
+            Detailed Analysis
+          </Typography>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-line', color: '#1c2c4d' }}>
+            {report.summaryText}
           </Typography>
         </Card>
       )}
