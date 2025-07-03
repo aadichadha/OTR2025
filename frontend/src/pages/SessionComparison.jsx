@@ -32,22 +32,20 @@ import {
   AccordionSummary,
   AccordionDetails
 } from '@mui/material';
-import {
-  Compare,
-  FilterList,
-  Refresh,
-  ExpandMore,
-  TrendingUp,
-  TrendingDown,
-  Speed,
-  ShowChart,
-  Straighten,
-  CalendarToday,
-  CheckCircle,
-  Cancel,
-  Visibility,
-  VisibilityOff
-} from '@mui/icons-material';
+import Compare from '@mui/icons-material/Compare';
+import FilterList from '@mui/icons-material/FilterList';
+import Refresh from '@mui/icons-material/Refresh';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import TrendingUp from '@mui/icons-material/TrendingUp';
+import TrendingDown from '@mui/icons-material/TrendingDown';
+import Speed from '@mui/icons-material/Speed';
+import ShowChart from '@mui/icons-material/ShowChart';
+import Straighten from '@mui/icons-material/Straighten';
+import CalendarToday from '@mui/icons-material/CalendarToday';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Cancel from '@mui/icons-material/Cancel';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {
   LineChart,
   Line,

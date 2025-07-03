@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { Drawer, List, ListItem, ListItemIcon, ListItemText, IconButton, Divider, Box } from '@mui/material';
-import { Home, CloudUpload, Group, Assessment, EmojiEvents, Menu, Logout } from '@mui/icons-material';
+import { Drawer, List, ListItem, ListItemIcon, ListItemText, IconButton, Box, Typography, Divider } from '@mui/material';
+import Home from '@mui/icons-material/Home';
+import CloudUpload from '@mui/icons-material/CloudUpload';
+import Group from '@mui/icons-material/Group';
+import Assessment from '@mui/icons-material/Assessment';
+import EmojiEvents from '@mui/icons-material/EmojiEvents';
+import Menu from '@mui/icons-material/Menu';
+import Logout from '@mui/icons-material/Logout';
 import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [

@@ -20,7 +20,9 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
-import { ArrowBack, FilterList, Analytics } from '@mui/icons-material';
+import ArrowBack from '@mui/icons-material/ArrowBack';
+import FilterList from '@mui/icons-material/FilterList';
+import Analytics from '@mui/icons-material/Analytics';
 import SprayChart from '../components/visualizations/SprayChart';
 import api from '../services/api';
 

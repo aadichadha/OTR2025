@@ -36,25 +36,23 @@ import {
   Tooltip,
   IconButton
 } from '@mui/material';
-import { 
-  Assessment, 
-  FilterList, 
-  Visibility, 
-  ExpandMore,
-  Analytics as AnalyticsIcon,
-  TableChart,
-  ShowChart,
-  Person,
-  TrendingUp,
-  Speed,
-  Timeline,
-  CalendarToday,
-  EmojiEvents,
-  BarChart as BarChartIcon,
-  PieChart,
-  ShowChart as ShowChartIcon,
-  Info
-} from '@mui/icons-material';
+import Assessment from '@mui/icons-material/Assessment';
+import FilterList from '@mui/icons-material/FilterList';
+import Visibility from '@mui/icons-material/Visibility';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import TableChart from '@mui/icons-material/TableChart';
+import ShowChart from '@mui/icons-material/ShowChart';
+import Person from '@mui/icons-material/Person';
+import TrendingUp from '@mui/icons-material/TrendingUp';
+import Speed from '@mui/icons-material/Speed';
+import Timeline from '@mui/icons-material/Timeline';
+import CalendarToday from '@mui/icons-material/CalendarToday';
+import EmojiEvents from '@mui/icons-material/EmojiEvents';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import PieChart from '@mui/icons-material/PieChart';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import Info from '@mui/icons-material/Info';
 import { useSearchParams } from 'react-router-dom';
 import { 
   LineChart, 

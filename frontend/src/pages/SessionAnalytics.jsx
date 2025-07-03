@@ -29,26 +29,24 @@ import {
   Tooltip,
   Badge
 } from '@mui/material';
-import {
-  TrendingUp,
-  TrendingDown,
-  Timeline,
-  Assessment,
-  FilterList,
-  ExpandMore,
-  Refresh,
-  Settings,
-  Star,
-  StarBorder,
-  Speed,
-  ShowChart,
-  Straighten,
-  CalendarToday,
-  Person,
-  School,
-  EmojiEvents,
-  TrendingFlat
-} from '@mui/icons-material';
+import TrendingUp from '@mui/icons-material/TrendingUp';
+import TrendingDown from '@mui/icons-material/TrendingDown';
+import Timeline from '@mui/icons-material/Timeline';
+import Assessment from '@mui/icons-material/Assessment';
+import FilterList from '@mui/icons-material/FilterList';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import Refresh from '@mui/icons-material/Refresh';
+import Settings from '@mui/icons-material/Settings';
+import Star from '@mui/icons-material/Star';
+import StarBorder from '@mui/icons-material/StarBorder';
+import Speed from '@mui/icons-material/Speed';
+import ShowChart from '@mui/icons-material/ShowChart';
+import Straighten from '@mui/icons-material/Straighten';
+import CalendarToday from '@mui/icons-material/CalendarToday';
+import Person from '@mui/icons-material/Person';
+import School from '@mui/icons-material/School';
+import EmojiEvents from '@mui/icons-material/EmojiEvents';
+import TrendingFlat from '@mui/icons-material/TrendingFlat';
 import {
   LineChart,
   Line,

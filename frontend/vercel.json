@@ -1,0 +1,4 @@
+{
+  "buildCommand": "npm ci && npm run build:simple",
+  "installCommand": "npm ci --legacy-peer-deps"
+} 

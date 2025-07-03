@@ -25,7 +25,12 @@ import {
   Grid,
   Chip
 } from '@mui/material';
-import { Add, Edit, Delete, Visibility, Analytics, Close } from '@mui/icons-material';
+import Add from '@mui/icons-material/Add';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
+import Visibility from '@mui/icons-material/Visibility';
+import Analytics from '@mui/icons-material/Analytics';
+import Close from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PlayerDetails from '../components/PlayerDetails';

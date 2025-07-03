@@ -25,7 +25,13 @@ import {
   DialogActions,
   Autocomplete
 } from '@mui/material';
-import { Delete, Download, Close, Visibility, Analytics, Edit, LocalOffer } from '@mui/icons-material';
+import Delete from '@mui/icons-material/Delete';
+import Download from '@mui/icons-material/Download';
+import Close from '@mui/icons-material/Close';
+import Visibility from '@mui/icons-material/Visibility';
+import Analytics from '@mui/icons-material/Analytics';
+import Edit from '@mui/icons-material/Edit';
+import LocalOffer from '@mui/icons-material/LocalOffer';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../services/api';

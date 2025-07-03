@@ -1,6 +1,8 @@
 import React from 'react';
 import { Box, Typography, Card, CardContent, Grid, Button } from '@mui/material';
-import { Upload, People, Assessment } from '@mui/icons-material';
+import Upload from '@mui/icons-material/Upload';
+import People from '@mui/icons-material/People';
+import Assessment from '@mui/icons-material/Assessment';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
