@@ -54,10 +54,19 @@ app.use('/api/auth/', authLimiter);
 // CORS configuration
 let allowedOrigins;
 if (process.env.NODE_ENV === 'production') {
-  if (!process.env.FRONTEND_URL) {
-    throw new Error('FRONTEND_URL must be set in production for CORS');
+  // In production, use FRONTEND_URL if set, otherwise allow common frontend domains
+  const frontendUrl = process.env.FRONTEND_URL;
+  if (frontendUrl) {
+    allowedOrigins = [frontendUrl];
+  } else {
+    // Fallback to common Vercel/Netlify domains if FRONTEND_URL not set
+    allowedOrigins = [
+      'https://*.vercel.app',
+      'https://*.netlify.app',
+      'https://*.onrender.com'
+    ];
+    console.log('⚠️  FRONTEND_URL not set, using fallback CORS origins');
   }
-  allowedOrigins = [process.env.FRONTEND_URL];
 } else {
   allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
 }

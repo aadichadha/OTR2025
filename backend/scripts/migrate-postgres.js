@@ -1,9 +1,11 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Database connection configuration
+// Database connection configuration for PostgreSQL
 let pool;
 
 if (process.env.NODE_ENV === 'production') {
@@ -13,7 +15,7 @@ if (process.env.NODE_ENV === 'production') {
     process.exit(1);
   }
   
-  console.log('🔗 Using DATABASE_URL for production connection');
+  console.log('🔗 Using DATABASE_URL for production PostgreSQL connection');
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -21,8 +23,8 @@ if (process.env.NODE_ENV === 'production') {
     }
   });
 } else {
-  // Development: Use individual environment variables or defaults
-  console.log('🔗 Using individual database config for development');
+  // Development: Use individual environment variables
+  console.log('🔗 Using individual database config for development PostgreSQL');
   pool = new Pool({
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 5432,
@@ -32,22 +34,22 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-async function runMigrations() {
+async function runPostgresMigrations() {
   let client;
   
   try {
-    console.log('🚀 Starting database migrations...');
+    console.log('🚀 Starting PostgreSQL database migrations...');
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     
     // Test connection first
     client = await pool.connect();
-    console.log('✅ Database connection established successfully');
+    console.log('✅ PostgreSQL connection established successfully');
     
     // Create migrations table if it doesn't exist
     await client.query(`
       CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL UNIQUE,
         executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -84,16 +86,26 @@ async function runMigrations() {
       const migrationPath = path.join(migrationsDir, file);
       let migrationSQL = fs.readFileSync(migrationPath, 'utf8');
       
-      // For PostgreSQL, we don't need to replace CREATE TABLE with CREATE TABLE IF NOT EXISTS
-      // as the migration system handles this through the migrations table
       // Remove any SQLite-specific PRAGMA statements
       migrationSQL = migrationSQL.replace(/PRAGMA\s+[^;]+;/gi, '-- PRAGMA statement removed for PostgreSQL');
       
       console.log(`🔄 Executing migration: ${migrationName}`);
       
       try {
-        // Execute the migration
-        await client.query(migrationSQL);
+        // Execute the migration in a transaction
+        await client.query('BEGIN');
+        
+        // Split the SQL into individual statements and execute each one
+        const statements = migrationSQL
+          .split(';')
+          .map(stmt => stmt.trim())
+          .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+        
+        for (const statement of statements) {
+          if (statement.trim()) {
+            await client.query(statement);
+          }
+        }
         
         // Record the migration as executed
         await client.query(
@@ -101,8 +113,12 @@ async function runMigrations() {
           [migrationName]
         );
         
+        await client.query('COMMIT');
         console.log(`✅ Migration ${migrationName} completed successfully`);
+        
       } catch (error) {
+        await client.query('ROLLBACK');
+        
         // If table already exists, mark migration as completed
         if (error.code === '42P07') { // relation already exists
           console.log(`⚠️  Table already exists for ${migrationName}, marking as completed`);
@@ -117,7 +133,7 @@ async function runMigrations() {
       }
     }
     
-    console.log('🎉 All migrations completed successfully!');
+    console.log('🎉 All PostgreSQL migrations completed successfully!');
     
     // Show current tables
     const { rows: tables } = await client.query(`
@@ -134,7 +150,7 @@ async function runMigrations() {
     });
     
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error('❌ PostgreSQL migration failed:', error);
     console.error('🔍 Error details:', {
       message: error.message,
       code: error.code,
@@ -152,17 +168,17 @@ async function runMigrations() {
   }
 }
 
-// Run migrations if this file is executed directly
+// Run if called directly
 if (require.main === module) {
-  runMigrations()
+  runPostgresMigrations()
     .then(() => {
-      console.log('✅ Migration script completed');
+      console.log('✅ PostgreSQL migration script completed');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('❌ Migration script failed:', error);
+      console.error('❌ PostgreSQL migration script failed:', error);
       process.exit(1);
     });
 }
 
-module.exports = { runMigrations }; 
+module.exports = { runPostgresMigrations }; 

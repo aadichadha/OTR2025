@@ -1,7 +1,7 @@
 -- Migration 005: Create exit_velocity_data table (Hittrax data)
 CREATE TABLE exit_velocity_data (
     id SERIAL PRIMARY KEY,
-    session_id INTEGER REFERENCES sessions(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    session_id INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
     strike_zone INTEGER, -- Column F
     exit_velocity DECIMAL(5,2), -- Column H
     launch_angle DECIMAL(5,2), -- Column I
