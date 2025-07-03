@@ -12,6 +12,7 @@
     "db:seed": "node scripts/seed-database.js",
     "db:backup": "node scripts/backup-database.js",
     "deploy:production": "node scripts/deploy-production.js",
+    "check:env": "node scripts/check-production-env.js",
     "users:delete-all": "node src/user-management.js delete-all",
     "users:create-test": "node src/user-management.js create-test",
     "users:list": "node src/user-management.js list",

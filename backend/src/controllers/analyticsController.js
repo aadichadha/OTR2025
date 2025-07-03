@@ -79,6 +79,8 @@ const getPlayerSessions = async (req, res) => {
       offset = 0
     } = req.query;
 
+    console.log(`[ANALYTICS] Fetching sessions for player ${playerId} with category: ${session_category}`);
+
     // Build where clause
     const whereClause = { player_id: playerId };
     if (session_category) {
@@ -100,32 +102,52 @@ const getPlayerSessions = async (req, res) => {
       offset: parseInt(offset)
     });
 
-    // Add analytics for each session
-    const sessionsWithAnalytics = sessions.map(session => {
-      const swings = session.exitVelocityData || [];
-      const exitVelocities = swings.map(s => parseFloat(s.exit_velocity)).filter(v => !isNaN(v));
-      const launchAngles = swings.map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
-      const distances = swings.map(s => parseFloat(s.distance)).filter(v => !isNaN(v));
+    console.log(`[ANALYTICS] Found ${sessions.length} sessions for player ${playerId}`);
 
+    // Add analytics for each session with proper data type handling
+    const sessionsWithAnalytics = sessions.map(session => {
+      const sessionData = session.toJSON();
+      const swings = sessionData.exitVelocityData || [];
+      
+      // Ensure proper data type conversion for calculations
+      const exitVelocities = swings.map(s => {
+        const val = parseFloat(s.exit_velocity);
+        return isNaN(val) || val <= 0 ? null : val;
+      }).filter(v => v !== null);
+      
+      const launchAngles = swings.map(s => {
+        const val = parseFloat(s.launch_angle);
+        return isNaN(val) || Math.abs(val) <= 0.01 ? null : val;
+      }).filter(v => v !== null);
+      
+      const distances = swings.map(s => {
+        const val = parseFloat(s.distance);
+        return isNaN(val) || val <= 0 ? null : val;
+      }).filter(v => v !== null);
+
+      // Calculate sweet spot swings with proper type handling
       const sweetSpotSwings = swings.filter(s => {
         const angle = parseFloat(s.launch_angle);
         const velocity = parseFloat(s.exit_velocity);
-        return angle >= 25 && angle <= 35 && velocity >= 90;
+        return !isNaN(angle) && !isNaN(velocity) && angle >= 25 && angle <= 35 && velocity >= 90;
       }).length;
 
+      // Ensure all calculated values are numbers or null
+      const analytics = {
+        total_swings: swings.length,
+        average_exit_velocity: exitVelocities.length > 0 ? 
+          parseFloat((exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length).toFixed(2)) : 0,
+        average_launch_angle: launchAngles.length > 0 ? 
+          parseFloat((launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length).toFixed(2)) : 0,
+        average_distance: distances.length > 0 ? 
+          parseFloat((distances.reduce((a, b) => a + b, 0) / distances.length).toFixed(2)) : 0,
+        best_exit_velocity: exitVelocities.length > 0 ? parseFloat(Math.max(...exitVelocities).toFixed(2)) : 0,
+        sweet_spot_swings: sweetSpotSwings
+      };
+
       return {
-        ...session.toJSON(),
-        analytics: {
-          total_swings: swings.length,
-          average_exit_velocity: exitVelocities.length > 0 ? 
-            (exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length).toFixed(2) : 0,
-          average_launch_angle: launchAngles.length > 0 ? 
-            (launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length).toFixed(2) : 0,
-          average_distance: distances.length > 0 ? 
-            (distances.reduce((a, b) => a + b, 0) / distances.length).toFixed(2) : 0,
-          best_exit_velocity: exitVelocities.length > 0 ? Math.max(...exitVelocities).toFixed(2) : 0,
-          sweet_spot_swings: sweetSpotSwings
-        }
+        ...sessionData,
+        analytics
       };
     });
 

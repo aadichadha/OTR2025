@@ -93,11 +93,26 @@ class MetricsCalculator {
         throw new Error('No exit velocity data found for this session');
       }
 
-      // Extract arrays of values (ignore zeros for EV and LA)
-      const exitVelocities = evData.map(row => parseFloat(row.exit_velocity)).filter(val => val && val > 0);
-      const launchAngles = evData.map(row => parseFloat(row.launch_angle)).filter(val => val && Math.abs(val) > 0.01);
-      const distances = evData.map(row => parseFloat(row.distance)).filter(val => val && val > 0);
-      const strikeZones = evData.map(row => row.strike_zone);
+      // Extract arrays of values with proper type normalization for PostgreSQL/SQLite compatibility
+      const exitVelocities = evData.map(row => {
+        const val = parseFloat(row.exit_velocity);
+        return isNaN(val) || val <= 0 ? null : val;
+      }).filter(val => val !== null);
+      
+      const launchAngles = evData.map(row => {
+        const val = parseFloat(row.launch_angle);
+        return isNaN(val) || Math.abs(val) <= 0.01 ? null : val;
+      }).filter(val => val !== null);
+      
+      const distances = evData.map(row => {
+        const val = parseFloat(row.distance);
+        return isNaN(val) || val <= 0 ? null : val;
+      }).filter(val => val !== null);
+      
+      const strikeZones = evData.map(row => {
+        const val = parseInt(row.strike_zone);
+        return isNaN(val) ? null : val;
+      }).filter(val => val !== null);
 
       // Calculate metrics only if there is valid data
       const maxExitVelocity = exitVelocities.length ? Math.max(...exitVelocities) : null;
@@ -120,11 +135,15 @@ class MetricsCalculator {
         launchAngleTop5 = top5LAs.length ? (top5LAs.reduce((a, b) => a + b, 0) / top5LAs.length) : null;
       }
 
-      // Calculate average EV per strike zone (1-13)
+      // Calculate average EV per strike zone (1-13) with proper type handling
       const hotZoneEVs = {};
       for (let zone = 1; zone <= 13; zone++) {
         const zoneEVs = evData
-          .filter(row => parseInt(row.strike_zone) === zone && parseFloat(row.exit_velocity) > 0)
+          .filter(row => {
+            const sz = parseInt(row.strike_zone);
+            const ev = parseFloat(row.exit_velocity);
+            return sz === zone && ev > 0 && !isNaN(ev);
+          })
           .map(row => parseFloat(row.exit_velocity));
         hotZoneEVs[zone] = zoneEVs.length ? +(zoneEVs.reduce((a, b) => a + b, 0) / zoneEVs.length).toFixed(1) : null;
       }

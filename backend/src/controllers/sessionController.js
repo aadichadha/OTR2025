@@ -18,6 +18,8 @@ class SessionController {
         return res.status(404).json({ error: 'Player not found' });
       }
 
+      console.log(`[SESSION] Fetching sessions for player ${playerId} (${player.name})`);
+
       const sessions = await Session.findAll({
         where: { player_id: playerId },
         order: [['session_date', 'DESC']],
@@ -35,14 +37,43 @@ class SessionController {
         ]
       });
 
+      console.log(`[SESSION] Found ${sessions.length} sessions for player ${playerId}`);
+
+      // Transform sessions to ensure consistent data structure
+      const transformedSessions = sessions.map(session => {
+        const sessionData = session.toJSON();
+        
+        // Ensure arrays are always present
+        sessionData.batSpeedData = sessionData.batSpeedData || [];
+        sessionData.exitVelocityData = sessionData.exitVelocityData || [];
+        
+        // Add data point counts
+        sessionData.batSpeedCount = sessionData.batSpeedData.length;
+        sessionData.exitVelocityCount = sessionData.exitVelocityData.length;
+        
+        // Ensure session_type is always a string
+        sessionData.session_type = sessionData.session_type || 'unknown';
+        
+        // Ensure session_date is properly formatted
+        if (sessionData.session_date) {
+          sessionData.session_date = new Date(sessionData.session_date).toISOString().split('T')[0];
+        }
+        
+        return sessionData;
+      });
+
       res.status(200).json({
-        sessions
+        success: true,
+        data: transformedSessions,
+        message: `Found ${transformedSessions.length} sessions for ${player.name}`
       });
 
     } catch (error) {
       console.error('Get player sessions error:', error);
       res.status(500).json({ 
-        error: 'Failed to retrieve player sessions' 
+        success: false,
+        error: 'Failed to retrieve player sessions',
+        details: error.message
       });
     }
   }
