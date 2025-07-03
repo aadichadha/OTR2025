@@ -113,6 +113,18 @@ function ReportDisplay({ report }) {
   
   console.log('[REPORT DISPLAY DEBUG] ===== COMPONENT RENDER END =====');
 
+  // Final validation - log the exact values that will be displayed
+  if (isHittrax && metrics) {
+    console.log('[REPORT DISPLAY FINAL] Values to be displayed:', {
+      avgExitVelocity: metrics.avgExitVelocity,
+      maxExitVelocity: metrics.maxExitVelocity,
+      avgLaunchAngle: metrics.avgLaunchAngle,
+      avgDistance: metrics.avgDistance,
+      dataPoints: metrics.dataPoints,
+      hotZoneEVs: metrics.hotZoneEVs
+    });
+  }
+
   // PDF header style
   return (
     <Box sx={{ bgcolor: '#f8f9fa', borderRadius: 3, boxShadow: '0 2px 12px rgba(28,44,77,0.07)', p: 0, overflow: 'hidden' }}>
