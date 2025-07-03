@@ -1,0 +1,41 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.nyc_output
+coverage
+.DS_Store
+*.log
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Database files
+database/*.db
+database/*.sqlite3
+
+# Upload files
+backend/uploads/*
+frontend/uploads/*
+
+# Build artifacts
+frontend/dist
+backend/dist
+
+# Test files
+**/*.test.js
+**/*.spec.js
+test/
+tests/
+
+# Documentation
+docs/
+*.md 

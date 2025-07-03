@@ -1,31 +1,36 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Upload from './pages/Upload';
+import Players from './pages/Players';
+import SessionVisualization from './pages/SessionVisualization';
+import Landing from './pages/Landing';
+import AnalyticsHome from './pages/AnalyticsHome';
+import Topbar from './components/Topbar';
+import { Box } from '@mui/material';
 
 function App() {
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  };
   return (
     <Router>
-      <div>
-        <header style={{ padding: '1rem', background: '#222', color: '#fff' }}>
-          <h1 style={{ margin: 0 }}>OTR Baseball Analytics</h1>
-          <nav style={{ marginTop: '0.5rem' }}>
-            <Link to="/" style={{ color: '#fff', marginRight: '1rem' }}>Home</Link>
-            <Link to="/upload" style={{ color: '#fff', marginRight: '1rem' }}>Upload</Link>
-            <Link to="/login" style={{ color: '#fff', marginRight: '1rem' }}>Login</Link>
-            <Link to="/register" style={{ color: '#fff' }}>Register</Link>
-          </nav>
-        </header>
-        <main style={{ padding: '2rem' }}>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Topbar onLogout={handleLogout} />
+        <Box component="main" sx={{ flexGrow: 1, width: '100%', pt: 2 }}>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/upload" element={<Upload />} />
+            <Route path="/players" element={<Players />} />
+            <Route path="/sessions/:id/visualize" element={<SessionVisualization />} />
+            <Route path="/analytics" element={<AnalyticsHome />} />
           </Routes>
-        </main>
-      </div>
+        </Box>
+      </Box>
     </Router>
   );
 }

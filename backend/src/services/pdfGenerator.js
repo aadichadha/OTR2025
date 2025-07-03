@@ -4,105 +4,260 @@ const path = require('path');
 
 function generateReportPDF(reportData, outputFilePath) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ 
+      margin: 30,
+      size: 'A4'
+    });
     const stream = fs.createWriteStream(outputFilePath);
     doc.pipe(stream);
 
+    // Helper function to draw a metric card
+    const drawMetricCard = (x, y, width, height, value, label, unit, color = '#333') => {
+      // Card background
+      doc.rect(x, y, width, height).fill('#f8f9fa');
+      doc.rect(x, y, width, height).stroke('#e9ecef');
+      
+      // Value (large number)
+      doc.fontSize(32).fill(color).text(value.toString(), x + width/2, y + 20, {
+        align: 'center',
+        width: width
+      });
+      
+      // Label
+      doc.fontSize(14).fill('#495057').text(label, x + width/2, y + 60, {
+        align: 'center',
+        width: width
+      });
+      
+      // Unit
+      doc.fontSize(10).fill('#6c757d').text(unit, x + width/2, y + 80, {
+        align: 'center',
+        width: width
+      });
+    };
+
+    // Helper function to get metric color
+    const getMetricColor = (value, benchmark) => {
+      if (!value || !benchmark) return '#333';
+      const percentage = (value / benchmark) * 100;
+      if (percentage >= 110) return '#28a745'; // Green
+      if (percentage >= 90) return '#ffc107'; // Yellow
+      return '#dc3545'; // Red
+    };
+
+    // Helper function to format metric value
+    const formatMetricValue = (value, decimals = 1) => {
+      if (value === null || value === undefined) return 'N/A';
+      return value.toFixed(decimals);
+    };
+
+    // Header with gradient background effect
+    doc.rect(0, 0, 595, 120).fill('#667eea');
+    
+    // Add OTR BASEBALL logo at the top
+    const logoPath = path.resolve(__dirname, '../../frontend/public/images/otrbaseball-main.png');
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 30, 20, { fit: [120, 40] });
+    }
+
     // Title
-    doc.fontSize(22).text('Baseball Analytics Report', { align: 'center' });
-    doc.moveDown();
+    doc.fontSize(28).fill('white').text('Performance Report', 30, 70);
+    doc.fontSize(16).fill('rgba(255,255,255,0.9)').text(
+      `${reportData.player.name} • ${new Date(reportData.session.date).toLocaleDateString()} • ${reportData.session.type.toUpperCase()}`,
+      30, 95
+    );
 
-    // Player & Session Info
-    doc.fontSize(14).text(`Player: ${reportData.player.name}`);
-    doc.text(`Level: ${reportData.player.level}`);
-    doc.text(`Session Date: ${new Date(reportData.session.date).toLocaleDateString()}`);
-    doc.text(`Session Type: ${reportData.session.type}`);
-    doc.moveDown();
+    let currentY = 140;
 
-    // Metrics Table
-    doc.fontSize(16).text('Metrics', { underline: true });
-    doc.moveDown(0.5);
-    const metrics = reportData.metrics;
-    const rows = [
-      ['Metric', 'Average', 'Benchmark', 'Above Benchmark?'],
-      ['Bat Speed',
-        metrics.batSpeed.average?.toFixed(2) ?? '-',
-        metrics.batSpeed.benchmark ?? '-',
-        metrics.batSpeed.aboveBenchmark === null ? '-' : metrics.batSpeed.aboveBenchmark ? 'Yes' : 'No'],
-      ['Attack Angle',
-        metrics.attackAngle.average?.toFixed(2) ?? '-',
-        metrics.attackAngle.benchmark ?? '-',
-        metrics.attackAngle.aboveBenchmark === null ? '-' : metrics.attackAngle.aboveBenchmark ? 'Yes' : 'No'],
-      ['Time To Contact',
-        metrics.timeToContact.average?.toFixed(3) ?? '-',
-        metrics.timeToContact.benchmark ?? '-',
-        metrics.timeToContact.aboveBenchmark === null ? '-' : metrics.timeToContact.aboveBenchmark ? 'Yes' : 'No'],
-      ['Exit Velocity',
-        metrics.exitVelocity.average?.toFixed(2) ?? '-',
-        metrics.exitVelocity.benchmark ?? '-',
-        metrics.exitVelocity.aboveBenchmark === null ? '-' : metrics.exitVelocity.aboveBenchmark ? 'Yes' : 'No'],
-      ['Launch Angle',
-        metrics.launchAngle.average?.toFixed(2) ?? '-',
-        metrics.launchAngle.benchmark ?? '-',
-        metrics.launchAngle.aboveBenchmark === null ? '-' : metrics.launchAngle.aboveBenchmark ? 'Yes' : 'No'],
-      ['Distance',
-        metrics.distance.average?.toFixed(2) ?? '-',
-        metrics.distance.benchmark ?? '-',
-        metrics.distance.aboveBenchmark === null ? '-' : metrics.distance.aboveBenchmark ? 'Yes' : 'No']
-    ];
-    // Draw table
-    rows.forEach((row, i) => {
-      doc.font(i === 0 ? 'Helvetica-Bold' : 'Helvetica').fontSize(12);
-      doc.text(row.join('   |   '));
-      doc.moveDown(0.2);
+    // Metrics Section
+    doc.fontSize(20).fill('#333').text('Performance Metrics', 30, currentY);
+    currentY += 30;
+
+    // Draw metric cards based on session type
+    if (reportData.session.type === 'blast' && reportData.metrics?.batSpeed) {
+      const metrics = reportData.metrics.batSpeed;
+      const cardWidth = 170;
+      const cardHeight = 100;
+      const cardsPerRow = 3;
+      const spacing = 20;
+
+      // Row 1
+      drawMetricCard(
+        30, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgBatSpeed),
+        'BAT SPEED',
+        'Mph',
+        getMetricColor(metrics.avgBatSpeed, metrics.benchmark?.avgBatSpeed)
+      );
+
+      drawMetricCard(
+        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.top10PercentBatSpeed),
+        'TOP 10% SPEED',
+        'Mph',
+        getMetricColor(metrics.top10PercentBatSpeed, metrics.benchmark?.top90BatSpeed)
+      );
+
+      drawMetricCard(
+        30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgAttackAngleTop10),
+        'ATTACK ANGLE',
+        'Degrees',
+        getMetricColor(metrics.avgAttackAngleTop10, metrics.benchmark?.avgAttackAngle)
+      );
+
+      currentY += cardHeight + 20;
+
+      // Row 2
+      drawMetricCard(
+        30, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgTimeToContact, 3),
+        'TIME TO CONTACT',
+        'Seconds',
+        getMetricColor(metrics.avgTimeToContact, metrics.benchmark?.avgTimeToContact)
+      );
+
+      drawMetricCard(
+        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.dataPoints || 0),
+        'TOTAL SWINGS',
+        'Data Points',
+        '#1976d2'
+      );
+    }
+
+    if (reportData.session.type === 'hittrax' && reportData.metrics?.exitVelocity) {
+      const metrics = reportData.metrics.exitVelocity;
+      const cardWidth = 170;
+      const cardHeight = 100;
+      const cardsPerRow = 3;
+      const spacing = 20;
+
+      // Row 1
+      drawMetricCard(
+        30, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgExitVelocity),
+        'EXIT VELOCITY',
+        'Mph',
+        getMetricColor(metrics.avgExitVelocity, metrics.benchmark?.avgEV)
+      );
+
+      drawMetricCard(
+        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgLaunchAngleTop8),
+        'LAUNCH ANGLE',
+        'Degrees',
+        getMetricColor(metrics.avgLaunchAngleTop8, metrics.benchmark?.hhbLA)
+      );
+
+      drawMetricCard(
+        30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgDistanceTop8),
+        'DISTANCE',
+        'Feet',
+        '#1976d2'
+      );
+
+      currentY += cardHeight + 20;
+
+      // Row 2
+      drawMetricCard(
+        30, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.top8PercentEV),
+        'TOP 8% EV',
+        'Mph',
+        getMetricColor(metrics.top8PercentEV, metrics.benchmark?.top8EV)
+      );
+
+      drawMetricCard(
+        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.dataPoints || 0),
+        'TOTAL SWINGS',
+        'Data Points',
+        '#1976d2'
+      );
+    }
+
+    currentY += 140;
+
+    // Strike Zone Visualization
+    doc.fontSize(20).fill('#333').text('Strike Zone Analysis', 30, currentY);
+    currentY += 30;
+
+    // Draw strike zone grid
+    const zoneWidth = 200;
+    const zoneHeight = 150;
+    const zoneX = 30;
+    const zoneY = currentY;
+
+    // Strike zone outline
+    doc.rect(zoneX, zoneY, zoneWidth, zoneHeight).stroke('#333');
+    
+    // Grid lines
+    for (let i = 1; i < 3; i++) {
+      doc.moveTo(zoneX + (zoneWidth / 3) * i, zoneY)
+        .lineTo(zoneX + (zoneWidth / 3) * i, zoneY + zoneHeight)
+        .stroke('#ccc');
+    }
+    for (let i = 1; i < 3; i++) {
+      doc.moveTo(zoneX, zoneY + (zoneHeight / 3) * i)
+        .lineTo(zoneX + zoneWidth, zoneY + (zoneHeight / 3) * i)
+        .stroke('#ccc');
+    }
+
+    // Zone labels
+    doc.fontSize(12).fill('#666').text('Strike Zone Heatmap', zoneX + zoneWidth/2, zoneY + zoneHeight + 10, {
+      align: 'center',
+      width: zoneWidth
     });
-    doc.moveDown();
 
-    // Historical Session Table
+    currentY += zoneHeight + 50;
+
+    // Detailed Analysis
+    if (reportData.summaryText) {
+      doc.fontSize(20).fill('#333').text('Detailed Analysis', 30, currentY);
+      currentY += 30;
+
+      // Analysis background
+      doc.rect(30, currentY, 535, 200).fill('#f8f9fa');
+      doc.rect(30, currentY, 535, 200).stroke('#e9ecef');
+
+      // Analysis text
+      doc.fontSize(11).fill('#333').text(reportData.summaryText, 40, currentY + 10, {
+        width: 515,
+        align: 'left'
+      });
+
+      currentY += 220;
+    }
+
+    // Session History
     if (reportData.history && reportData.history.length > 1) {
-      doc.fontSize(16).text('Session History', { underline: true });
-      doc.moveDown(0.5);
-      // Table header
-      doc.font('Helvetica-Bold').fontSize(12).text('Date      | Type     | Avg BatSpeed | Top BatSpeed | Avg EV | Top EV');
-      doc.moveDown(0.2);
+      doc.fontSize(20).fill('#333').text('Session History', 30, currentY);
+      currentY += 30;
+
+      // History table
+      doc.fontSize(12).fill('#333');
+      doc.text('Date', 30, currentY);
+      doc.text('Type', 120, currentY);
+      doc.text('Avg Bat Speed', 200, currentY);
+      doc.text('Top Bat Speed', 300, currentY);
+      doc.text('Avg Exit Velo', 400, currentY);
+      doc.text('Top Exit Velo', 500, currentY);
+      currentY += 20;
+
       // Table rows
-      reportData.history.forEach(s => {
-        doc.font('Helvetica').fontSize(12).text(
-          `${s.sessionDate} | ${s.sessionType.padEnd(8)} | ` +
-          `${s.metrics.avgBatSpeed !== null ? s.metrics.avgBatSpeed.toFixed(2) : '-'}         | ` +
-          `${s.metrics.topBatSpeed !== null ? s.metrics.topBatSpeed.toFixed(2) : '-'}        | ` +
-          `${s.metrics.avgExitVelocity !== null ? s.metrics.avgExitVelocity.toFixed(2) : '-'}   | ` +
-          `${s.metrics.topExitVelocity !== null ? s.metrics.topExitVelocity.toFixed(2) : '-'}`
-        );
-        doc.moveDown(0.1);
+      reportData.history.slice(-5).forEach(session => {
+        doc.fontSize(10).fill('#666');
+        doc.text(new Date(session.sessionDate).toLocaleDateString(), 30, currentY);
+        doc.text(session.sessionType.toUpperCase(), 120, currentY);
+        doc.text(session.metrics.avgBatSpeed ? session.metrics.avgBatSpeed.toFixed(1) : 'N/A', 200, currentY);
+        doc.text(session.metrics.topBatSpeed ? session.metrics.topBatSpeed.toFixed(1) : 'N/A', 300, currentY);
+        doc.text(session.metrics.avgExitVelocity ? session.metrics.avgExitVelocity.toFixed(1) : 'N/A', 400, currentY);
+        doc.text(session.metrics.topExitVelocity ? session.metrics.topExitVelocity.toFixed(1) : 'N/A', 500, currentY);
+        currentY += 15;
       });
-      doc.moveDown();
     }
-
-    // Trends Table
-    if (reportData.trends && reportData.trends.length > 0) {
-      doc.fontSize(16).text('Session-over-Session Trends', { underline: true });
-      doc.moveDown(0.5);
-      doc.font('Helvetica-Bold').fontSize(12).text('Date      | ΔAvg BatSpeed | ΔTop BatSpeed | ΔAvg EV | ΔTop EV');
-      doc.moveDown(0.2);
-      reportData.trends.forEach(t => {
-        doc.font('Helvetica').fontSize(12).text(
-          `${t.sessionDate} | ` +
-          `${t.trends.avgBatSpeed !== null ? (t.trends.avgBatSpeed > 0 ? '+' : '') + t.trends.avgBatSpeed.toFixed(2) : '-'}         | ` +
-          `${t.trends.topBatSpeed !== null ? (t.trends.topBatSpeed > 0 ? '+' : '') + t.trends.topBatSpeed.toFixed(2) : '-'}        | ` +
-          `${t.trends.avgExitVelocity !== null ? (t.trends.avgExitVelocity > 0 ? '+' : '') + t.trends.avgExitVelocity.toFixed(2) : '-'}   | ` +
-          `${t.trends.topExitVelocity !== null ? (t.trends.topExitVelocity > 0 ? '+' : '') + t.trends.topExitVelocity.toFixed(2) : '-'}`
-        );
-        doc.moveDown(0.1);
-      });
-      doc.moveDown();
-    }
-
-    // Strike Zone Heatmap Placeholder
-    doc.fontSize(14).text('Strike Zone Heatmap:', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(10).text('(Heatmap visualization coming soon)', { align: 'center' });
-    doc.moveDown();
 
     // Footer
     doc.moveDown(2);

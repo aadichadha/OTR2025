@@ -1,0 +1,14 @@
+Date,Time,Player,Session,Zone,StrikeZone,Result,ExitVelocity,LaunchAngle,Distance,Carry,SpinRate,SpinAxis
+2024-01-15,10:30:00,Player1,Session1,Zone1,1,Hit,75.2,12.5,280,275,2200,45
+2024-01-15,10:31:00,Player1,Session1,Zone2,2,Hit,82.1,15.2,310,305,2100,42
+2024-01-15,10:32:00,Player1,Session1,Zone3,3,Hit,78.9,13.8,295,290,2150,48
+2024-01-15,10:33:00,Player1,Session1,Zone4,4,Hit,85.3,16.1,320,315,2050,40
+2024-01-15,10:34:00,Player1,Session1,Zone5,5,Hit,79.6,14.2,300,295,2180,46
+2024-01-15,10:35:00,Player1,Session1,Zone6,6,Hit,88.7,17.5,335,330,2000,38
+2024-01-15,10:36:00,Player1,Session1,Zone7,7,Hit,76.4,12.8,285,280,2220,44
+2024-01-15,10:37:00,Player1,Session1,Zone8,8,Hit,83.2,15.8,315,310,2080,41
+2024-01-15,10:38:00,Player1,Session1,Zone9,9,Hit,81.5,14.9,305,300,2120,43
+2024-01-15,10:39:00,Player1,Session1,Zone10,10,Hit,87.1,16.8,325,320,2020,39
+2024-01-15,10:40:00,Player1,Session1,Zone11,11,Hit,77.8,13.1,290,285,2200,45
+2024-01-15,10:41:00,Player1,Session1,Zone12,12,Hit,84.6,15.5,318,313,2060,40
+2024-01-15,10:42:00,Player1,Session1,Zone13,13,Hit,80.3,14.5,302,297,2140,42 

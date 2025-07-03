@@ -2,36 +2,71 @@ const { Session, Player, BatSpeedData, ExitVelocityData } = require('../models')
 const benchmarks = require('../config/benchmarks');
 const MetricsCalculator = require('./metricsCalculator');
 
-async function aggregateReportData(sessionId) {
-  // Fetch session
-  const session = await Session.findByPk(sessionId, { include: [Player] });
-  if (!session) throw new Error('Session not found');
-
-  // Fetch all bat speed and exit velocity data for this session
-  const batSpeedRows = await BatSpeedData.findAll({ where: { session_id: sessionId } });
-  const exitVelocityRows = await ExitVelocityData.findAll({ where: { session_id: sessionId } });
-
-  // Calculate metrics
-  const batSpeeds = batSpeedRows.map(row => row.bat_speed).filter(Number.isFinite);
-  const attackAngles = batSpeedRows.map(row => row.attack_angle).filter(Number.isFinite);
-  const timeToContacts = batSpeedRows.map(row => row.time_to_contact).filter(Number.isFinite);
-
-  const exitVelocities = exitVelocityRows.map(row => row.exit_velocity).filter(Number.isFinite);
-  const launchAngles = exitVelocityRows.map(row => row.launch_angle).filter(Number.isFinite);
-  const distances = exitVelocityRows.map(row => row.distance).filter(Number.isFinite);
-  const strikeZones = exitVelocityRows.map(row => row.strike_zone).filter(Number.isFinite);
-
-  // Helper for average
-  const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+async function aggregateReportData(sessionId, options = {}) {
+  const { transaction } = options;
+  
+  // First check if session exists
+  const session = await Session.findByPk(sessionId, { include: [{ model: Player, as: 'player' }], transaction });
+  if (!session) {
+    console.log(`Session ${sessionId} not found, skipping report aggregation`);
+    return {
+      session: {
+        id: sessionId,
+        date: new Date(),
+        type: 'unknown'
+      },
+      player: {
+        id: null,
+        name: 'Unknown Player',
+        level: 'High School'
+      },
+      metrics: {},
+      summaryText: "Session data saved but report generation skipped. Please refresh to view the complete report.",
+      history: [],
+      trends: {}
+    };
+  }
 
   // Get player level for benchmarks
   const playerLevel = session.player_level || 'High School';
-  const bm = benchmarks[playerLevel] || benchmarks['High School'];
+
+  // Calculate detailed metrics using MetricsCalculator
+  let batSpeedMetrics = null;
+  let exitVelocityMetrics = null;
+  let summaryText = '';
+
+  try {
+    if (session.session_type === 'blast') {
+      console.log('[REPORT] Calculating bat speed metrics for session', sessionId);
+      batSpeedMetrics = await MetricsCalculator.calculateBatSpeedMetrics(sessionId, playerLevel, options);
+      console.log('[REPORT] Bat speed metrics:', batSpeedMetrics);
+      summaryText += `### Bat Speed Metrics\n`;
+      summaryText += `Max Bat Speed: ${batSpeedMetrics.maxBatSpeed} mph (Benchmark: ${batSpeedMetrics.benchmark.maxBatSpeed})\n  - Grade: ${batSpeedMetrics.grades.maxBatSpeed}\n\n`;
+      summaryText += `Average Bat Speed: ${batSpeedMetrics.avgBatSpeed} mph (Benchmark: ${batSpeedMetrics.benchmark.avgBatSpeed})\n  - Grade: ${batSpeedMetrics.grades.avgBatSpeed}\n\n`;
+      summaryText += `Average Attack Angle: ${batSpeedMetrics.avgAttackAngle}° (Benchmark: ${batSpeedMetrics.benchmark.avgAttackAngle}°)\n  - Grade: ${batSpeedMetrics.grades.attackAngle}\n\n`;
+      summaryText += `Average Time to Contact: ${batSpeedMetrics.avgTimeToContact} sec (Benchmark: ${batSpeedMetrics.benchmark.avgTimeToContact} sec)\n  - Grade: ${batSpeedMetrics.grades.timeToContact}\n`;
+    }
+
+    if (session.session_type === 'hittrax') {
+      console.log('[REPORT] Calculating exit velocity metrics for session', sessionId);
+      exitVelocityMetrics = await MetricsCalculator.calculateExitVelocityMetrics(sessionId, playerLevel, options);
+      console.log('[REPORT] Exit velocity metrics:', exitVelocityMetrics);
+      summaryText += `### Exit Velocity Metrics\n`;
+      summaryText += `Max Exit Velocity: ${exitVelocityMetrics.maxExitVelocity ?? 'N/A'} mph (Benchmark: ${exitVelocityMetrics.benchmark.maxEV})\n  - Grade: ${exitVelocityMetrics.grades.maxExitVelocity ?? 'N/A'}\n\n`;
+      summaryText += `Average Exit Velocity: ${exitVelocityMetrics.avgExitVelocity ?? 'N/A'} mph (Benchmark: ${exitVelocityMetrics.benchmark.avgEV})\n  - Grade: ${exitVelocityMetrics.grades.avgExitVelocity ?? 'N/A'}\n\n`;
+      summaryText += `Launch Angle of Top 5% EV: ${exitVelocityMetrics.launchAngleTop5 ?? 'N/A'}° (Benchmark: ${exitVelocityMetrics.benchmark.hhbLA}°)\n  - Grade: ${exitVelocityMetrics.grades.launchAngleTop5 ?? 'N/A'}\n\n`;
+      summaryText += `Average Launch Angle: ${exitVelocityMetrics.avgLaunchAngle ?? 'N/A'}° (Benchmark: ${exitVelocityMetrics.benchmark.avgLA}°)\n  - Grade: ${exitVelocityMetrics.grades.avgLaunchAngle ?? 'N/A'}\n`;
+    }
+  } catch (err) {
+    console.error('[REPORT] Metrics calculation failed:', err);
+    summaryText = 'No valid data found for this session, or metrics calculation failed.';
+  }
 
   // Fetch session history for this player (sorted by date)
   const allSessions = await Session.findAll({
     where: { player_id: session.player_id },
     order: [['session_date', 'ASC']],
+    transaction
   });
   // For each session, aggregate key metrics (reuse logic from playerController)
   const sessionHistory = await Promise.all(allSessions.map(async (s) => {
@@ -71,51 +106,15 @@ async function aggregateReportData(sessionId) {
       type: session.session_type
     },
     player: {
-      id: session.Player.id,
-      name: session.Player.name,
+      id: session.player.id,
+      name: session.player.name,
       level: playerLevel
     },
     metrics: {
-      batSpeed: {
-        values: batSpeeds,
-        average: avg(batSpeeds),
-        benchmark: bm.batSpeed,
-        aboveBenchmark: avg(batSpeeds) && bm.batSpeed ? avg(batSpeeds) >= bm.batSpeed : null
-      },
-      attackAngle: {
-        values: attackAngles,
-        average: avg(attackAngles),
-        benchmark: bm.attackAngle,
-        aboveBenchmark: avg(attackAngles) && bm.attackAngle ? avg(attackAngles) >= bm.attackAngle : null
-      },
-      timeToContact: {
-        values: timeToContacts,
-        average: avg(timeToContacts),
-        benchmark: bm.timeToContact,
-        aboveBenchmark: avg(timeToContacts) && bm.timeToContact ? avg(timeToContacts) <= bm.timeToContact : null // lower is better
-      },
-      exitVelocity: {
-        values: exitVelocities,
-        average: avg(exitVelocities),
-        benchmark: bm.exitVelocity,
-        aboveBenchmark: avg(exitVelocities) && bm.exitVelocity ? avg(exitVelocities) >= bm.exitVelocity : null
-      },
-      launchAngle: {
-        values: launchAngles,
-        average: avg(launchAngles),
-        benchmark: bm.launchAngle,
-        aboveBenchmark: avg(launchAngles) && bm.launchAngle ? avg(launchAngles) >= bm.launchAngle : null
-      },
-      distance: {
-        values: distances,
-        average: avg(distances),
-        benchmark: bm.distance,
-        aboveBenchmark: avg(distances) && bm.distance ? avg(distances) >= bm.distance : null
-      },
-      strikeZone: {
-        values: strikeZones
-      }
+      batSpeed: batSpeedMetrics,
+      exitVelocity: exitVelocityMetrics
     },
+    summaryText,
     history: sessionHistory,
     trends
   };

@@ -1,0 +1,3 @@
+id,email,password,role,created_at,updated_at,name
+1,test@example.com,$2b$12$DmS9ADi1HSmZqKi6Ap8qAu8/Mc6oprJSsLTG3sxfhdI/Az34W5ZIe,user,"2025-06-25 03:21:45","2025-06-25 03:21:45",""
+,newuser@example.com,$2a$10$7aBmCG0U971QAMz2nj32U.MYfziPkbZ5T79Nl8g8DoJZKKstvr64W,user,"2025-06-25 04:28:26.917 +00:00","2025-06-25 04:28:26.917 +00:00",""

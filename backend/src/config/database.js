@@ -1,23 +1,52 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'otr_baseball',
-  process.env.DB_USER || 'postgres',
-  process.env.DB_PASSWORD || 'password',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
+const path = require('path');
+
+let sequelize;
+
+if (process.env.NODE_ENV === 'production') {
+  // Production: PostgreSQL
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     pool: {
       max: 5,
       min: 0,
       acquire: 30000,
       idle: 10000
     }
-  }
-);
+  });
+} else {
+  // Development: SQLite
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: path.join(__dirname, '../../../database/otrbaseball.db'),
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    dialectOptions: {
+      busyTimeout: 60000
+    },
+    isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+  });
+
+  // Always enable foreign key enforcement for SQLite
+  sequelize
+    .getQueryInterface()
+    .sequelize
+    .query('PRAGMA foreign_keys = ON;')
+    .then(() => {
+      console.log('✅ SQLite foreign key enforcement enabled.');
+    })
+    .catch((err) => {
+      console.error('❌ Failed to enable SQLite foreign key enforcement:', err);
+    });
+}
 
 // Test the connection
 const testConnection = async () => {

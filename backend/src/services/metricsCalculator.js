@@ -6,14 +6,16 @@ class MetricsCalculator {
    * Calculate bat speed metrics for a session
    * @param {number} sessionId - Database session ID
    * @param {string} playerLevel - Player level for benchmarks
+   * @param {Object} options - Options object that may contain transaction
    * @returns {Promise<Object>} - Calculated metrics
    */
-  static async calculateBatSpeedMetrics(sessionId, playerLevel) {
+  static async calculateBatSpeedMetrics(sessionId, playerLevel, options = {}) {
     try {
       // Get all bat speed data for the session
       const batSpeedData = await BatSpeedData.findAll({
         where: { session_id: sessionId },
-        attributes: ['bat_speed', 'attack_angle', 'time_to_contact']
+        attributes: ['bat_speed', 'attack_angle', 'time_to_contact'],
+        ...options
       });
 
       if (batSpeedData.length === 0) {
@@ -30,18 +32,10 @@ class MetricsCalculator {
       }
 
       // Calculate metrics
+      const maxBatSpeed = Math.max(...batSpeeds);
       const avgBatSpeed = this.calculateAverage(batSpeeds);
-      let top10PercentBatSpeed = this.calculatePercentile(batSpeeds, 90);
-      if (typeof top10PercentBatSpeed !== 'number' || isNaN(top10PercentBatSpeed)) top10PercentBatSpeed = 0;
-
-      // Get attack angle for top 10% bat speed swings
-      const top10BatSpeedThreshold = top10PercentBatSpeed;
-      const top10AttackAngles = attackAngles.filter((_, index) => batSpeeds[index] >= top10BatSpeedThreshold);
-      let avgAttackAngleTop10 = this.calculateAverage(top10AttackAngles);
-      if (typeof avgAttackAngleTop10 !== 'number' || isNaN(avgAttackAngleTop10)) avgAttackAngleTop10 = 0;
-
-      let avgTimeToContact = this.calculateAverage(timeToContacts);
-      if (typeof avgTimeToContact !== 'number' || isNaN(avgTimeToContact)) avgTimeToContact = 0;
+      const avgAttackAngle = this.calculateAverage(attackAngles);
+      const avgTimeToContact = this.calculateAverage(timeToContacts);
 
       // Get benchmarks
       const benchmark = benchmarks[playerLevel];
@@ -50,25 +44,25 @@ class MetricsCalculator {
       }
 
       // Evaluate performance
-      const batSpeedGrade = this.evaluatePerformance(avgBatSpeed, benchmark['Avg BatSpeed']);
-      const top10Grade = this.evaluatePerformance(top10PercentBatSpeed, benchmark['90th% BatSpeed']);
-      const attackAngleGrade = this.evaluatePerformance(avgAttackAngleTop10, benchmark['Avg AttackAngle']);
+      const maxBatSpeedGrade = this.evaluatePerformance(maxBatSpeed, benchmark['90th% BatSpeed']);
+      const avgBatSpeedGrade = this.evaluatePerformance(avgBatSpeed, benchmark['Avg BatSpeed']);
+      const attackAngleGrade = this.evaluatePerformance(avgAttackAngle, benchmark['Avg AttackAngle']);
       const timeToContactGrade = this.evaluatePerformance(avgTimeToContact, benchmark['Avg TimeToContact'], true);
 
       return {
+        maxBatSpeed: parseFloat(maxBatSpeed.toFixed(2)),
         avgBatSpeed: parseFloat(avgBatSpeed.toFixed(2)),
-        top10PercentBatSpeed: parseFloat(top10PercentBatSpeed.toFixed(2)),
-        avgAttackAngleTop10: parseFloat(avgAttackAngleTop10.toFixed(2)),
+        avgAttackAngle: parseFloat(avgAttackAngle.toFixed(2)),
         avgTimeToContact: parseFloat(avgTimeToContact.toFixed(3)),
         benchmark: {
+          maxBatSpeed: benchmark['90th% BatSpeed'],
           avgBatSpeed: benchmark['Avg BatSpeed'],
-          top90BatSpeed: benchmark['90th% BatSpeed'],
           avgAttackAngle: benchmark['Avg AttackAngle'],
           avgTimeToContact: benchmark['Avg TimeToContact']
         },
         grades: {
-          batSpeed: batSpeedGrade,
-          top10: top10Grade,
+          maxBatSpeed: maxBatSpeedGrade,
+          avgBatSpeed: avgBatSpeedGrade,
           attackAngle: attackAngleGrade,
           timeToContact: timeToContactGrade
         },
@@ -83,50 +77,57 @@ class MetricsCalculator {
    * Calculate exit velocity metrics for a session
    * @param {number} sessionId - Database session ID
    * @param {string} playerLevel - Player level for benchmarks
+   * @param {Object} options - Options object that may contain transaction
    * @returns {Promise<Object>} - Calculated metrics
    */
-  static async calculateExitVelocityMetrics(sessionId, playerLevel) {
+  static async calculateExitVelocityMetrics(sessionId, playerLevel, options = {}) {
     try {
       // Get all exit velocity data for the session
       const evData = await ExitVelocityData.findAll({
         where: { session_id: sessionId },
-        attributes: ['exit_velocity', 'launch_angle', 'distance', 'strike_zone']
+        attributes: ['exit_velocity', 'launch_angle', 'distance', 'strike_zone'],
+        ...options
       });
 
       if (evData.length === 0) {
         throw new Error('No exit velocity data found for this session');
       }
 
-      // Extract arrays of values
-      const exitVelocities = evData.map(row => row.exit_velocity).filter(val => val !== null && val > 0);
-      const launchAngles = evData.map(row => row.launch_angle).filter(val => val !== null);
-      const distances = evData.map(row => row.distance).filter(val => val !== null);
-      const strikeZones = evData.map(row => row.strike_zone).filter(val => val !== null);
+      // Extract arrays of values (ignore zeros for EV and LA)
+      const exitVelocities = evData.map(row => parseFloat(row.exit_velocity)).filter(val => val && val > 0);
+      const launchAngles = evData.map(row => parseFloat(row.launch_angle)).filter(val => val && Math.abs(val) > 0.01);
+      const distances = evData.map(row => parseFloat(row.distance)).filter(val => val && val > 0);
+      const strikeZones = evData.map(row => row.strike_zone);
 
-      if (exitVelocities.length === 0) {
-        throw new Error('No valid (non-zero) exit velocity data found');
+      // Calculate metrics only if there is valid data
+      const maxExitVelocity = exitVelocities.length ? Math.max(...exitVelocities) : null;
+      const avgExitVelocity = exitVelocities.length ? (exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length) : null;
+      const avgLaunchAngle = launchAngles.length ? (launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length) : null;
+      const avgDistance = distances.length ? (distances.reduce((a, b) => a + b, 0) / distances.length) : null;
+
+      // Calculate top 5% launch angle (by EV)
+      let launchAngleTop5 = null;
+      if (exitVelocities.length > 0 && launchAngles.length > 0) {
+        const paired = evData
+          .map(row => ({
+            ev: parseFloat(row.exit_velocity),
+            la: parseFloat(row.launch_angle)
+          }))
+          .filter(row => row.ev > 0 && !isNaN(row.la));
+        const top5Count = Math.ceil(paired.length * 0.05);
+        const top5 = paired.sort((a, b) => b.ev - a.ev).slice(0, top5Count);
+        const top5LAs = top5.map(row => row.la).filter(la => la && Math.abs(la) > 0.01);
+        launchAngleTop5 = top5LAs.length ? (top5LAs.reduce((a, b) => a + b, 0) / top5LAs.length) : null;
       }
 
-      // Calculate metrics
-      const avgExitVelocity = this.calculateAverage(exitVelocities);
-      let top8PercentEV = this.calculatePercentile(exitVelocities, 92); // Top 8% = 92nd percentile
-      if (typeof top8PercentEV !== 'number' || isNaN(top8PercentEV)) top8PercentEV = 0;
-
-      // Get launch angle and distance for top 8% EV swings
-      const top8Mask = exitVelocities.map(ev => ev >= top8PercentEV);
-      let top8LaunchAngles = launchAngles.filter((_, index) => top8Mask[index]);
-      let top8Distances = distances.filter((_, index) => top8Mask[index]);
-
-      let avgLaunchAngleTop8 = this.calculateAverage(top8LaunchAngles);
-      if (typeof avgLaunchAngleTop8 !== 'number' || isNaN(avgLaunchAngleTop8)) avgLaunchAngleTop8 = 0;
-      let avgDistanceTop8 = this.calculateAverage(top8Distances);
-      if (typeof avgDistanceTop8 !== 'number' || isNaN(avgDistanceTop8)) avgDistanceTop8 = 0;
-      let totalAvgLaunchAngle = this.calculateAverage(launchAngles.filter(la => la > 0));
-      if (typeof totalAvgLaunchAngle !== 'number' || isNaN(totalAvgLaunchAngle)) totalAvgLaunchAngle = 0;
-
-      // Calculate strike zone distribution for top 8% EV
-      const top8StrikeZones = strikeZones.filter((_, index) => top8Mask[index]);
-      const strikeZoneCounts = this.aggregateStrikeZones(top8StrikeZones);
+      // Calculate average EV per strike zone (1-13)
+      const hotZoneEVs = {};
+      for (let zone = 1; zone <= 13; zone++) {
+        const zoneEVs = evData
+          .filter(row => parseInt(row.strike_zone) === zone && parseFloat(row.exit_velocity) > 0)
+          .map(row => parseFloat(row.exit_velocity));
+        hotZoneEVs[zone] = zoneEVs.length ? +(zoneEVs.reduce((a, b) => a + b, 0) / zoneEVs.length).toFixed(1) : null;
+      }
 
       // Get benchmarks
       const benchmark = benchmarks[playerLevel];
@@ -135,32 +136,36 @@ class MetricsCalculator {
       }
 
       // Evaluate performance
-      const evGrade = this.evaluatePerformance(avgExitVelocity, benchmark['Avg EV'], false, true);
-      const top8Grade = this.evaluatePerformance(top8PercentEV, benchmark['Top 8th EV'], false, true);
-      const laTop8Grade = this.evaluatePerformance(avgLaunchAngleTop8, benchmark['HHB LA']);
-      const laTotalGrade = this.evaluatePerformance(totalAvgLaunchAngle, benchmark['Avg LA']);
+      const maxEVGrade = maxExitVelocity !== null ? this.evaluatePerformance(maxExitVelocity, benchmark['Top 8th EV'], false, true) : null;
+      const avgEVGrade = avgExitVelocity !== null ? this.evaluatePerformance(avgExitVelocity, benchmark['Avg EV'], false, true) : null;
+      const laTop5Grade = launchAngleTop5 !== null ? this.evaluatePerformance(launchAngleTop5, benchmark['HHB LA']) : null;
+      const laAvgGrade = avgLaunchAngle !== null ? this.evaluatePerformance(avgLaunchAngle, benchmark['Avg LA']) : null;
 
-      return {
-        avgExitVelocity: parseFloat(avgExitVelocity.toFixed(2)),
-        top8PercentEV: parseFloat(top8PercentEV.toFixed(2)),
-        avgLaunchAngleTop8: parseFloat(avgLaunchAngleTop8.toFixed(2)),
-        avgDistanceTop8: parseFloat(avgDistanceTop8.toFixed(2)),
-        totalAvgLaunchAngle: parseFloat(totalAvgLaunchAngle.toFixed(2)),
-        strikeZoneCounts: strikeZoneCounts,
+      // Before returning, log avgDistance and hotZoneEVs for debugging
+      console.log('[DEBUG] calculateExitVelocityMetrics:', { avgDistance, hotZoneEVs });
+      const result = {
+        maxExitVelocity,
+        avgExitVelocity,
+        launchAngleTop5,
+        avgLaunchAngle,
+        avgDistance: avgDistance !== undefined ? avgDistance : null,
+        hotZoneEVs: hotZoneEVs || {},
         benchmark: {
+          maxEV: benchmark['Top 8th EV'],
           avgEV: benchmark['Avg EV'],
-          top8EV: benchmark['Top 8th EV'],
           avgLA: benchmark['Avg LA'],
           hhbLA: benchmark['HHB LA']
         },
         grades: {
-          exitVelocity: evGrade,
-          top8EV: top8Grade,
-          launchAngleTop8: laTop8Grade,
-          launchAngleTotal: laTotalGrade
+          maxExitVelocity: maxEVGrade,
+          avgExitVelocity: avgEVGrade,
+          launchAngleTop5: laTop5Grade,
+          avgLaunchAngle: laAvgGrade
         },
         dataPoints: exitVelocities.length
       };
+      console.log('[DEBUG] Returning exit velocity metrics:', result);
+      return result;
     } catch (error) {
       throw new Error(`Exit velocity metrics calculation failed: ${error.message}`);
     }

@@ -1,7 +1,7 @@
 -- Migration 003: Create sessions table
 CREATE TABLE sessions (
     id SERIAL PRIMARY KEY,
-    player_id INTEGER REFERENCES players(id) ON DELETE CASCADE,
+    player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
     session_date DATE NOT NULL,
     session_type VARCHAR(50) NOT NULL, -- 'blast' or 'hittrax'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

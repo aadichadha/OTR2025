@@ -26,6 +26,31 @@ const Player = sequelize.define('Player', {
   high_school: {
     type: DataTypes.STRING(255),
     allowNull: true
+  },
+  little_league: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  college: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  position: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  graduation_year: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 2024,
+      max: 2030
+    }
+  },
+  player_code: {
+    type: DataTypes.CHAR(4),
+    allowNull: false,
+    unique: true
   }
 }, {
   tableName: 'players',

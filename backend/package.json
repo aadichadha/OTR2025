@@ -6,10 +6,21 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest"
+    "test": "jest",
+    "migrate": "node src/migrate.js",
+    "migrate:postgres": "node scripts/migrate-to-postgres.js",
+    "db:seed": "node scripts/seed-database.js",
+    "db:backup": "node scripts/backup-database.js",
+    "users:delete-all": "node src/user-management.js delete-all",
+    "users:create-test": "node src/user-management.js create-test",
+    "users:list": "node src/user-management.js list",
+    "users:verify": "node src/user-management.js verify",
+    "build": "echo 'No build step required for Node.js backend'",
+    "postinstall": "npm run migrate"
   },
   "dependencies": {
     "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
@@ -23,7 +34,8 @@
     "nodemailer": "^6.9.7",
     "pdfkit": "^0.14.0",
     "pg": "^8.11.3",
-    "sequelize": "^6.35.0"
+    "sequelize": "^6.35.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "jest": "^29.7.0",

@@ -1,162 +1,221 @@
-const csv = require('csv-parser');
-const fs = require('fs');
+const fs = require('fs').promises;
 const { BatSpeedData, ExitVelocityData } = require('../models');
 
 class CSVParser {
   /**
-   * Parse Blast CSV file (bat speed data)
+   * Parse Blast CSV file (bat speed data) using direct column indexing
    * @param {string} filePath - Path to the CSV file
-   * @param {number} sessionId - Database session ID
+   * @param {number} sessionId - Database session ID (can be null for initial parsing)
+   * @param {Object} transaction - Sequelize transaction object
    * @returns {Promise<Object>} - Parsed data summary
    */
-  static async parseBlastCSV(filePath, sessionId) {
-    return new Promise((resolve, reject) => {
+  static async parseBlastCSV(filePath, sessionId, transaction = null) {
+    try {
+      console.log('Starting Blast CSV parsing:', filePath);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const lines = fileContent.split('\n').filter(line => line.trim());
+      
+      console.log(`Total lines in file: ${lines.length}`);
+      console.log('First 10 lines:', lines.slice(0, 10));
+      
       const results = [];
-      let rowCount = 0;
-      let skippedRows = 0;
-      let errorCount = 0;
-
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (row) => {
-          rowCount++;
+      let dataStartRow = -1;
+      
+      // Find where actual data starts (look for first row with mostly numbers)
+      for (let i = 0; i < Math.min(lines.length, 20); i++) {
+        const columns = lines[i].split(',');
+        let numericCount = 0;
+        
+        // Check columns 7, 10, and 14 for numeric values
+        if (columns.length >= 15) {
+          if (!isNaN(parseFloat(columns[7]))) numericCount++;
+          if (!isNaN(parseFloat(columns[10]))) numericCount++;
+          if (!isNaN(parseFloat(columns[14]))) numericCount++;
           
-          // Skip first 8 rows as per existing Python code
-          if (rowCount <= 8) {
-            skippedRows++;
-            return;
+          if (numericCount >= 2) {
+            dataStartRow = i;
+            console.log(`Data starts at row ${i + 1}`);
+            break;
           }
-
-          try {
-            // Extract data from specific columns (0-indexed)
-            // Column H = index 7 (bat speed)
-            // Column K = index 10 (attack angle) 
-            // Column P = index 15 (time to contact)
-            
-            const batSpeed = this.parseNumericValue(row[Object.keys(row)[7]]);
-            const attackAngle = this.parseNumericValue(row[Object.keys(row)[10]]);
-            const timeToContact = this.parseNumericValue(row[Object.keys(row)[15]]);
-
-            // Only add row if we have at least bat speed data
-            if (batSpeed !== null) {
-              results.push({
-                session_id: sessionId,
-                bat_speed: batSpeed,
-                attack_angle: attackAngle,
-                time_to_contact: timeToContact
-              });
-            }
-          } catch (error) {
-            errorCount++;
-            console.warn(`Error parsing row ${rowCount}:`, error.message);
+        }
+      }
+      
+      if (dataStartRow === -1) {
+        throw new Error('Could not find data rows in Blast CSV');
+      }
+      
+      // Process data rows
+      for (let i = dataStartRow; i < lines.length; i++) {
+        const columns = lines[i].split(',').map(col => col.trim());
+        
+        if (columns.length < 15) {
+          console.log(`Skipping row ${i + 1}: insufficient columns (${columns.length})`);
+          continue;
+        }
+        
+        const batSpeed = parseFloat(columns[7]);
+        const attackAngle = parseFloat(columns[10]);
+        const timeToContact = parseFloat(columns[14]);
+        
+        console.log(`Row ${i + 1}: BatSpeed=${columns[7]}, AttackAngle=${columns[10]}, TimeToContact=${columns[14]}`);
+        
+        if (!isNaN(batSpeed) && !isNaN(attackAngle) && !isNaN(timeToContact)) {
+          const dataRow = {
+            bat_speed: batSpeed,
+            attack_angle: attackAngle,
+            time_to_contact: timeToContact
+          };
+          
+          // Add session_id if provided
+          if (sessionId) {
+            dataRow.session_id = sessionId;
           }
-        })
-        .on('end', async () => {
-          try {
-            // Save to database
-            if (results.length > 0) {
-              await BatSpeedData.bulkCreate(results);
-            }
-
-            const summary = {
-              totalRows: rowCount,
-              skippedRows: skippedRows,
-              parsedRows: results.length,
-              errorCount: errorCount,
-              data: results.slice(0, 5) // Return first 5 rows for preview
-            };
-
-            resolve(summary);
-          } catch (error) {
-            reject(new Error(`Database save failed: ${error.message}`));
+          
+          results.push(dataRow);
+        } else {
+          console.log(`Skipping row ${i + 1}: invalid numeric values`);
+        }
+      }
+      
+      console.log(`Successfully parsed ${results.length} Blast records`);
+      if (results.length > 0) {
+        console.log('Sample data:', JSON.stringify(results.slice(0, 3), null, 2));
+        
+        // Only save to database if sessionId is provided
+        if (sessionId && results.length > 0) {
+          const chunkSize = 300;
+          for (let i = 0; i < results.length; i += chunkSize) {
+            const chunk = results.slice(i, i + chunkSize);
+            await BatSpeedData.bulkCreate(chunk, {
+              transaction,
+              validate: true
+            });
           }
-        })
-        .on('error', (error) => {
-          reject(new Error(`CSV parsing failed: ${error.message}`));
-        });
-    });
+        }
+      }
+      
+      return {
+        totalRows: lines.length,
+        skippedRows: lines.length - results.length,
+        parsedRows: results.length,
+        errorCount: 0,
+        data: results
+      };
+      
+    } catch (error) {
+      console.error('Blast CSV parsing error:', error);
+      throw error;
+    }
   }
 
   /**
-   * Parse Hittrax CSV file (exit velocity data)
+   * Parse Hittrax CSV file (exit velocity data) using direct column indexing
    * @param {string} filePath - Path to the CSV file
-   * @param {number} sessionId - Database session ID
+   * @param {number} sessionId - Database session ID (can be null for initial parsing)
+   * @param {Object} transaction - Sequelize transaction object
    * @returns {Promise<Object>} - Parsed data summary
    */
-  static async parseHittraxCSV(filePath, sessionId) {
-    return new Promise((resolve, reject) => {
+  static async parseHittraxCSV(filePath, sessionId, transaction = null) {
+    try {
+      console.log('Starting Hittrax CSV parsing:', filePath);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const lines = fileContent.split('\n').filter(line => line.trim());
+      
+      console.log(`Total lines in file: ${lines.length}`);
+      console.log('First 3 lines:', lines.slice(0, 3));
+      
       const results = [];
-      let rowCount = 0;
-      let errorCount = 0;
-
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (row) => {
-          rowCount++;
-
-          try {
-            // Extract data from specific columns (0-indexed)
-            // Column F = index 5 (strike zone)
-            // Column H = index 7 (exit velocity)
-            // Column I = index 8 (launch angle)
-            // Column J = index 9 (distance)
+      
+      // Hittrax starts from row 2 (index 1)
+      for (let i = 1; i < lines.length; i++) {
+        const columns = lines[i].split(',').map(col => col.trim());
+        
+        if (columns.length < 24) {
+          console.log(`Skipping row ${i + 1}: insufficient columns (${columns.length})`);
+          continue;
+        }
+        
+        const velo = parseFloat(columns[7]);    // Column H
+        const la = parseFloat(columns[8]);      // Column I
+        const dist = parseFloat(columns[9]);    // Column J
+        const strikeZone = parseInt(columns[5]); // Column F
+        const horizAngle = parseFloat(columns[12]); // Column M - Horizontal Angle
+        const sprayChartX = parseFloat(columns[22]); // Column W - Spray Chart X
+        const sprayChartZ = parseFloat(columns[23]); // Column X - Spray Chart Z
+        
+        console.log(`Row ${i + 1}: Velo=${columns[7]}, LA=${columns[8]}, Dist=${columns[9]}, HorizAngle=${columns[12]}, SprayX=${columns[22]}, SprayZ=${columns[23]}`);
+        
+        if (!isNaN(velo) && !isNaN(la) && !isNaN(dist) && velo > 0) {
+          const dataRow = {
+            strike_zone: isNaN(strikeZone) ? null : strikeZone,
+            exit_velocity: velo,
+            launch_angle: la,
+            distance: dist,
+            horiz_angle: isNaN(horizAngle) ? null : horizAngle,
+            spray_chart_x: isNaN(sprayChartX) ? null : sprayChartX,
+            spray_chart_z: isNaN(sprayChartZ) ? null : sprayChartZ
+          };
+          // Debug log for distance and strike_zone
+          console.log(`[DEBUG] Parsed row: distance=${dist}, strike_zone=${strikeZone}`);
+          // Add session_id if provided
+          if (sessionId) {
+            dataRow.session_id = sessionId;
+          }
+          results.push(dataRow);
+        }
+      }
+      
+      console.log(`Successfully parsed ${results.length} Hittrax records`);
+      if (results.length > 0) {
+        console.log('Sample data:', JSON.stringify(results.slice(0, 3), null, 2));
+        
+        // Only save to database if sessionId is provided
+        if (sessionId && results.length > 0) {
+          console.log(`🔍 DEBUG: About to save ${results.length} records to database`);
+          console.log(`🔍 DEBUG: First 5 records:`, JSON.stringify(results.slice(0, 5), null, 2));
+          
+          const chunkSize = 300;
+          for (let i = 0; i < results.length; i += chunkSize) {
+            const chunk = results.slice(i, i + chunkSize);
+            console.log(`🔍 DEBUG: Processing chunk ${Math.floor(i/chunkSize) + 1}, size: ${chunk.length}`);
             
-            const strikeZone = this.parseNumericValue(row[Object.keys(row)[5]]);
-            const exitVelocity = this.parseNumericValue(row[Object.keys(row)[7]]);
-            const launchAngle = this.parseNumericValue(row[Object.keys(row)[8]]);
-            const distance = this.parseNumericValue(row[Object.keys(row)[9]]);
-
-            // Only add row if we have exit velocity data
-            if (exitVelocity !== null && exitVelocity > 0) {
-              results.push({
-                session_id: sessionId,
-                strike_zone: strikeZone,
-                exit_velocity: exitVelocity,
-                launch_angle: launchAngle,
-                distance: distance
+            try {
+              const inserted = await ExitVelocityData.bulkCreate(chunk, {
+                transaction,
+                validate: false,
+                logging: console.log
               });
+              console.log(`🔍 DEBUG: Successfully inserted ${inserted.length} records in this chunk`);
+            } catch (error) {
+              console.error(`🔍 DEBUG: Error inserting chunk:`, error);
+              throw error;
             }
-          } catch (error) {
-            errorCount++;
-            console.warn(`Error parsing row ${rowCount}:`, error.message);
           }
-        })
-        .on('end', async () => {
-          try {
-            // Save to database
-            if (results.length > 0) {
-              await ExitVelocityData.bulkCreate(results);
-            }
-
-            const summary = {
-              totalRows: rowCount,
-              parsedRows: results.length,
-              errorCount: errorCount,
-              data: results.slice(0, 5) // Return first 5 rows for preview
-            };
-
-            resolve(summary);
-          } catch (error) {
-            reject(new Error(`Database save failed: ${error.message}`));
-          }
-        })
-        .on('error', (error) => {
-          reject(new Error(`CSV parsing failed: ${error.message}`));
-        });
-    });
+          console.log(`🔍 DEBUG: Total records processed: ${results.length}`);
+        }
+      }
+      
+      return {
+        totalRows: lines.length,
+        parsedRows: results.length,
+        errorCount: 0,
+        data: results
+      };
+      
+    } catch (error) {
+      console.error('Hittrax CSV parsing error:', error);
+      throw error;
+    }
   }
 
   /**
-   * Parse numeric value with error handling
-   * @param {string} value - Raw value from CSV
+   * Parse numeric value from string
+   * @param {string} value - String value to parse
    * @returns {number|null} - Parsed number or null if invalid
    */
   static parseNumericValue(value) {
-    if (!value || value === '' || value === 'null' || value === 'undefined') {
-      return null;
-    }
-
-    const parsed = parseFloat(value);
+    if (!value || value.trim() === '') return null;
+    const parsed = parseFloat(value.trim());
     return isNaN(parsed) ? null : parsed;
   }
 
@@ -167,31 +226,23 @@ class CSVParser {
    * @returns {Promise<boolean>} - True if valid
    */
   static async validateCSVStructure(filePath, type) {
-    return new Promise((resolve, reject) => {
-      const headers = [];
-      let isValid = false;
-
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (row) => {
-          if (headers.length === 0) {
-            headers.push(...Object.keys(row));
-          }
-        })
-        .on('end', () => {
-          if (type === 'blast') {
-            // Blast CSV should have at least 16 columns (0-15)
-            isValid = headers.length >= 16;
-          } else if (type === 'hittrax') {
-            // Hittrax CSV should have at least 10 columns (0-9)
-            isValid = headers.length >= 10;
-          }
-          resolve(isValid);
-        })
-        .on('error', (error) => {
-          reject(new Error(`CSV validation failed: ${error.message}`));
-        });
-    });
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const lines = fileContent.split('\n').filter(line => line.trim());
+      
+      if (type === 'blast') {
+        // Blast CSV should have at least 15 columns in data rows
+        return lines.length > 0;
+      } else if (type === 'hittrax') {
+        // Hittrax CSV should have at least 10 columns
+        return lines.length > 1;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error(`${type} CSV validation error:`, error);
+      return false;
+    }
   }
 }
 

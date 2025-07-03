@@ -16,7 +16,8 @@ const testCSVProcessing = async () => {
       name: 'Test Player',
       age: 16,
       travel_team: 'Test Team',
-      high_school: 'Test High School'
+      high_school: 'Test High School',
+      player_code: Math.floor(1000 + Math.random() * 9000).toString()
     });
     
     // Create a test session

@@ -2,33 +2,92 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const multer = require('multer');
+const rateLimit = require('express-rate-limit');
 const upload = require('./middleware/upload');
 const { authenticateToken } = require('./middleware/auth');
+const validateCsvParams = require('./middleware/validateCsvParams');
 const UploadController = require('./controllers/uploadController');
 const AuthController = require('./controllers/authController');
 const PlayerController = require('./controllers/playerController');
+const SessionController = require('./controllers/sessionController');
+const AnalyticsController = require('./controllers/analyticsController');
 require('dotenv').config();
+const { sequelize } = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
-app.use(helmet());
-app.use(express.json());
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", process.env.FRONTEND_URL || "http://localhost:5173"]
+    }
+  }
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', limiter);
+
+// Stricter rate limiting for auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: 'Too many authentication attempts, please try again later.',
+});
+
+app.use('/api/auth/', authLimiter);
+
+// CORS configuration
+let allowedOrigins;
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.FRONTEND_URL) {
+    throw new Error('FRONTEND_URL must be set in production for CORS');
+  }
+  allowedOrigins = [process.env.FRONTEND_URL];
+} else {
+  allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
+}
+const corsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+// REMINDER: Set FRONTEND_URL in your production environment variables to your deployed frontend domain.
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'API is healthy!' });
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'API is healthy!',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Authentication routes
-app.post('/api/auth/register', AuthController.register);
-app.post('/api/auth/login', AuthController.login);
+const authRouter = require('./controllers/authController');
+app.use('/api/auth', authRouter);
 
 // Protected routes
-app.get('/api/auth/profile', authenticateToken, AuthController.getProfile);
-app.put('/api/auth/profile', authenticateToken, AuthController.updateProfile);
+// app.get('/api/auth/profile', authenticateToken, AuthController.getProfile);
+// app.put('/api/auth/profile', authenticateToken, AuthController.updateProfile);
 
 // Player management routes (protected)
 app.post('/api/players', authenticateToken, PlayerController.createPlayer);
@@ -37,11 +96,42 @@ app.get('/api/players/:id', authenticateToken, PlayerController.getPlayer);
 app.put('/api/players/:id', authenticateToken, PlayerController.updatePlayer);
 app.delete('/api/players/:id', authenticateToken, PlayerController.deletePlayer);
 app.get('/api/players/:id/stats', authenticateToken, PlayerController.getPlayerStats);
-app.get('/api/players/:playerId/sessions', authenticateToken, PlayerController.getSessionHistory);
+
+// Session management routes (protected)
+app.get('/api/players/:playerId/sessions', authenticateToken, SessionController.getPlayerSessions);
+app.post('/api/sessions', authenticateToken, SessionController.createSession);
+app.patch('/api/sessions/:sessionId', authenticateToken, SessionController.updateSession);
+app.delete('/api/sessions/:sessionId', authenticateToken, SessionController.deleteSession);
+app.get('/api/sessions/:sessionId', authenticateToken, SessionController.getSessionDetails);
+app.get('/api/sessions/:sessionId/report', authenticateToken, SessionController.downloadSessionReport);
+app.get('/api/sessions/:sessionId/report-data', authenticateToken, SessionController.getSessionReportData);
+app.get('/api/sessions/:sessionId/swings', authenticateToken, SessionController.getSessionSwings);
+
+// Analytics routes (protected)
+app.get('/api/sessions/compare', authenticateToken, AnalyticsController.compareSessions);
+app.get('/api/sessions/:sessionId/swings', authenticateToken, AnalyticsController.getSessionSwings);
+app.put('/api/sessions/:sessionId/category', authenticateToken, AnalyticsController.updateSessionCategory);
+app.get('/api/players/:playerId/sessions', authenticateToken, AnalyticsController.getPlayerSessions);
+app.get('/api/players/:playerId/swings', authenticateToken, AnalyticsController.getPlayerSwings);
+app.get('/api/players/:playerId/analytics', authenticateToken, AnalyticsController.getPlayerAnalytics);
+
+// Advanced analytics routes (protected)
+app.get('/api/analytics/players/:playerId/trends', authenticateToken, AnalyticsController.getPlayerTrends);
+app.get('/api/analytics/players/:playerId/benchmarks', authenticateToken, AnalyticsController.getPlayerBenchmarks);
+app.get('/api/analytics/players/:playerId/progress', authenticateToken, AnalyticsController.getPlayerProgress);
+app.get('/api/analytics/players/:playerId/filter-options', authenticateToken, AnalyticsController.getFilterOptions);
 
 // Upload routes (protected)
-app.post('/api/upload/blast', authenticateToken, upload.single('file'), UploadController.uploadBlast);
-app.post('/api/upload/hittrax', authenticateToken, upload.single('file'), UploadController.uploadHittrax);
+app.post('/api/upload/blast', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadBlast);
+app.post('/api/upload/hittrax', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadHittrax);
+
+// Analytics routes
+app.get('/api/analytics/sessions/:sessionId/swings', AnalyticsController.getSessionSwings);
+app.put('/api/analytics/sessions/:sessionId/category', AnalyticsController.updateSessionCategory);
+app.get('/api/analytics/players/:playerId/sessions', AnalyticsController.getPlayerSessions);
+app.get('/api/analytics/players/:playerId/swings', AnalyticsController.getPlayerSwings);
+app.get('/api/analytics/players/:playerId/analytics', AnalyticsController.getPlayerAnalytics);
+app.post('/api/analytics/compare-sessions', AnalyticsController.compareSessions);
 
 // Error handling middleware
 app.use((error, req, res, next) => {
@@ -55,12 +145,46 @@ app.use((error, req, res, next) => {
   }
   
   console.error('Server error:', error);
+  
+  /* dev-mode detailed errors */
+  if (process.env.NODE_ENV === 'development') {
+    return res.status(500).json({ 
+      error: error.message, 
+      sql: error.parent?.sql,
+      stack: error.stack 
+    });
+  }
+  
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// Initialize database and start server
+async function initializeApp() {
+  try {
+    // Test database connection
+    await sequelize.authenticate();
+    console.log('✅ Database connection established successfully.');
+    
+    // Sync database
+    await sequelize.sync();
+    console.log('✅ Database synced successfully.');
+    
+    // Force enable foreign keys
+    await sequelize.query('PRAGMA foreign_keys = ON');
+    const [fkResult] = await sequelize.query('PRAGMA foreign_keys');
+    console.log('Foreign key enforcement:', fkResult.foreign_keys === 1 ? 'ENABLED' : 'DISABLED');
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to initialize app:', error);
+    process.exit(1);
+  }
+}
+
+// Start the application
+initializeApp();
 
 module.exports = app; 

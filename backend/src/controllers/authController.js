@@ -1,4 +1,8 @@
 const AuthService = require('../services/authService');
+const jwt = require('jsonwebtoken');
+const express = require('express');
+const router = express.Router();
+const { authenticateToken } = require('../middleware/auth');
 
 class AuthController {
   /**
@@ -37,9 +41,16 @@ class AuthController {
         role
       });
 
+      const token = jwt.sign({ userId: result.user.id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
       res.status(201).json({
         message: 'User registered successfully',
-        ...result
+        token,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          role: result.user.role
+        }
       });
 
     } catch (error) {
@@ -65,10 +76,20 @@ class AuthController {
       }
 
       const result = await AuthService.loginUser({ email, password });
+      console.log('[LOGIN DEBUG] result.user:', result.user);
+      if (!result.user || !result.user.id) {
+        console.error('[LOGIN ERROR] User object missing or id is null:', result.user);
+        return res.status(401).json({ error: 'Login failed: user not found or id is null' });
+      }
 
+      const token = jwt.sign({ userId: result.user.id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
       res.status(200).json({
         message: 'Login successful',
-        ...result
+        token,
+        user: {
+          id: result.user.id,
+          email: result.user.email
+        }
       });
 
     } catch (error) {
@@ -151,4 +172,19 @@ class AuthController {
   }
 }
 
-module.exports = AuthController; 
+router.get('/verify', authenticateToken, (req, res) => {
+  if (req.user) {
+    res.json({ user: req.user });
+  } else {
+    res.status(401).json({ error: 'No user found in token' });
+  }
+});
+
+router.post('/login', AuthController.login);
+router.post('/register', AuthController.register);
+
+router.get('/test', authenticateToken, (req, res) => {
+  res.json({ success: true, user: req.user });
+});
+
+module.exports = router; 

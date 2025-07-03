@@ -7,14 +7,19 @@ class PlayerController {
    */
   static async createPlayer(req, res) {
     try {
-      const { name, age, travel_team, high_school, position, graduation_year } = req.body;
+      const { age, travel_team, high_school, little_league, college, position, graduation_year } = req.body;
+      const userId = req.user.id;
 
-      // Validate required fields
-      if (!name) {
-        return res.status(400).json({ 
-          error: 'Player name is required' 
+      // Get the user's name from their profile
+      const user = await require('../models').User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ 
+          error: 'User not found' 
         });
       }
+
+      // Use the user's name as the player name
+      const name = user.name;
 
       // Validate age if provided
       if (age && (age < 8 || age > 25)) {
@@ -33,13 +38,36 @@ class PlayerController {
         }
       }
 
+      // Generate unique 4-digit player code
+      let playerCode;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      do {
+        playerCode = Math.floor(1000 + Math.random() * 9000).toString();
+        attempts++;
+        
+        // Check if code already exists
+        const existingPlayer = await Player.findOne({ where: { player_code: playerCode } });
+        if (!existingPlayer) break;
+        
+        if (attempts >= maxAttempts) {
+          return res.status(500).json({ 
+            error: 'Unable to generate unique player code' 
+          });
+        }
+      } while (true);
+
       const player = await Player.create({
         name,
         age,
         travel_team,
         high_school,
+        little_league,
+        college,
         position,
-        graduation_year
+        graduation_year,
+        player_code: playerCode
       });
 
       res.status(201).json({
@@ -60,6 +88,7 @@ class PlayerController {
    */
   static async getPlayers(req, res) {
     try {
+      console.log('🔍 getPlayers called with query:', req.query);
       const { page = 1, limit = 10, search, team, school } = req.query;
       const offset = (page - 1) * limit;
 
@@ -75,17 +104,17 @@ class PlayerController {
         whereClause.high_school = { [require('sequelize').Op.iLike]: `%${school}%` };
       }
 
+      console.log('🔍 Where clause:', whereClause);
+
       const { count, rows: players } = await Player.findAndCountAll({
         where: whereClause,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        order: [['name', 'ASC']],
-        include: [{
-          model: Session,
-          attributes: ['id', 'session_date', 'session_type'],
-          required: false
-        }]
+        order: [['name', 'ASC']]
       });
+
+      console.log(`📊 Found ${count} players, returning ${players.length} for current page`);
+      console.log('📋 Players:', players.map(p => ({ id: p.id, name: p.name, position: p.position })));
 
       res.status(200).json({
         players,
@@ -144,7 +173,7 @@ class PlayerController {
   static async updatePlayer(req, res) {
     try {
       const { id } = req.params;
-      const { name, age, travel_team, high_school, position, graduation_year } = req.body;
+      const { name, age, travel_team, high_school, little_league, college, position, graduation_year } = req.body;
 
       const player = await Player.findByPk(id);
       if (!player) {
@@ -175,6 +204,8 @@ class PlayerController {
         age: age !== undefined ? age : player.age,
         travel_team: travel_team !== undefined ? travel_team : player.travel_team,
         high_school: high_school !== undefined ? high_school : player.high_school,
+        little_league: little_league !== undefined ? little_league : player.little_league,
+        college: college !== undefined ? college : player.college,
         position: position !== undefined ? position : player.position,
         graduation_year: graduation_year !== undefined ? graduation_year : player.graduation_year
       });

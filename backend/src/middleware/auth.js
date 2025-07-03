@@ -1,4 +1,5 @@
 const AuthService = require('../services/authService');
+const jwt = require('jsonwebtoken');
 
 /**
  * Middleware to verify JWT token and add user to request
@@ -7,22 +8,29 @@ const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
+    console.log('[AUTH] Raw header:', authHeader);
+    console.log('[AUTH] Extracted token:', token);
     if (!token) {
       return res.status(401).json({ error: 'Access token required' });
     }
-
     // Verify token
-    const decoded = AuthService.verifyToken(token);
-    
+    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    let decoded;
+    try {
+      decoded = jwt.verify(token, secret);
+      console.log('[AUTH] Decoded token:', decoded);
+    } catch (err) {
+      console.error('[AUTH] Token verification error:', err);
+      return res.status(403).json({ error: 'Invalid or expired token', details: err.message });
+    }
     // Get user data
-    const user = await AuthService.getUserById(decoded.id);
-    
-    // Add user to request
+    const userId = decoded.userId;
+    console.log('[AUTH] Using userId for lookup:', userId);
+    const user = await AuthService.getUserById(userId);
     req.user = user;
     next();
   } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired token' });
+    return res.status(403).json({ error: 'Invalid or expired token', details: error.message });
   }
 };
 
