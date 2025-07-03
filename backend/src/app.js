@@ -178,14 +178,26 @@ async function initializeApp() {
     await sequelize.sync();
     console.log('✅ Database synced successfully.');
     
-    // Force enable foreign keys
-    await sequelize.query('PRAGMA foreign_keys = ON');
-    const [fkResult] = await sequelize.query('PRAGMA foreign_keys');
-    console.log('Foreign key enforcement:', fkResult.foreign_keys === 1 ? 'ENABLED' : 'DISABLED');
+    // Handle foreign key enforcement based on database type
+    if (process.env.NODE_ENV === 'production') {
+      // PostgreSQL: Foreign keys are enforced by default, no PRAGMA needed
+      console.log('🔗 PostgreSQL: Foreign key enforcement is enabled by default');
+    } else {
+      // SQLite: Enable foreign key enforcement
+      try {
+        await sequelize.query('PRAGMA foreign_keys = ON');
+        const [fkResult] = await sequelize.query('PRAGMA foreign_keys');
+        console.log('🔗 SQLite: Foreign key enforcement:', fkResult.foreign_keys === 1 ? 'ENABLED' : 'DISABLED');
+      } catch (error) {
+        console.log('⚠️  Could not enable SQLite foreign keys:', error.message);
+      }
+    }
     
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Database: ${process.env.NODE_ENV === 'production' ? 'PostgreSQL' : 'SQLite'}`);
     });
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);

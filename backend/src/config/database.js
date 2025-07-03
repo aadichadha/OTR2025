@@ -48,17 +48,19 @@ if (process.env.NODE_ENV === 'production') {
     isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
   });
 
-  // Always enable foreign key enforcement for SQLite
-  sequelize
-    .getQueryInterface()
-    .sequelize
-    .query('PRAGMA foreign_keys = ON;')
-    .then(() => {
-      console.log('✅ SQLite foreign key enforcement enabled.');
-    })
-    .catch((err) => {
-      console.error('❌ Failed to enable SQLite foreign key enforcement:', err);
-    });
+  // Enable foreign key enforcement for SQLite (only in development)
+  if (process.env.NODE_ENV !== 'production') {
+    sequelize
+      .getQueryInterface()
+      .sequelize
+      .query('PRAGMA foreign_keys = ON;')
+      .then(() => {
+        console.log('✅ SQLite foreign key enforcement enabled.');
+      })
+      .catch((err) => {
+        console.error('❌ Failed to enable SQLite foreign key enforcement:', err);
+      });
+  }
 }
 
 // Test the connection
