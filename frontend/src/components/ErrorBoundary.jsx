@@ -1,11 +1,14 @@
 import React from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { 
+      hasError: false, 
+      error: null, 
+      errorInfo: null 
+    };
   }
 
   static getDerivedStateFromError(error) {
@@ -13,78 +16,61 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    console.error('[ERROR BOUNDARY] React error caught:', error);
+    console.error('[ERROR BOUNDARY] Error info:', errorInfo);
+    console.error('[ERROR BOUNDARY] Error stack:', error.stack);
+    console.error('[ERROR BOUNDARY] Component stack:', errorInfo.componentStack);
+    
     this.setState({
       error: error,
       errorInfo: errorInfo
     });
-    
-    // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by boundary:', error, errorInfo);
-    }
-    
-    // In production, you could send this to an error reporting service
-    // like Sentry
   }
-
-  handleReload = () => {
-    window.location.reload();
-  };
 
   render() {
     if (this.state.hasError) {
       return (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="100vh"
-          bgcolor="#f5f5f5"
-        >
-          <Paper
-            elevation={3}
-            sx={{
-              p: 4,
-              maxWidth: 500,
-              textAlign: 'center',
-              borderRadius: 3
-            }}
+        <Paper sx={{ p: 4, m: 2, bgcolor: '#fff3cd', border: '1px solid #ffeaa7' }}>
+          <Typography variant="h5" color="error" gutterBottom>
+            🚨 Application Error Detected
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Something went wrong in the application. This error has been logged to the console.
+          </Typography>
+          
+          {this.state.error && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>Error Details:</Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', bgcolor: '#f8f9fa', p: 1, borderRadius: 1 }}>
+                {this.state.error.toString()}
+              </Typography>
+            </Box>
+          )}
+          
+          {this.state.errorInfo && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>Component Stack:</Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', bgcolor: '#f8f9fa', p: 1, borderRadius: 1, fontSize: '0.8rem' }}>
+                {this.state.errorInfo.componentStack}
+              </Typography>
+            </Box>
+          )}
+          
+          <Button 
+            variant="contained" 
+            onClick={() => window.location.reload()}
+            sx={{ mr: 1 }}
           >
-            <ErrorIcon sx={{ fontSize: 60, color: '#d32f2f', mb: 2 }} />
-            <Typography variant="h5" color="#d32f2f" gutterBottom>
-              Something went wrong
-            </Typography>
-            <Typography variant="body1" color="text.secondary" mb={3}>
-              We're sorry, but something unexpected happened. Please try refreshing the page.
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={this.handleReload}
-              sx={{
-                bgcolor: '#1976d2',
-                '&:hover': { bgcolor: '#1565c0' }
-              }}
-            >
-              Refresh Page
-            </Button>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <Box mt={3} textAlign="left">
-                <Typography variant="h6" gutterBottom>
-                  Error Details (Development Only):
-                </Typography>
-                <Typography variant="body2" component="pre" sx={{ 
-                  bgcolor: '#f5f5f5', 
-                  p: 2, 
-                  borderRadius: 1,
-                  overflow: 'auto',
-                  fontSize: '0.75rem'
-                }}>
-                  {this.state.error.toString()}
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Box>
+            Reload Page
+          </Button>
+          
+          <Button 
+            variant="outlined" 
+            onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+          >
+            Try Again
+          </Button>
+        </Paper>
       );
     }
 

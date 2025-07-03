@@ -44,13 +44,59 @@ const formatMetricValue = (value, decimals = 1) => {
 };
 
 function ReportDisplay({ report }) {
-  if (!report) return null;
+  // COMPREHENSIVE DEBUGGING FOR LOCAL vs VERCEL
+  console.log('[REPORT DISPLAY DEBUG] ===== COMPONENT RENDER START =====');
+  console.log('[REPORT DISPLAY DEBUG] Raw report prop:', report);
+  console.log('[REPORT DISPLAY DEBUG] Type of report:', typeof report);
+  console.log('[REPORT DISPLAY DEBUG] Report keys:', Object.keys(report || {}));
+  
+  if (!report) {
+    console.error('[REPORT DISPLAY ERROR] No report data provided!');
+    return <div>ERROR: No report data provided</div>;
+  }
+
   const metrics = report.metrics?.exitVelocity || report.metrics?.batSpeed;
+  console.log('[REPORT DISPLAY DEBUG] Metrics object:', metrics);
+  console.log('[REPORT DISPLAY DEBUG] Metrics type:', typeof metrics);
+  console.log('[REPORT DISPLAY DEBUG] Metrics keys:', Object.keys(metrics || {}));
+  
   const isBlast = !!report.metrics?.batSpeed;
   const isHittrax = !!report.metrics?.exitVelocity;
+  console.log('[REPORT DISPLAY DEBUG] Is Blast:', isBlast);
+  console.log('[REPORT DISPLAY DEBUG] Is Hittrax:', isHittrax);
+  
   const player = report.player || {};
   const session = report.session || {};
   const history = report.history || [];
+  
+  console.log('[REPORT DISPLAY DEBUG] Player data:', player);
+  console.log('[REPORT DISPLAY DEBUG] Session data:', session);
+  console.log('[REPORT DISPLAY DEBUG] History length:', history.length);
+  
+  // Specific debugging for exit velocity metrics
+  if (isHittrax && metrics) {
+    console.log('[REPORT DISPLAY DEBUG] Exit velocity metrics:', {
+      avgExitVelocity: metrics.avgExitVelocity,
+      maxExitVelocity: metrics.maxExitVelocity,
+      dataPoints: metrics.dataPoints,
+      hotZoneEVs: metrics.hotZoneEVs
+    });
+    console.log('[REPORT DISPLAY DEBUG] Hot zone EVs:', metrics.hotZoneEVs);
+    console.log('[REPORT DISPLAY DEBUG] Hot zone EVs type:', typeof metrics.hotZoneEVs);
+    console.log('[REPORT DISPLAY DEBUG] Hot zone EVs keys:', Object.keys(metrics.hotZoneEVs || {}));
+  }
+  
+  // Specific debugging for bat speed metrics
+  if (isBlast && metrics) {
+    console.log('[REPORT DISPLAY DEBUG] Bat speed metrics:', {
+      avgBatSpeed: metrics.avgBatSpeed,
+      top10PercentBatSpeed: metrics.top10PercentBatSpeed,
+      dataPoints: metrics.dataPoints
+    });
+  }
+  
+  console.log('[REPORT DISPLAY DEBUG] ===== COMPONENT RENDER END =====');
+
   // PDF header style
   return (
     <Box sx={{ bgcolor: '#f8f9fa', borderRadius: 3, boxShadow: '0 2px 12px rgba(28,44,77,0.07)', p: 0, overflow: 'hidden' }}>
