@@ -1,4 +1,4 @@
 {
-  "buildCommand": "npm ci && npm run build:simple",
-  "installCommand": "npm ci --legacy-peer-deps"
+  "buildCommand": "npm install --legacy-peer-deps && npm run build:simple",
+  "installCommand": "npm install --legacy-peer-deps"
 } 
