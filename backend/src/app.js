@@ -65,14 +65,15 @@ app.use('/api/auth/', authLimiter);
 // CORS configuration
 let allowedOrigins;
 if (process.env.NODE_ENV === 'production') {
-  // In production, use FRONTEND_URL if set, otherwise allow common frontend domains
+  // In production, use FRONTEND_URL if set, otherwise allow specific frontend domains
   const frontendUrl = process.env.FRONTEND_URL;
   if (frontendUrl) {
     allowedOrigins = [frontendUrl];
   } else {
-    // Fallback to common Vercel/Netlify domains if FRONTEND_URL not set
+    // Allow specific frontend domains
     allowedOrigins = [
       'https://otr-2025-frontend.vercel.app', // Your specific Vercel domain
+      'https://otr2025-frontend.vercel.app',  // Alternative format
       'https://*.vercel.app',
       'https://*.netlify.app',
       'https://*.onrender.com'
@@ -82,13 +83,53 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
 }
+
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        const pattern = allowed.replace('*', '.*');
+        return new RegExp(pattern).test(origin);
+      }
+      return allowed === origin;
+    })) {
+      callback(null, true);
+    } else {
+      console.log('🚫 CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'Cache-Control',
+    'Pragma'
+  ]
 };
+
 // REMINDER: Set FRONTEND_URL in your production environment variables to your deployed frontend domain.
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// CORS logging middleware (for debugging)
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🌐 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'No origin'}`);
+  }
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
