@@ -4,19 +4,44 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Database connection configuration
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'otr_database',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
-});
+let pool;
+
+if (process.env.NODE_ENV === 'production') {
+  // Production: Use DATABASE_URL from Render
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL is required in production environment');
+    process.exit(1);
+  }
+  
+  console.log('🔗 Using DATABASE_URL for production connection');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+} else {
+  // Development: Use individual environment variables or defaults
+  console.log('🔗 Using individual database config for development');
+  pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'otr_database',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'password',
+  });
+}
 
 async function runMigrations() {
-  const client = await pool.connect();
+  let client;
   
   try {
     console.log('🚀 Starting database migrations...');
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    // Test connection first
+    client = await pool.connect();
+    console.log('✅ Database connection established successfully');
     
     // Create migrations table if it doesn't exist
     await client.query(`
@@ -29,6 +54,12 @@ async function runMigrations() {
     
     // Get list of migration files
     const migrationsDir = path.join(__dirname, '../../database/migrations');
+    
+    if (!fs.existsSync(migrationsDir)) {
+      console.log('📁 No migrations directory found, skipping migrations');
+      return;
+    }
+    
     const migrationFiles = fs.readdirSync(migrationsDir)
       .filter(file => file.endsWith('.sql'))
       .sort(); // This will sort them numerically
@@ -78,6 +109,7 @@ async function runMigrations() {
             [migrationName]
           );
         } else {
+          console.error(`❌ Migration ${migrationName} failed:`, error.message);
           throw error;
         }
       }
@@ -101,10 +133,20 @@ async function runMigrations() {
     
   } catch (error) {
     console.error('❌ Migration failed:', error);
+    console.error('🔍 Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint
+    });
     throw error;
   } finally {
-    client.release();
-    await pool.end();
+    if (client) {
+      client.release();
+    }
+    if (pool) {
+      await pool.end();
+    }
   }
 }
 
