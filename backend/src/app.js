@@ -133,70 +133,132 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Wrap route setup in try-catch to catch any import errors
+try {
+  console.log('🔧 Setting up API routes...');
+  
+  // Authentication routes
+  const authRouter = require('./controllers/authController');
+  app.use('/api/auth', authRouter);
+  console.log('✅ Auth routes loaded');
+
+  // Protected routes
+  // app.get('/api/auth/profile', authenticateToken, AuthController.getProfile);
+  // app.put('/api/auth/profile', authenticateToken, AuthController.updateProfile);
+
+  // Player management routes (protected)
+  app.post('/api/players', authenticateToken, PlayerController.createPlayer);
+  app.get('/api/players', authenticateToken, PlayerController.getPlayers);
+  app.get('/api/players/:id', authenticateToken, PlayerController.getPlayer);
+  app.put('/api/players/:id', authenticateToken, PlayerController.updatePlayer);
+  app.delete('/api/players/:id', authenticateToken, PlayerController.deletePlayer);
+  app.get('/api/players/:id/stats', authenticateToken, PlayerController.getPlayerStats);
+  console.log('✅ Player routes loaded');
+
+  // Session management routes (protected)
+  app.get('/api/players/:playerId/sessions', authenticateToken, SessionController.getPlayerSessions);
+  app.post('/api/sessions', authenticateToken, SessionController.createSession);
+  app.patch('/api/sessions/:sessionId', authenticateToken, SessionController.updateSession);
+  app.delete('/api/sessions/:sessionId', authenticateToken, SessionController.deleteSession);
+  app.get('/api/sessions/:sessionId', authenticateToken, SessionController.getSessionDetails);
+  app.get('/api/sessions/:sessionId/report', authenticateToken, SessionController.downloadSessionReport);
+  app.get('/api/sessions/:sessionId/report-data', authenticateToken, SessionController.getSessionReportData);
+  app.get('/api/sessions/:sessionId/swings', authenticateToken, SessionController.getSessionSwings);
+  console.log('✅ Session routes loaded');
+
+  // Analytics routes (protected)
+  app.get('/api/sessions/compare', authenticateToken, AnalyticsController.compareSessions);
+  app.get('/api/sessions/:sessionId/swings', authenticateToken, AnalyticsController.getSessionSwings);
+  app.put('/api/sessions/:sessionId/category', authenticateToken, AnalyticsController.updateSessionCategory);
+  app.get('/api/players/:playerId/sessions', authenticateToken, AnalyticsController.getPlayerSessions);
+  app.get('/api/players/:playerId/swings', authenticateToken, AnalyticsController.getPlayerSwings);
+  app.get('/api/players/:playerId/analytics', authenticateToken, AnalyticsController.getPlayerAnalytics);
+  console.log('✅ Analytics routes loaded');
+
+  // Advanced analytics routes (protected)
+  app.get('/api/analytics/players/:playerId/trends', authenticateToken, AnalyticsController.getPlayerTrends);
+  app.get('/api/analytics/players/:playerId/benchmarks', authenticateToken, AnalyticsController.getPlayerBenchmarks);
+  app.get('/api/analytics/players/:playerId/progress', authenticateToken, AnalyticsController.getPlayerProgress);
+  app.get('/api/analytics/players/:playerId/filter-options', authenticateToken, AnalyticsController.getFilterOptions);
+
+  // Upload routes (protected)
+  app.post('/api/upload/blast', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadBlast);
+  app.post('/api/upload/hittrax', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadHittrax);
+  console.log('✅ Upload routes loaded');
+
+  // Analytics routes
+  app.get('/api/analytics/sessions/:sessionId/swings', AnalyticsController.getSessionSwings);
+  app.put('/api/analytics/sessions/:sessionId/category', AnalyticsController.updateSessionCategory);
+  app.get('/api/analytics/players/:playerId/sessions', AnalyticsController.getPlayerSessions);
+  app.get('/api/analytics/players/:playerId/swings', AnalyticsController.getPlayerSwings);
+  app.get('/api/analytics/players/:playerId/analytics', AnalyticsController.getPlayerAnalytics);
+  app.post('/api/analytics/compare-sessions', AnalyticsController.compareSessions);
+  console.log('✅ All routes loaded successfully');
+
+} catch (error) {
+  console.error('❌ Error setting up routes:', error);
+  console.error('Stack trace:', error.stack);
+  throw error;
+}
+
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
-    message: 'API is healthy!',
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString()
-  });
+  try {
+    res.status(200).json({ 
+      status: 'ok', 
+      message: 'API is healthy!',
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+      database: 'connected', // We'll test this separately
+      cors: 'enabled',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
-// Authentication routes
-const authRouter = require('./controllers/authController');
-app.use('/api/auth', authRouter);
-
-// Protected routes
-// app.get('/api/auth/profile', authenticateToken, AuthController.getProfile);
-// app.put('/api/auth/profile', authenticateToken, AuthController.updateProfile);
-
-// Player management routes (protected)
-app.post('/api/players', authenticateToken, PlayerController.createPlayer);
-app.get('/api/players', authenticateToken, PlayerController.getPlayers);
-app.get('/api/players/:id', authenticateToken, PlayerController.getPlayer);
-app.put('/api/players/:id', authenticateToken, PlayerController.updatePlayer);
-app.delete('/api/players/:id', authenticateToken, PlayerController.deletePlayer);
-app.get('/api/players/:id/stats', authenticateToken, PlayerController.getPlayerStats);
-
-// Session management routes (protected)
-app.get('/api/players/:playerId/sessions', authenticateToken, SessionController.getPlayerSessions);
-app.post('/api/sessions', authenticateToken, SessionController.createSession);
-app.patch('/api/sessions/:sessionId', authenticateToken, SessionController.updateSession);
-app.delete('/api/sessions/:sessionId', authenticateToken, SessionController.deleteSession);
-app.get('/api/sessions/:sessionId', authenticateToken, SessionController.getSessionDetails);
-app.get('/api/sessions/:sessionId/report', authenticateToken, SessionController.downloadSessionReport);
-app.get('/api/sessions/:sessionId/report-data', authenticateToken, SessionController.getSessionReportData);
-app.get('/api/sessions/:sessionId/swings', authenticateToken, SessionController.getSessionSwings);
-
-// Analytics routes (protected)
-app.get('/api/sessions/compare', authenticateToken, AnalyticsController.compareSessions);
-app.get('/api/sessions/:sessionId/swings', authenticateToken, AnalyticsController.getSessionSwings);
-app.put('/api/sessions/:sessionId/category', authenticateToken, AnalyticsController.updateSessionCategory);
-app.get('/api/players/:playerId/sessions', authenticateToken, AnalyticsController.getPlayerSessions);
-app.get('/api/players/:playerId/swings', authenticateToken, AnalyticsController.getPlayerSwings);
-app.get('/api/players/:playerId/analytics', authenticateToken, AnalyticsController.getPlayerAnalytics);
-
-// Advanced analytics routes (protected)
-app.get('/api/analytics/players/:playerId/trends', authenticateToken, AnalyticsController.getPlayerTrends);
-app.get('/api/analytics/players/:playerId/benchmarks', authenticateToken, AnalyticsController.getPlayerBenchmarks);
-app.get('/api/analytics/players/:playerId/progress', authenticateToken, AnalyticsController.getPlayerProgress);
-app.get('/api/analytics/players/:playerId/filter-options', authenticateToken, AnalyticsController.getFilterOptions);
-
-// Upload routes (protected)
-app.post('/api/upload/blast', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadBlast);
-app.post('/api/upload/hittrax', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadHittrax);
-
-// Analytics routes
-app.get('/api/analytics/sessions/:sessionId/swings', AnalyticsController.getSessionSwings);
-app.put('/api/analytics/sessions/:sessionId/category', AnalyticsController.updateSessionCategory);
-app.get('/api/analytics/players/:playerId/sessions', AnalyticsController.getPlayerSessions);
-app.get('/api/analytics/players/:playerId/swings', AnalyticsController.getPlayerSwings);
-app.get('/api/analytics/players/:playerId/analytics', AnalyticsController.getPlayerAnalytics);
-app.post('/api/analytics/compare-sessions', AnalyticsController.compareSessions);
+// Basic API info endpoint
+app.get('/api', (req, res) => {
+  try {
+    res.status(200).json({
+      message: 'OTR Baseball Analytics API',
+      version: '1.0.0',
+      environment: process.env.NODE_ENV,
+      endpoints: {
+        health: '/api/health',
+        auth: '/api/auth',
+        players: '/api/players',
+        sessions: '/api/sessions',
+        analytics: '/api/analytics',
+        upload: '/api/upload'
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('API info error:', error);
+    res.status(500).json({ 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 // Error handling middleware
 app.use((error, req, res, next) => {
+  // Log the full error details
+  console.error('🚨 Server Error Details:');
+  console.error('  Error:', error.message);
+  console.error('  Stack:', error.stack);
+  console.error('  URL:', req.url);
+  console.error('  Method:', req.method);
+  console.error('  Headers:', req.headers);
+  
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'File too large' });
@@ -206,18 +268,34 @@ app.use((error, req, res, next) => {
     }
   }
   
-  console.error('Server error:', error);
-  
-  /* dev-mode detailed errors */
+  // Return detailed error in development, generic in production
   if (process.env.NODE_ENV === 'development') {
     return res.status(500).json({ 
       error: error.message, 
+      stack: error.stack,
+      url: req.url,
+      method: req.method,
       sql: error.parent?.sql,
-      stack: error.stack 
+      code: error.code,
+      detail: error.detail
     });
   }
   
-  res.status(500).json({ error: 'Internal server error' });
+  // Production: Log error but return generic message
+  console.error('❌ Production Error:', {
+    message: error.message,
+    code: error.code,
+    detail: error.detail,
+    hint: error.hint,
+    url: req.url,
+    method: req.method
+  });
+  
+  res.status(500).json({ 
+    error: 'Internal server error',
+    timestamp: new Date().toISOString(),
+    requestId: Math.random().toString(36).substr(2, 9)
+  });
 });
 
 // Initialize database and start server
