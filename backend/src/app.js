@@ -58,42 +58,27 @@ const authLimiter = rateLimit({
 app.use('/api/auth/', authLimiter);
 
 // CORS configuration
-let allowedOrigins;
-if (process.env.NODE_ENV === 'production') {
-  // In production, use FRONTEND_URL if set, otherwise allow specific frontend domains
-  const frontendUrl = process.env.FRONTEND_URL;
-  if (frontendUrl) {
-    allowedOrigins = [frontendUrl];
-  } else {
-    // Allow specific frontend domains
-    allowedOrigins = [
-      'https://otr-2025-frontend.vercel.app', // Your specific Vercel domain
-      'https://otr2025-frontend.vercel.app',  // Alternative format
-      'https://*.vercel.app',
-      'https://*.netlify.app',
-      'https://*.onrender.com'
-    ];
-    console.log('⚠️  FRONTEND_URL not set, using fallback CORS origins');
-  }
-} else {
-  allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
-}
+const allowedOrigins = [
+  'https://otr-2025-frontend.vercel.app', // Your Vercel frontend domain
+  'http://localhost:5173', // Local development
+  'http://localhost:3000'  // Alternative local development
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('🌐 CORS: Allowing request with no origin');
+      return callback(null, true);
+    }
     
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.some(allowed => {
-      if (allowed.includes('*')) {
-        const pattern = allowed.replace('*', '.*');
-        return new RegExp(pattern).test(origin);
-      }
-      return allowed === origin;
-    })) {
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS: Allowing origin:', origin);
       callback(null, true);
     } else {
-      console.log('🚫 CORS blocked origin:', origin);
+      console.log('🚫 CORS: Blocking origin:', origin);
+      console.log('📋 Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -111,6 +96,8 @@ const corsOptions = {
   ]
 };
 
+console.log('🔧 CORS configured for origins:', allowedOrigins);
+
 // REMINDER: Set FRONTEND_URL in your production environment variables to your deployed frontend domain.
 app.use(cors(corsOptions));
 
@@ -119,9 +106,7 @@ app.options('*', cors(corsOptions));
 
 // CORS logging middleware (for debugging)
 app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`🌐 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'No origin'}`);
-  }
+  console.log(`🌐 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'No origin'}`);
   next();
 });
 
@@ -213,6 +198,24 @@ app.get('/api/health', (req, res) => {
     res.status(500).json({ 
       status: 'error', 
       message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// CORS test endpoint
+app.get('/api/cors-test', (req, res) => {
+  try {
+    res.status(200).json({ 
+      message: 'CORS is working!',
+      origin: req.headers.origin || 'No origin header',
+      allowedOrigins: allowedOrigins,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('CORS test error:', error);
+    res.status(500).json({ 
+      error: error.message,
       timestamp: new Date().toISOString()
     });
   }
