@@ -10,28 +10,13 @@ export default defineConfig({
     minify: 'terser',
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Separate MUI icons into their own chunk
-          if (id.includes('@mui/icons-material')) {
-            return 'mui-icons';
-          }
-          // Separate MUI core into its own chunk
-          if (id.includes('@mui/material') && !id.includes('@mui/icons-material')) {
-            return 'mui-core';
-          }
-          // Separate React into its own chunk
-          if (id.includes('react') || id.includes('react-dom')) {
-            return 'react-vendor';
-          }
-          // Separate charts into their own chunk
-          if (id.includes('recharts') || id.includes('d3')) {
-            return 'charts';
-          }
-          // Everything else goes to main
-          return 'main';
+        // Simple chunking strategy that's more stable
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'mui-vendor': ['@mui/material', '@mui/icons-material'],
+          'charts-vendor': ['recharts']
         }
       },
-      external: [],
       onwarn(warning, warn) {
         // Ignore clsx warning
         if (warning.code === 'UNRESOLVED_IMPORT' && warning.message.includes('clsx')) {
@@ -44,8 +29,8 @@ export default defineConfig({
         warn(warning);
       }
     },
-    // Increase chunk size warning limit
-    chunkSizeWarningLimit: 2000
+    // Reasonable chunk size warning limit
+    chunkSizeWarningLimit: 1000
   },
   server: {
     port: 5173,
@@ -56,7 +41,6 @@ export default defineConfig({
     host: true
   },
   optimizeDeps: {
-    include: ['clsx'],
-    exclude: ['@mui/icons-material']
+    include: ['clsx']
   }
 })
