@@ -203,10 +203,28 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
       const response = await axios.get(`${API_URL}/players/${player.id}/sessions`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSessions(response.data.sessions || []);
+      
+      // Handle both old and new response formats
+      let sessionsData = [];
+      if (response.data.success && response.data.data) {
+        // New format
+        sessionsData = response.data.data;
+      } else if (response.data.sessions) {
+        // Old format
+        sessionsData = response.data.sessions;
+      } else if (Array.isArray(response.data)) {
+        // Direct array format
+        sessionsData = response.data;
+      }
+      
+      console.log('[DEBUG] Sessions response:', response.data);
+      console.log('[DEBUG] Processed sessions:', sessionsData);
+      
+      setSessions(sessionsData);
     } catch (err) {
       setError('Failed to load sessions');
       console.error('Error fetching sessions:', err);
+      console.error('Response:', err.response?.data);
     } finally {
       setLoading(false);
     }
