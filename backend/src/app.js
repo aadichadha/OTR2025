@@ -15,7 +15,18 @@ require('dotenv').config();
 const { sequelize } = require('./config/database');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+
+// Parse and validate PORT
+const parsePort = (portStr) => {
+  const port = parseInt(portStr);
+  if (isNaN(port) || port < 0 || port > 65535) {
+    console.warn(`⚠️  Invalid PORT value: ${portStr}, using default port 3001`);
+    return 3001;
+  }
+  return port;
+};
+
+const PORT = parsePort(process.env.PORT) || 3001;
 
 // Security middleware
 app.use(helmet({
@@ -195,9 +206,10 @@ async function initializeApp() {
     
     // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 Database: ${process.env.NODE_ENV === 'production' ? 'PostgreSQL' : 'SQLite'}`);
+      console.log(`📡 API available at: ${process.env.NODE_ENV === 'production' ? `https://your-app.onrender.com` : `http://localhost:${PORT}`}`);
     });
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);
