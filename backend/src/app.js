@@ -28,18 +28,11 @@ const parsePort = (portStr) => {
 
 const PORT = parsePort(process.env.PORT) || 3001;
 
-// Security middleware
+// Security middleware - simplified to prevent header errors
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      connectSrc: ["'self'", process.env.FRONTEND_URL || "http://localhost:5173"]
-    }
-  }
+  contentSecurityPolicy: false, // Disable CSP temporarily to prevent header errors
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // Rate limiting
