@@ -1,19 +1,10 @@
 {
   "buildCommand": "npm install --legacy-peer-deps && npm run build:simple",
   "installCommand": "npm install --legacy-peer-deps",
-  "functions": {
-    "app.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/index.html"
     }
   ]
 } 
