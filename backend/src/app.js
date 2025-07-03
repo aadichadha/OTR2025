@@ -28,12 +28,14 @@ const parsePort = (portStr) => {
 
 const PORT = parsePort(process.env.PORT) || 3001;
 
-// Security middleware - simplified to prevent header errors
-app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP temporarily to prevent header errors
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+// Security middleware - DISABLED temporarily to fix CSP header errors
+// app.use(helmet({
+//   contentSecurityPolicy: false, // Disable CSP temporarily to prevent header errors
+//   crossOriginEmbedderPolicy: false,
+//   crossOriginResourcePolicy: { policy: "cross-origin" }
+// }));
+
+// TODO: Re-enable Helmet with proper CSP configuration once API is working
 
 // Rate limiting
 const limiter = rateLimit({
