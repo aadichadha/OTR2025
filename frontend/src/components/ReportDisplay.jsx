@@ -60,10 +60,26 @@ function ReportDisplay({ report }) {
   console.log('[REPORT DISPLAY DEBUG] Metrics type:', typeof metrics);
   console.log('[REPORT DISPLAY DEBUG] Metrics keys:', Object.keys(metrics || {}));
   
+  // Validate metrics data
+  if (!metrics) {
+    console.error('[REPORT DISPLAY ERROR] No metrics found in report!');
+    return <div>ERROR: No metrics data found in report</div>;
+  }
+  
   const isBlast = !!report.metrics?.batSpeed;
   const isHittrax = !!report.metrics?.exitVelocity;
   console.log('[REPORT DISPLAY DEBUG] Is Blast:', isBlast);
   console.log('[REPORT DISPLAY DEBUG] Is Hittrax:', isHittrax);
+  
+  // Validate required fields for Hittrax
+  if (isHittrax) {
+    const requiredFields = ['avgExitVelocity', 'maxExitVelocity', 'dataPoints', 'hotZoneEVs'];
+    const missingFields = requiredFields.filter(field => !(field in metrics));
+    if (missingFields.length > 0) {
+      console.error('[REPORT DISPLAY ERROR] Missing required Hittrax fields:', missingFields);
+      console.error('[REPORT DISPLAY ERROR] Available fields:', Object.keys(metrics));
+    }
+  }
   
   const player = report.player || {};
   const session = report.session || {};
@@ -128,9 +144,9 @@ function ReportDisplay({ report }) {
           {isHittrax && (
             <>
               <MetricCard label="EXIT VELOCITY" value={metrics.avgExitVelocity} unit="Mph" />
-              <MetricCard label="LAUNCH ANGLE" value={metrics.avgLaunchAngleTop8} unit="Degrees" />
-              <MetricCard label="DISTANCE" value={metrics.avgDistanceTop8} unit="Feet" color="#1976d2" />
-              <MetricCard label="TOP 8% EV" value={metrics.top8PercentEV} unit="Mph" />
+              <MetricCard label="LAUNCH ANGLE" value={metrics.avgLaunchAngle} unit="Degrees" />
+              <MetricCard label="DISTANCE" value={metrics.avgDistance} unit="Feet" color="#1976d2" />
+              <MetricCard label="MAX EXIT VELOCITY" value={metrics.maxExitVelocity} unit="Mph" />
               <MetricCard label="TOTAL SWINGS" value={metrics.dataPoints} unit="Data Points" color="#1976d2" />
             </>
           )}
@@ -139,15 +155,15 @@ function ReportDisplay({ report }) {
         <Divider sx={{ my: 4 }} />
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#333', mb: 2 }}>Strike Zone Analysis</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-          <Box sx={{ border: '2px solid #333', width: 200, height: 150, position: 'relative', mb: 1 }}>
-            {/* Grid lines */}
+          <Box sx={{ border: '2px solid #333', width: 240, height: 180, position: 'relative', mb: 1 }}>
+            {/* Grid lines for 3x3 strike zone */}
             {[1,2].map(i => (
               <Box key={i} sx={{ position: 'absolute', left: `${(i/3)*100}%`, top: 0, bottom: 0, width: 2, bgcolor: '#ccc' }} />
             ))}
             {[1,2].map(i => (
               <Box key={i+10} sx={{ position: 'absolute', top: `${(i/3)*100}%`, left: 0, right: 0, height: 2, bgcolor: '#ccc' }} />
             ))}
-            {/* Hot zones (overlay) */}
+            {/* Hot zones (overlay) - Standard 3x3 strike zone */}
             <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)' }}>
               {[1,2,3,4,5,6,7,8,9].map(zone => (
                 <Box key={zone} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -157,6 +173,25 @@ function ReportDisplay({ report }) {
             </Box>
           </Box>
           <Typography variant="body2" color="textSecondary">Each zone shows the average exit velocity (mph) for that strike zone</Typography>
+          
+          {/* Additional zones if they exist */}
+          {metrics.hotZoneEVs && Object.keys(metrics.hotZoneEVs).some(zone => parseInt(zone) > 9) && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, width: '100%', maxWidth: 400 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Additional Zones:</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {Object.entries(metrics.hotZoneEVs)
+                  .filter(([zone]) => parseInt(zone) > 9)
+                  .map(([zone, ev]) => (
+                    <Chip 
+                      key={zone}
+                      label={`Zone ${zone}: ${ev ? ev.toFixed(1) + ' mph' : 'N/A'}`}
+                      size="small"
+                      sx={{ bgcolor: getZoneColor(ev), color: ev && ev > 85 ? 'white' : 'black' }}
+                    />
+                  ))}
+              </Box>
+            </Box>
+          )}
         </Box>
         {/* Summary/Analysis Section */}
         {report.summaryText && (
