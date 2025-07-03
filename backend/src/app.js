@@ -72,6 +72,7 @@ if (process.env.NODE_ENV === 'production') {
   } else {
     // Fallback to common Vercel/Netlify domains if FRONTEND_URL not set
     allowedOrigins = [
+      'https://otr-2025-frontend.vercel.app', // Your specific Vercel domain
       'https://*.vercel.app',
       'https://*.netlify.app',
       'https://*.onrender.com'
