@@ -14,23 +14,8 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://otr-baseball-frontend.onrender.com
+        value: https://otr-baseball-frontend.vercel.app
     healthCheckPath: /api/health
-
-  # Frontend Web Service
-  - type: web
-    name: otr-baseball-frontend
-    env: static
-    plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://otr-baseball-backend.onrender.com/api
-      - key: VITE_APP_NAME
-        value: OTR Baseball Analytics
-      - key: VITE_APP_VERSION
-        value: 1.0.0
 
 databases:
   # PostgreSQL Database
