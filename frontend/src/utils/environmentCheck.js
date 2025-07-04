@@ -1,3 +1,5 @@
+import React from 'react';
+
 // Environment validation script to check for differences between local and Vercel
 export const validateEnvironment = () => {
   console.log('[ENVIRONMENT CHECK] ===== STARTING ENVIRONMENT VALIDATION =====');

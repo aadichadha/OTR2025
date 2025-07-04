@@ -1,3 +1,5 @@
+import React from 'react';
+
 // Deployment validation script to ensure Vercel deployment works exactly like local
 export const validateDeployment = async () => {
   console.log('[DEPLOYMENT VALIDATION] ===== STARTING DEPLOYMENT VALIDATION =====');
