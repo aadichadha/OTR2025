@@ -9,14 +9,6 @@ export default defineConfig({
     sourcemap: false,
     minify: 'terser',
     rollupOptions: {
-      output: {
-        // Simple chunking strategy that's more stable
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material'],
-          'charts-vendor': ['recharts']
-        }
-      },
       onwarn(warning, warn) {
         // Ignore clsx warning
         if (warning.code === 'UNRESOLVED_IMPORT' && warning.message.includes('clsx')) {
