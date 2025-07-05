@@ -1,6 +1,7 @@
-import React from 'react';
-import { Box, Typography, Grid, Card } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Grid, Card, Button, CircularProgress } from '@mui/material';
 import otrLogo from '/images/otrbaseball-main.png';
+import DownloadIcon from '@mui/icons-material/Download';
 
 const NAVY = '#1a2340';
 const PANEL_BG = '#fff';
@@ -108,12 +109,10 @@ function ReportDisplay({ report }) {
           </Box>
         </Box>
         {/* Summary/Analysis Section */}
-        {report.summaryText && (
-          <Box sx={{ bgcolor: CARD_BG, borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', p: 3, mb: 2 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: CARD_TEXT, mb: 2 }}>Detailed Analysis</Typography>
-            <Typography variant="body1" sx={{ color: CARD_TEXT }}>{report.summaryText}</Typography>
-          </Box>
-        )}
+        {/* Removed Detailed Analysis section. Add Download PDF button instead. */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
+          <DownloadPDFButton report={report} />
+        </Box>
       </Box>
     </Box>
   );
@@ -132,6 +131,52 @@ function MetricCard({ label, value, unit, grade }) {
         {grade && <Typography variant="caption" sx={{ color: gradeColor, fontWeight: 700, mt: 0.5 }}>{grade}</Typography>}
       </Card>
     </Grid>
+  );
+}
+
+function DownloadPDFButton({ report }) {
+  const [loading, setLoading] = useState(false);
+  if (!report?.session?.id) return null;
+  const sessionId = report.session.id;
+  const playerName = report.player?.name?.replace(/\s+/g, '_') || 'Player';
+  const sessionDate = report.session?.date ? new Date(report.session.date).toISOString().split('T')[0] : 'Session';
+  const fileName = `OTR_Report_${playerName}_${sessionDate}.pdf`;
+
+  const handleDownload = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/report`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to download PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Failed to download PDF report.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="contained"
+      color="primary"
+      startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
+      onClick={handleDownload}
+      disabled={loading}
+      sx={{ minWidth: 180, fontWeight: 700, fontSize: '1rem', borderRadius: 3 }}
+    >
+      {loading ? 'Preparing PDF...' : 'Download PDF'}
+    </Button>
   );
 }
 
