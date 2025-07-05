@@ -60,9 +60,16 @@ app.use('/api/auth/', authLimiter);
 // CORS configuration
 const allowedOrigins = [
   'https://otr-2025-frontend.vercel.app', // Your Vercel frontend domain
+  'https://otr-2025-frontend-pd5mjq47m-aadis-projects-cfbb1119.vercel.app', // Current preview deployment
   'http://localhost:5173', // Local development
   'http://localhost:3000'  // Alternative local development
 ];
+
+// Add FRONTEND_URL from environment if it exists
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+  console.log('🔧 Added FRONTEND_URL to CORS origins:', process.env.FRONTEND_URL);
+}
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -75,6 +82,10 @@ const corsOptions = {
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
       console.log('✅ CORS: Allowing origin:', origin);
+      callback(null, true);
+    } else if (origin.includes('otr-2025-frontend') && origin.includes('vercel.app')) {
+      // Allow any Vercel preview deployment for the otr-2025-frontend project
+      console.log('✅ CORS: Allowing Vercel preview deployment:', origin);
       callback(null, true);
     } else {
       console.log('🚫 CORS: Blocking origin:', origin);
