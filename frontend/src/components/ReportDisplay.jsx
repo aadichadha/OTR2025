@@ -145,7 +145,7 @@ function DownloadPDFButton({ report }) {
   const handleDownload = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/report`, {
+      const res = await fetch(`https://otr2025.onrender.com/api/sessions/${sessionId}/report`, {
         method: 'GET',
         credentials: 'include',
       });
