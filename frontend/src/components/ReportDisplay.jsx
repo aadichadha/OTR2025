@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, Grid, Card, Button, CircularProgress } from '@mui/material';
 import otrLogo from '/images/otrbaseball-main.png';
 import DownloadIcon from '@mui/icons-material/Download';
+import { getToken } from '../services/auth';
 
 const NAVY = '#1a2340';
 const PANEL_BG = '#fff';
@@ -144,12 +145,23 @@ function DownloadPDFButton({ report }) {
 
   const handleDownload = async () => {
     setLoading(true);
+    const token = getToken();
+    if (!token) {
+      alert('You must be logged in to download reports.');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`https://otr2025.onrender.com/api/sessions/${sessionId}/report`, {
         method: 'GET',
         credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
-      if (!res.ok) throw new Error('Failed to download PDF');
+      if (res.status === 401) throw new Error('You are not authorized to download this report. Please log in again.');
+      if (res.status === 404) throw new Error('Session not found or report unavailable.');
+      if (!res.ok) throw new Error('Failed to download PDF.');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -160,7 +172,7 @@ function DownloadPDFButton({ report }) {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Failed to download PDF report.');
+      alert(err.message || 'Failed to download PDF report.');
     } finally {
       setLoading(false);
     }
