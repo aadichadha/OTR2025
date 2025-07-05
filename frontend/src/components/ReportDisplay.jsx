@@ -19,10 +19,9 @@ const getZoneColor = (avgEV) => {
 
 function HotZoneCell({ zone, ev }) {
   const bgColor = getZoneColor(ev);
-  return zone ? (
+  return (
     <Box
       sx={{
-        aspectRatio: '1',
         border: '2px solid #fff',
         display: 'flex',
         alignItems: 'center',
@@ -34,15 +33,12 @@ function HotZoneCell({ zone, ev }) {
         flexDirection: 'column',
         width: 60,
         height: 60,
-        borderRadius: 3,
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}
     >
       <span style={{ fontSize: '1rem', opacity: 0.8, fontWeight: 600 }}>{zone}</span>
       <span style={{ fontSize: '0.85rem', marginTop: 2 }}>{ev !== null && ev !== undefined ? `${ev.toFixed(1)}` : ''}</span>
     </Box>
-  ) : (
-    <Box sx={{ width: 60, height: 60 }} />
   );
 }
 
@@ -53,12 +49,13 @@ function ReportDisplay({ report }) {
   const player = report.player || {};
   const session = report.session || {};
 
-  // Rectangular strike zone grid: [10, null, 11], [1,2,3], [4,5,6], [7,8,9]
+  // Rectangular strike zone grid: [10, null, 11], [1,2,3], [4,5,6], [7,8,9], [12, null, 13]
   const zoneGrid = [
     [10, null, 11],
     [1, 2, 3],
     [4, 5, 6],
     [7, 8, 9],
+    [12, null, 13],
   ];
 
   return (
@@ -94,7 +91,7 @@ function ReportDisplay({ report }) {
           <Box sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 60px)',
-            gridTemplateRows: 'repeat(4, 60px)',
+            gridTemplateRows: 'repeat(5, 60px)',
             gap: 2,
             justifyContent: 'center',
             mx: 'auto',
@@ -109,9 +106,6 @@ function ReportDisplay({ report }) {
               )
             ))}
           </Box>
-          <Typography variant="body2" sx={{ color: '#b3c6e0', mt: 2, textAlign: 'center', fontSize: '0.9rem' }}>
-            High | Middle | Low • Outside | Middle | Inside
-          </Typography>
         </Box>
         {/* Summary/Analysis Section */}
         {report.summaryText && (

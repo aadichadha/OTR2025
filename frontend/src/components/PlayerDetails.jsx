@@ -1142,12 +1142,12 @@ function ReportDisplay({ report, player }) {
           <Box sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 60px)',
-            gridTemplateRows: 'repeat(4, 60px)',
+            gridTemplateRows: 'repeat(5, 60px)',
             gap: 2,
             maxWidth: 220,
             mx: 'auto'
           }}>
-            {[[10, null, 11], [1,2,3], [4,5,6], [7,8,9]].flat().map((zone, idx) => (
+            {[[10, null, 11], [1,2,3], [4,5,6], [7,8,9], [12, null, 13]].flat().map((zone, idx) => (
               zone !== null ? (
                 <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />
               ) : (
@@ -1155,9 +1155,6 @@ function ReportDisplay({ report, player }) {
               )
             ))}
           </Box>
-          <Typography variant="body2" color="textSecondary" sx={{ mt: 2, color: '#1c2c4d' }}>
-            High | Middle | Low • Outside | Middle | Inside
-          </Typography>
         </Card>
       )}
 
@@ -1319,7 +1316,6 @@ function HotZoneCell({ zone, ev }) {
   return (
     <Box
       sx={{
-        aspectRatio: '1',
         border: '2px solid #fff',
         display: 'flex',
         alignItems: 'center',
@@ -1329,10 +1325,8 @@ function HotZoneCell({ zone, ev }) {
         fontWeight: 'bold',
         fontSize: '1.2rem',
         flexDirection: 'column',
-        transition: 'background 0.3s',
         width: 60,
         height: 60,
-        borderRadius: 3,
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}
     >
