@@ -12,28 +12,33 @@ function generateReportPDF(reportData, outputFilePath) {
     doc.pipe(stream);
 
     // Helper function to draw a metric card
-    const drawMetricCard = (x, y, width, height, value, label, unit, color = '#333') => {
-      // Card background
-      doc.rect(x, y, width, height).fill('#f8f9fa');
-      doc.rect(x, y, width, height).stroke('#e9ecef');
-      
-      // Value (large number)
-      doc.fontSize(32).fill(color).text(value.toString(), x + width/2, y + 20, {
+    const drawMetricCard = (x, y, width, height, value, label, unit, statusColor = '#fff', statusLabel = null) => {
+      doc.save();
+      doc.roundedRect(x, y, width, height, 20).fill('#2D3748');
+      doc.roundedRect(x, y, width, height, 20).stroke('#23293a');
+      // Value
+      doc.fontSize(32).fill('white').font('Helvetica-Bold').text(value.toString(), x, y + 18, {
         align: 'center',
         width: width
       });
-      
       // Label
-      doc.fontSize(14).fill('#495057').text(label, x + width/2, y + 60, {
+      doc.fontSize(13).fill('#CBD5E1').font('Helvetica-Bold').text(label, x, y + 60, {
         align: 'center',
         width: width
       });
-      
       // Unit
-      doc.fontSize(10).fill('#6c757d').text(unit, x + width/2, y + 80, {
+      if (unit) doc.fontSize(11).fill('#A0AEC0').font('Helvetica').text(unit, x, y + 80, {
         align: 'center',
         width: width
       });
+      // Status label (performance indicator)
+      if (statusLabel) {
+        doc.fontSize(11).fill(statusColor).font('Helvetica-Bold').text(statusLabel, x, y + height - 24, {
+          align: 'center',
+          width: width
+        });
+      }
+      doc.restore();
     };
 
     // Helper function to get metric color
@@ -51,213 +56,189 @@ function generateReportPDF(reportData, outputFilePath) {
       return value.toFixed(decimals);
     };
 
-    // Header with gradient background effect
-    doc.rect(0, 0, 595, 120).fill('#667eea');
-    
+    // Helper for status color
+    const getStatusColor = (grade) => {
+      if (!grade) return '#CBD5E1';
+      if (grade.toLowerCase().includes('above')) return '#10B981'; // green
+      if (grade.toLowerCase().includes('below')) return '#F59E0B'; // orange
+      if (grade.toLowerCase().includes('complete')) return '#3B82F6'; // blue
+      if (grade.toLowerCase().includes('distance')) return '#6366F1'; // indigo
+      return '#CBD5E1';
+    };
+
+    // Set dark background for the whole PDF
+    doc.rect(0, 0, doc.page.width, doc.page.height).fill('#23293a');
+    doc.fillColor('white');
+
+    // Header with dark navy background
+    doc.rect(0, 0, 595, 120).fill('#2D3748');
     // Add OTR BASEBALL logo at the top
     const logoPath = path.resolve(__dirname, '../../frontend/public/images/otrbaseball-main.png');
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 30, 20, { fit: [120, 40] });
     }
-
     // Title
     doc.fontSize(28).fill('white').text('Performance Report', 30, 70);
     doc.fontSize(16).fill('rgba(255,255,255,0.9)').text(
       `${reportData.player.name} • ${new Date(reportData.session.date).toLocaleDateString()} • ${reportData.session.type.toUpperCase()}`,
       30, 95
     );
-
     let currentY = 140;
 
     // Metrics Section
-    doc.fontSize(20).fill('#333').text('Performance Metrics', 30, currentY);
-    currentY += 30;
-
-    // Draw metric cards based on session type
-    if (reportData.session.type === 'blast' && reportData.metrics?.batSpeed) {
-      const metrics = reportData.metrics.batSpeed;
-      const cardWidth = 170;
-      const cardHeight = 100;
-      const cardsPerRow = 3;
-      const spacing = 20;
-
-      // Row 1
-      drawMetricCard(
-        30, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.avgBatSpeed),
-        'BAT SPEED',
-        'Mph',
-        getMetricColor(metrics.avgBatSpeed, metrics.benchmark?.avgBatSpeed)
-      );
-
-      drawMetricCard(
-        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.top10PercentBatSpeed),
-        'TOP 10% SPEED',
-        'Mph',
-        getMetricColor(metrics.top10PercentBatSpeed, metrics.benchmark?.top90BatSpeed)
-      );
-
-      drawMetricCard(
-        30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.avgAttackAngleTop10),
-        'ATTACK ANGLE',
-        'Degrees',
-        getMetricColor(metrics.avgAttackAngleTop10, metrics.benchmark?.avgAttackAngle)
-      );
-
-      currentY += cardHeight + 20;
-
-      // Row 2
-      drawMetricCard(
-        30, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.avgTimeToContact, 3),
-        'TIME TO CONTACT',
-        'Seconds',
-        getMetricColor(metrics.avgTimeToContact, metrics.benchmark?.avgTimeToContact)
-      );
-
-      drawMetricCard(
-        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.dataPoints || 0),
-        'TOTAL SWINGS',
-        'Data Points',
-        '#1976d2'
-      );
-    }
-
+    // Draw metric cards with dark background, rounded corners, white text
+    const cardWidth = 170;
+    const cardHeight = 100;
+    const spacing = 20;
     if (reportData.session.type === 'hittrax' && reportData.metrics?.exitVelocity) {
       const metrics = reportData.metrics.exitVelocity;
-      const cardWidth = 170;
-      const cardHeight = 100;
-      const cardsPerRow = 3;
-      const spacing = 20;
-
       // Row 1
       drawMetricCard(
         30, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.maxExitVelocity),
         'MAX EXIT VELOCITY',
-        'Mph',
-        getMetricColor(metrics.maxExitVelocity, metrics.benchmark?.maxEV)
+        'MPH',
+        getStatusColor(metrics.grades?.maxExitVelocity),
+        metrics.grades?.maxExitVelocity
       );
-
       drawMetricCard(
         30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.avgExitVelocity),
         'AVG EXIT VELOCITY',
-        'Mph',
-        getMetricColor(metrics.avgExitVelocity, metrics.benchmark?.avgEV)
+        'MPH',
+        getStatusColor(metrics.grades?.avgExitVelocity),
+        metrics.grades?.avgExitVelocity
       );
-
       drawMetricCard(
         30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.launchAngleTop5),
         'AVG LA (TOP 5% EV)',
-        'Degrees',
-        getMetricColor(metrics.launchAngleTop5, metrics.benchmark?.hhbLA)
+        '°',
+        getStatusColor(metrics.grades?.launchAngleTop5),
+        metrics.grades?.launchAngleTop5
       );
-
       currentY += cardHeight + 20;
-
       // Row 2
       drawMetricCard(
         30, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.avgLaunchAngle),
         'AVG LAUNCH ANGLE',
-        'Degrees',
-        getMetricColor(metrics.avgLaunchAngle, metrics.benchmark?.avgLA)
+        '°',
+        getStatusColor(metrics.grades?.avgLaunchAngle),
+        metrics.grades?.avgLaunchAngle
       );
-
       drawMetricCard(
         30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.barrels || 0),
         'BARRELS',
-        'Quality',
-        '#1976d2'
+        '',
+        '#3B82F6',
+        'Quality'
       );
-
       drawMetricCard(
         30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.dataPoints || 0),
         'TOTAL SWINGS',
-        'Data Points',
-        '#1976d2'
+        '',
+        '#3B82F6',
+        'Complete'
       );
     }
+    if (reportData.session.type === 'blast' && reportData.metrics?.batSpeed) {
+      const metrics = reportData.metrics.batSpeed;
+      // Row 1
+      drawMetricCard(
+        30, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.maxBatSpeed),
+        'MAX BAT SPEED',
+        'MPH',
+        getStatusColor(metrics.grades?.maxBatSpeed),
+        metrics.grades?.maxBatSpeed
+      );
+      drawMetricCard(
+        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgBatSpeed),
+        'AVG BAT SPEED',
+        'MPH',
+        getStatusColor(metrics.grades?.avgBatSpeed),
+        metrics.grades?.avgBatSpeed
+      );
+      drawMetricCard(
+        30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgAttackAngle),
+        'AVG ATTACK ANGLE',
+        '°',
+        getStatusColor(metrics.grades?.attackAngle),
+        metrics.grades?.attackAngle
+      );
+      currentY += cardHeight + 20;
+      // Row 2
+      drawMetricCard(
+        30, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.avgTimeToContact, 3),
+        'AVG TIME TO CONTACT',
+        'SEC',
+        getStatusColor(metrics.grades?.timeToContact),
+        metrics.grades?.timeToContact
+      );
+      drawMetricCard(
+        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.dataPoints || 0),
+        'TOTAL SWINGS',
+        '',
+        '#3B82F6',
+        'Complete'
+      );
+    }
+    currentY += cardHeight + 80;
 
-    currentY += 140;
-
-    // Strike Zone Visualization
-    doc.fontSize(20).fill('#333').text('Strike Zone Analysis', 30, currentY);
+    // Strike Zone Heat Map (5x3 grid)
+    doc.fontSize(20).fill('white').text('Strike Zone Hot Zones (Avg EV)', 30, currentY);
     currentY += 30;
-
-    // Draw strike zone grid (3x3 square)
-    const zoneWidth = 180;
-    const zoneHeight = 180; // Make it square
+    const zoneCellSize = 60;
+    const zoneGrid = [
+      [10, null, 11],
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9],
+      [12, null, 13],
+    ];
     const zoneX = 30;
     const zoneY = currentY;
-
-    // Strike zone outline
-    doc.rect(zoneX, zoneY, zoneWidth, zoneHeight).stroke('#333');
-    
-    // Grid lines for 3x3
-    for (let i = 1; i < 3; i++) {
-      doc.moveTo(zoneX + (zoneWidth / 3) * i, zoneY)
-        .lineTo(zoneX + (zoneWidth / 3) * i, zoneY + zoneHeight)
-        .stroke('#ccc');
+    for (let row = 0; row < zoneGrid.length; row++) {
+      for (let col = 0; col < 3; col++) {
+        const zone = zoneGrid[row][col];
+        const x = zoneX + col * zoneCellSize;
+        const y = zoneY + row * zoneCellSize;
+        if (zone === null) {
+          // Empty cell
+          doc.save();
+          doc.rect(x, y, zoneCellSize, zoneCellSize).fill('#23293a');
+          doc.restore();
+          continue;
+        }
+        // Get value and color
+        const ev = reportData.metrics?.exitVelocity?.hotZoneEVs?.[zone] ?? null;
+        let cellColor = '#6B7280'; // gray
+        if (ev === null) cellColor = '#fff';
+        else if (ev >= 90) cellColor = '#DC2626'; // red
+        else if (ev >= 85) cellColor = '#EA580C'; // orange
+        // Draw cell
+        doc.save();
+        doc.rect(x, y, zoneCellSize, zoneCellSize).fill(cellColor);
+        doc.restore();
+        // Draw zone number (small, top left)
+        doc.fontSize(10).fill('white').font('Helvetica-Bold').text(zone.toString(), x + 6, y + 6);
+        // Draw value (large, centered)
+        if (ev !== null) {
+          doc.fontSize(18).fill('white').font('Helvetica-Bold').text(ev.toFixed(1), x, y + 22, {
+            align: 'center',
+            width: zoneCellSize
+          });
+        }
+      }
     }
-    for (let i = 1; i < 3; i++) {
-      doc.moveTo(zoneX, zoneY + (zoneHeight / 3) * i)
-        .lineTo(zoneX + zoneWidth, zoneY + (zoneHeight / 3) * i)
-        .stroke('#ccc');
-    }
-
-    // Zone numbers (1-9 in 3x3 grid)
-    const zones = [
-      [1, 2, 3], // High zone
-      [4, 5, 6], // Middle zone  
-      [7, 8, 9]  // Low zone
-    ];
-    
-    zones.forEach((row, rowIdx) => {
-      row.forEach((zone, colIdx) => {
-        const x = zoneX + (zoneWidth / 3) * colIdx + (zoneWidth / 6);
-        const y = zoneY + (zoneHeight / 3) * rowIdx + (zoneHeight / 6);
-        doc.fontSize(14).fill('#333').text(zone.toString(), x, y, { align: 'center' });
-      });
-    });
-
-    // Zone labels
-    doc.fontSize(12).fill('#666').text('Strike Zone Hot Zones (Avg EV)', zoneX + zoneWidth/2, zoneY + zoneHeight + 10, {
-      align: 'center',
-      width: zoneWidth
-    });
-    
-    doc.fontSize(10).fill('#999').text('High | Middle | Low • Outside | Middle | Inside', zoneX + zoneWidth/2, zoneY + zoneHeight + 25, {
-      align: 'center',
-      width: zoneWidth
-    });
-
-    currentY += zoneHeight + 50;
-
-    // Detailed Analysis
-    if (reportData.summaryText) {
-      doc.fontSize(20).fill('#333').text('Detailed Analysis', 30, currentY);
-      currentY += 30;
-
-      // Analysis background
-      doc.rect(30, currentY, 535, 200).fill('#f8f9fa');
-      doc.rect(30, currentY, 535, 200).stroke('#e9ecef');
-
-      // Analysis text
-      doc.fontSize(11).fill('#333').text(reportData.summaryText, 40, currentY + 10, {
-        width: 515,
-        align: 'left'
-      });
-
-      currentY += 220;
-    }
+    currentY += zoneCellSize * zoneGrid.length + 30;
 
     // Session History
     if (reportData.history && reportData.history.length > 1) {
