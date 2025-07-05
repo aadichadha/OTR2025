@@ -136,26 +136,26 @@ function generateReportPDF(reportData, outputFilePath) {
       // Row 1
       drawMetricCard(
         30, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.maxExitVelocity),
+        'MAX EXIT VELOCITY',
+        'Mph',
+        getMetricColor(metrics.maxExitVelocity, metrics.benchmark?.maxEV)
+      );
+
+      drawMetricCard(
+        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.avgExitVelocity),
-        'EXIT VELOCITY',
+        'AVG EXIT VELOCITY',
         'Mph',
         getMetricColor(metrics.avgExitVelocity, metrics.benchmark?.avgEV)
       );
 
       drawMetricCard(
-        30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.avgLaunchAngleTop8),
-        'LAUNCH ANGLE',
-        'Degrees',
-        getMetricColor(metrics.avgLaunchAngleTop8, metrics.benchmark?.hhbLA)
-      );
-
-      drawMetricCard(
         30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.avgDistanceTop8),
-        'DISTANCE',
-        'Feet',
-        '#1976d2'
+        formatMetricValue(metrics.launchAngleTop5),
+        'AVG LA (TOP 5% EV)',
+        'Degrees',
+        getMetricColor(metrics.launchAngleTop5, metrics.benchmark?.hhbLA)
       );
 
       currentY += cardHeight + 20;
@@ -163,14 +163,22 @@ function generateReportPDF(reportData, outputFilePath) {
       // Row 2
       drawMetricCard(
         30, currentY, cardWidth, cardHeight,
-        formatMetricValue(metrics.top8PercentEV),
-        'TOP 8% EV',
-        'Mph',
-        getMetricColor(metrics.top8PercentEV, metrics.benchmark?.top8EV)
+        formatMetricValue(metrics.avgLaunchAngle),
+        'AVG LAUNCH ANGLE',
+        'Degrees',
+        getMetricColor(metrics.avgLaunchAngle, metrics.benchmark?.avgLA)
       );
 
       drawMetricCard(
         30 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        formatMetricValue(metrics.barrels || 0),
+        'BARRELS',
+        'Quality',
+        '#1976d2'
+      );
+
+      drawMetricCard(
+        30 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
         formatMetricValue(metrics.dataPoints || 0),
         'TOTAL SWINGS',
         'Data Points',
@@ -184,16 +192,16 @@ function generateReportPDF(reportData, outputFilePath) {
     doc.fontSize(20).fill('#333').text('Strike Zone Analysis', 30, currentY);
     currentY += 30;
 
-    // Draw strike zone grid
-    const zoneWidth = 200;
-    const zoneHeight = 150;
+    // Draw strike zone grid (3x3 square)
+    const zoneWidth = 180;
+    const zoneHeight = 180; // Make it square
     const zoneX = 30;
     const zoneY = currentY;
 
     // Strike zone outline
     doc.rect(zoneX, zoneY, zoneWidth, zoneHeight).stroke('#333');
     
-    // Grid lines
+    // Grid lines for 3x3
     for (let i = 1; i < 3; i++) {
       doc.moveTo(zoneX + (zoneWidth / 3) * i, zoneY)
         .lineTo(zoneX + (zoneWidth / 3) * i, zoneY + zoneHeight)
@@ -205,8 +213,28 @@ function generateReportPDF(reportData, outputFilePath) {
         .stroke('#ccc');
     }
 
+    // Zone numbers (1-9 in 3x3 grid)
+    const zones = [
+      [1, 2, 3], // High zone
+      [4, 5, 6], // Middle zone  
+      [7, 8, 9]  // Low zone
+    ];
+    
+    zones.forEach((row, rowIdx) => {
+      row.forEach((zone, colIdx) => {
+        const x = zoneX + (zoneWidth / 3) * colIdx + (zoneWidth / 6);
+        const y = zoneY + (zoneHeight / 3) * rowIdx + (zoneHeight / 6);
+        doc.fontSize(14).fill('#333').text(zone.toString(), x, y, { align: 'center' });
+      });
+    });
+
     // Zone labels
-    doc.fontSize(12).fill('#666').text('Strike Zone Heatmap', zoneX + zoneWidth/2, zoneY + zoneHeight + 10, {
+    doc.fontSize(12).fill('#666').text('Strike Zone Hot Zones (Avg EV)', zoneX + zoneWidth/2, zoneY + zoneHeight + 10, {
+      align: 'center',
+      width: zoneWidth
+    });
+    
+    doc.fontSize(10).fill('#999').text('High | Middle | Low • Outside | Middle | Inside', zoneX + zoneWidth/2, zoneY + zoneHeight + 25, {
       align: 'center',
       width: zoneWidth
     });

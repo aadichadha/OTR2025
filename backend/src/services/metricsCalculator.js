@@ -135,6 +135,31 @@ class MetricsCalculator {
         launchAngleTop5 = top5LAs.length ? (top5LAs.reduce((a, b) => a + b, 0) / top5LAs.length) : null;
       }
 
+      // Calculate Barrels (top 10% EV with LA 8-30 degrees)
+      let barrels = 0;
+      if (exitVelocities.length > 0 && launchAngles.length > 0) {
+        const paired = evData
+          .map(row => ({
+            ev: parseFloat(row.exit_velocity),
+            la: parseFloat(row.launch_angle)
+          }))
+          .filter(row => row.ev > 0 && !isNaN(row.la));
+        
+        if (paired.length > 0) {
+          // Sort by EV to find top 10%
+          const sortedByEV = paired.sort((a, b) => b.ev - a.ev);
+          const top10PercentCount = Math.ceil(paired.length * 0.10);
+          const top10PercentEV = sortedByEV[top10PercentCount - 1]?.ev || 0;
+          
+          // Count swings that meet both criteria: top 10% EV AND LA between 8-30 degrees
+          barrels = paired.filter(swing => 
+            swing.ev >= top10PercentEV && 
+            swing.la >= 8 && 
+            swing.la <= 30
+          ).length;
+        }
+      }
+
       // Calculate average EV per strike zone (1-13) with proper type handling
       const hotZoneEVs = {};
       for (let zone = 1; zone <= 13; zone++) {
@@ -161,13 +186,14 @@ class MetricsCalculator {
       const laAvgGrade = avgLaunchAngle !== null ? this.evaluatePerformance(avgLaunchAngle, benchmark['Avg LA']) : null;
 
       // Before returning, log avgDistance and hotZoneEVs for debugging
-      console.log('[DEBUG] calculateExitVelocityMetrics:', { avgDistance, hotZoneEVs });
+      console.log('[DEBUG] calculateExitVelocityMetrics:', { avgDistance, hotZoneEVs, barrels });
       const result = {
         maxExitVelocity,
         avgExitVelocity,
         launchAngleTop5,
         avgLaunchAngle,
         avgDistance: avgDistance !== undefined ? avgDistance : null,
+        barrels: barrels,
         hotZoneEVs: hotZoneEVs || {},
         benchmark: {
           maxEV: benchmark['Top 8th EV'],

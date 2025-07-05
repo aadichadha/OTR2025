@@ -30,19 +30,19 @@ function HotZoneCell({ zone, ev }) {
         bgcolor: bgColor,
         color: ev !== null && ev !== undefined && ev > 85 ? 'white' : NAVY,
         fontWeight: 'bold',
-        fontSize: '1.1rem',
+        fontSize: '1.2rem',
         flexDirection: 'column',
-        minWidth: 48,
-        minHeight: 48,
-        borderRadius: 2,
+        width: 60,
+        height: 60,
+        borderRadius: 3,
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}
     >
-      <span style={{ fontSize: '0.95rem', opacity: 0.7 }}>{zone}</span>
-      <span>{ev !== null && ev !== undefined ? `${ev.toFixed(1)} mph` : ''}</span>
+      <span style={{ fontSize: '1rem', opacity: 0.8, fontWeight: 600 }}>{zone}</span>
+      <span style={{ fontSize: '0.85rem', marginTop: 2 }}>{ev !== null && ev !== undefined ? `${ev.toFixed(1)}` : ''}</span>
     </Box>
   ) : (
-    <Box sx={{ minWidth: 48, minHeight: 48 }} />
+    <Box sx={{ width: 60, height: 60 }} />
   );
 }
 
@@ -53,13 +53,14 @@ function ReportDisplay({ report }) {
   const player = report.player || {};
   const session = report.session || {};
 
-  // 5-row strike zone grid: [10, blank, 11], [1,2,3], [4,5,6], [7,8,9], [12, blank, 13]
+  // Real strike zone grid: 3x3 square grid representing the strike zone
+  // Top row: high and outside, high middle, high and inside
+  // Middle row: middle outside, middle, middle inside  
+  // Bottom row: low and outside, low middle, low and inside
   const zoneGrid = [
-    [10, null, 11],
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9],
-    [12, null, 13],
+    [1, 2, 3],  // High zone
+    [4, 5, 6],  // Middle zone
+    [7, 8, 9],  // Low zone
   ];
 
   return (
@@ -84,7 +85,7 @@ function ReportDisplay({ report }) {
               <MetricCard label="AVG EXIT VELOCITY" value={metrics.avgExitVelocity} unit="MPH" grade={metrics.grades?.avgExitVelocity} />
               <MetricCard label="AVG LA (TOP 5% EV)" value={metrics.launchAngleTop5} unit="°" grade={metrics.grades?.launchAngleTop5} />
               <MetricCard label="AVG LAUNCH ANGLE" value={metrics.avgLaunchAngle} unit="°" grade={metrics.grades?.avgLaunchAngle} />
-              <MetricCard label="DISTANCE" value={metrics.avgDistance} unit="FT" grade="Distance" />
+              <MetricCard label="BARRELS" value={metrics.barrels} unit="" grade="Quality" />
               <MetricCard label="TOTAL SWINGS" value={metrics.dataPoints} unit="" grade="Complete" />
             </>
           )}
@@ -92,11 +93,14 @@ function ReportDisplay({ report }) {
         {/* Strike Zone Grid */}
         <Box sx={{ bgcolor: NAVY, borderRadius: 4, boxShadow: '0 2px 16px rgba(0,0,0,0.18)', p: 3, mt: 4, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 1 }}>STRIKE ZONE HOT ZONES (Avg EV)</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 48px)', gridTemplateRows: 'repeat(5, 48px)', gap: 1, justifyContent: 'center', mx: 'auto', bgcolor: NAVY, borderRadius: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 60px)', gridTemplateRows: 'repeat(3, 60px)', gap: 2, justifyContent: 'center', mx: 'auto', bgcolor: NAVY, borderRadius: 2 }}>
             {zoneGrid.flat().map((zone, idx) => (
               <HotZoneCell key={idx} zone={zone} ev={metrics.hotZoneEVs?.[zone]} />
             ))}
           </Box>
+          <Typography variant="body2" sx={{ color: '#b3c6e0', mt: 2, textAlign: 'center', fontSize: '0.9rem' }}>
+            High | Middle | Low • Outside | Middle | Inside
+          </Typography>
         </Box>
         {/* Summary/Analysis Section */}
         {report.summaryText && (

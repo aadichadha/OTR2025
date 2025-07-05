@@ -1098,14 +1098,14 @@ function ReportDisplay({ report, player }) {
             </Card>
           </Grid>
 
-          {/* Distance */}
+          {/* Barrels */}
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)' }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                {exitVelocityMetrics.avgDistance ? exitVelocityMetrics.avgDistance.toFixed(1) : 'N/A'}
+                {exitVelocityMetrics.barrels || 0}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Distance (FT)
+                Barrels
               </Typography>
             </Card>
           </Grid>
@@ -1139,16 +1139,10 @@ function ReportDisplay({ report, player }) {
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#1c2c4d' }}>
             STRIKE ZONE HOT ZONES (Avg EV)
           </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, maxWidth: 350, mx: 'auto' }}>
-            {[10, null, 11].map((zone, idx) => zone ? (
-              <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />
-            ) : <Box key={idx} />)}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 60px)', gridTemplateRows: 'repeat(3, 60px)', gap: 2, maxWidth: 220, mx: 'auto' }}>
             {[1, 2, 3].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
             {[4, 5, 6].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
             {[7, 8, 9].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
-            {[12, null, 13].map((zone, idx) => zone ? (
-              <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />
-            ) : <Box key={idx + 'b'} />)}
           </Box>
           <Typography variant="body2" color="textSecondary" sx={{ mt: 2, color: '#1c2c4d' }}>
             Each zone shows the average exit velocity (mph) for that strike zone
@@ -1315,22 +1309,24 @@ function HotZoneCell({ zone, ev }) {
     <Box
       sx={{
         aspectRatio: '1',
-        border: '2px solid #ddd',
+        border: '2px solid #fff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         bgcolor: bgColor,
-        color: ev !== null && ev !== undefined && ev > 85 ? 'white' : 'black',
+        color: ev !== null && ev !== undefined && ev > 85 ? 'white' : '#1c2c4d',
         fontWeight: 'bold',
-        fontSize: '1.1rem',
+        fontSize: '1.2rem',
         flexDirection: 'column',
         transition: 'background 0.3s',
-        minWidth: 60,
-        minHeight: 60
+        width: 60,
+        height: 60,
+        borderRadius: 3,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}
     >
-      <span style={{ fontSize: '0.95rem', opacity: 0.7 }}>{zone}</span>
-      <span>{ev !== null && ev !== undefined ? `${ev.toFixed(1)} mph` : ''}</span>
+      <span style={{ fontSize: '1rem', opacity: 0.8, fontWeight: 600 }}>{zone}</span>
+      <span style={{ fontSize: '0.85rem', marginTop: 2 }}>{ev !== null && ev !== undefined ? `${ev.toFixed(1)}` : ''}</span>
     </Box>
   );
 }
