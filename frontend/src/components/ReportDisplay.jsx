@@ -53,14 +53,12 @@ function ReportDisplay({ report }) {
   const player = report.player || {};
   const session = report.session || {};
 
-  // Real strike zone grid: 3x3 square grid representing the strike zone
-  // Top row: high and outside, high middle, high and inside
-  // Middle row: middle outside, middle, middle inside  
-  // Bottom row: low and outside, low middle, low and inside
+  // Rectangular strike zone grid: [10, null, 11], [1,2,3], [4,5,6], [7,8,9]
   const zoneGrid = [
-    [1, 2, 3],  // High zone
-    [4, 5, 6],  // Middle zone
-    [7, 8, 9],  // Low zone
+    [10, null, 11],
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
   ];
 
   return (
@@ -93,9 +91,22 @@ function ReportDisplay({ report }) {
         {/* Strike Zone Grid */}
         <Box sx={{ bgcolor: NAVY, borderRadius: 4, boxShadow: '0 2px 16px rgba(0,0,0,0.18)', p: 3, mt: 4, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 1 }}>STRIKE ZONE HOT ZONES (Avg EV)</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 60px)', gridTemplateRows: 'repeat(3, 60px)', gap: 2, justifyContent: 'center', mx: 'auto', bgcolor: NAVY, borderRadius: 2 }}>
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 60px)',
+            gridTemplateRows: 'repeat(4, 60px)',
+            gap: 2,
+            justifyContent: 'center',
+            mx: 'auto',
+            bgcolor: NAVY,
+            borderRadius: 2
+          }}>
             {zoneGrid.flat().map((zone, idx) => (
-              <HotZoneCell key={idx} zone={zone} ev={metrics.hotZoneEVs?.[zone]} />
+              zone !== null ? (
+                <HotZoneCell key={idx} zone={zone} ev={metrics.hotZoneEVs?.[zone]} />
+              ) : (
+                <Box key={idx} sx={{ width: 60, height: 60, bgcolor: 'transparent' }} />
+              )
             ))}
           </Box>
           <Typography variant="body2" sx={{ color: '#b3c6e0', mt: 2, textAlign: 'center', fontSize: '0.9rem' }}>

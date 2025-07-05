@@ -1139,13 +1139,24 @@ function ReportDisplay({ report, player }) {
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#1c2c4d' }}>
             STRIKE ZONE HOT ZONES (Avg EV)
           </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 60px)', gridTemplateRows: 'repeat(3, 60px)', gap: 2, maxWidth: 220, mx: 'auto' }}>
-            {[1, 2, 3].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
-            {[4, 5, 6].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
-            {[7, 8, 9].map(zone => <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />)}
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 60px)',
+            gridTemplateRows: 'repeat(4, 60px)',
+            gap: 2,
+            maxWidth: 220,
+            mx: 'auto'
+          }}>
+            {[[10, null, 11], [1,2,3], [4,5,6], [7,8,9]].flat().map((zone, idx) => (
+              zone !== null ? (
+                <HotZoneCell key={zone} zone={zone} ev={exitVelocityMetrics.hotZoneEVs[zone]} />
+              ) : (
+                <Box key={idx} sx={{ width: 60, height: 60, bgcolor: 'transparent' }} />
+              )
+            ))}
           </Box>
           <Typography variant="body2" color="textSecondary" sx={{ mt: 2, color: '#1c2c4d' }}>
-            Each zone shows the average exit velocity (mph) for that strike zone
+            High | Middle | Low • Outside | Middle | Inside
           </Typography>
         </Card>
       )}
