@@ -37,28 +37,7 @@ const PORT = parsePort(process.env.PORT) || 3001;
 
 // TODO: Re-enable Helmet with proper CSP configuration once API is working
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use('/api/', limiter);
-
-// Stricter rate limiting for auth routes (skip OPTIONS requests)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: 'Too many authentication attempts, please try again later.',
-  skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
-});
-
-app.use('/api/auth/', authLimiter);
-
-// CORS configuration
+// CORS configuration (MUST come before rate limiting)
 const allowedOrigins = [
   'https://otr-2025-frontend.vercel.app', // Your Vercel frontend domain
   'https://otr-2025-frontend-pd5mjq47m-aadis-projects-cfbb1119.vercel.app', // Current preview deployment
@@ -110,7 +89,7 @@ const corsOptions = {
 
 console.log('🔧 CORS configured for origins:', allowedOrigins);
 
-// REMINDER: Set FRONTEND_URL in your production environment variables to your deployed frontend domain.
+// Apply CORS middleware FIRST (before rate limiting)
 app.use(cors(corsOptions));
 
 // Handle preflight requests
@@ -121,6 +100,27 @@ app.use((req, res, next) => {
   console.log(`🌐 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'No origin'}`);
   next();
 });
+
+// Rate limiting (AFTER CORS)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', limiter);
+
+// Stricter rate limiting for auth routes (skip OPTIONS requests)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: 'Too many authentication attempts, please try again later.',
+  skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
+});
+
+app.use('/api/auth/', authLimiter);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
