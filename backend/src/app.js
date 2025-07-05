@@ -48,11 +48,12 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// Stricter rate limiting for auth routes
+// Stricter rate limiting for auth routes (skip OPTIONS requests)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 requests per windowMs
   message: 'Too many authentication attempts, please try again later.',
+  skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
 });
 
 app.use('/api/auth/', authLimiter);
@@ -225,6 +226,24 @@ app.get('/api/cors-test', (req, res) => {
     });
   } catch (error) {
     console.error('CORS test error:', error);
+    res.status(500).json({ 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Auth CORS test endpoint
+app.get('/api/auth/cors-test', (req, res) => {
+  try {
+    res.status(200).json({ 
+      message: 'Auth CORS is working!',
+      origin: req.headers.origin || 'No origin header',
+      allowedOrigins: allowedOrigins,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Auth CORS test error:', error);
     res.status(500).json({ 
       error: error.message,
       timestamp: new Date().toISOString()
