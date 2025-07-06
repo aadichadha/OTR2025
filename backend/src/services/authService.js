@@ -56,33 +56,12 @@ class AuthService {
     const { email, password: rawPassword } = credentials;
     const password = rawPassword ? rawPassword.trim() : rawPassword;
     console.log('[LOGIN DEBUG] Attempting login for:', email);
-    console.log('[LOGIN DEBUG] Password provided:', password ? 'YES' : 'NO');
-    console.log('[LOGIN DEBUG] Password length:', password ? password.length : 0);
-    console.log('[LOGIN DEBUG] Password first char:', password ? `"${password.charAt(0)}"` : 'N/A');
-    
+    console.log('[BCRYPT DEBUG] Original password:', JSON.stringify(password));
     // Find user
     const user = await User.findOne({ where: { email } });
-    console.log('[LOGIN DEBUG] Found user:', user ? {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      hasPassword: !!user.password,
-      passwordLength: user.password ? user.password.length : 0
-    } : 'NOT FOUND');
-    
     if (!user) {
-      console.log('[LOGIN ERROR] No user found with email:', email);
       throw new Error('Invalid email or password');
     }
-    
-    console.log('[LOGIN DEBUG] User password field:', {
-      exists: !!user.password,
-      length: user.password ? user.password.length : 0,
-      startsWithHash: user.password ? user.password.startsWith('$2a$') : false
-    });
-    
-    // Verify password with detailed debugging
-    console.log('[BCRYPT DEBUG] Original password:', JSON.stringify(password));
     console.log('[BCRYPT DEBUG] Stored hash:', JSON.stringify(user.password));
     console.log('[BCRYPT DEBUG] Hash details:', {
       length: user.password.length,
@@ -90,20 +69,16 @@ class AuthService {
       type: typeof user.password,
       encoding: Buffer.from(user.password).toString('hex').substring(0, 20)
     });
-
     // Test with a fresh hash of the same password
+    const bcrypt = require('bcrypt');
     const testHash = await bcrypt.hash(password, 10);
     console.log('[BCRYPT DEBUG] Fresh hash for same password:', testHash);
     const testCompare = await bcrypt.compare(password, testHash);
     console.log('[BCRYPT DEBUG] Fresh hash comparison:', testCompare);
-
     // Try the actual comparison with explicit await
-    console.log('[LOGIN DEBUG] Attempting password comparison...');
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    console.log('[BCRYPT DEBUG] Actual comparison result:', isValidPassword);
-    
-    if (!isValidPassword) {
-      console.log('[LOGIN ERROR] Password mismatch for user:', email);
+    const actualCompare = await bcrypt.compare(password, user.password);
+    console.log('[BCRYPT DEBUG] Actual comparison result:', actualCompare);
+    if (!actualCompare) {
       throw new Error('Invalid email or password');
     }
     
