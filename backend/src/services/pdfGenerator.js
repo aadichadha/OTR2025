@@ -2,8 +2,8 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// EMERGENCY: Shrink everything
-const margin = 20;
+// SCALE UP: Fill the page
+const margin = 30;
 const pageWidth = 612;
 const pageHeight = 792;
 const contentWidth = pageWidth - 2 * margin;
@@ -50,30 +50,31 @@ function generateReportPDF(reportData, outputFilePath) {
     const panelY = margin;
     const panelWidth = contentWidth;
     const panelHeight = contentHeight;
-    doc.roundedRect(panelX, panelY, panelWidth, panelHeight, 12).fill(PANEL_BG);
+    doc.roundedRect(panelX, panelY, panelWidth, panelHeight, 18).fill(PANEL_BG);
 
-    // Header (centered, small)
+    // Header (centered, bigger)
     const logoPath = path.resolve(__dirname, '../../frontend/public/images/otrbaseball-main.png');
     if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, panelX + 6, panelY + 8, { fit: [60, 20] });
+      doc.image(logoPath, panelX + 10, panelY + 18, { fit: [90, 32] });
     }
-    doc.fontSize(18).fill(NAVY).font('Helvetica-Bold').text('Performance Report', panelX, panelY + 8, {
+    doc.fontSize(28).fill(NAVY).font('Helvetica-Bold').text('Performance Report', panelX, panelY + 18, {
       align: 'center', width: panelWidth
     });
-    doc.fontSize(9).fill(METRIC_UNIT).font('Helvetica-Bold').text(
+    doc.fontSize(14).fill(METRIC_UNIT).font('Helvetica-Bold').text(
       `${reportData.player.name} • ${new Date(reportData.session.date).toLocaleDateString()} • ${reportData.session.type.toUpperCase()}`,
-      panelX, panelY + 28, {
+      panelX, panelY + 52, {
         align: 'center', width: panelWidth
       }
     );
 
     // --- Layout calculations ---
-    let y = panelY + 40; // Header: 40px
-    // Metric cards: 2 rows of 3, small size
-    const cardWidth = 120;
-    const cardHeight = 80;
-    const cardSpacingX = 10;
-    const cardSpacingY = 10;
+    let y = panelY + 60; // Header: 60px
+    y += 30; // Space after header
+    // Metric cards: 2 rows of 3, bigger size
+    const cardWidth = 180;
+    const cardHeight = 120;
+    const cardSpacingX = 20;
+    const cardSpacingY = 40;
     const cardsPerRow = 3;
     const totalCardsWidth = (cardWidth * cardsPerRow) + (cardSpacingX * (cardsPerRow - 1));
     const cardsStartX = panelX + (panelWidth - totalCardsWidth) / 2;
@@ -81,27 +82,27 @@ function generateReportPDF(reportData, outputFilePath) {
     // Draw metric cards
     const drawMetricCard = (x, y, value, label, unit, grade) => {
       doc.save();
-      doc.roundedRect(x, y, cardWidth, cardHeight, 8).fill(CARD_BG);
-      doc.roundedRect(x, y, cardWidth, cardHeight, 8).stroke(NAVY);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 14).fill(CARD_BG);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 14).stroke(NAVY);
       // Value
       const valueText = value !== null && value !== undefined ? Number(value).toFixed(1) : 'N/A';
-      doc.fontSize(16).fill(CARD_TEXT).font('Helvetica-Bold').text(valueText, x, y + 10, {
+      doc.fontSize(24).fill(CARD_TEXT).font('Helvetica-Bold').text(valueText, x, y + 20, {
         align: 'center', width: cardWidth
       });
       // Unit
       if (unit) {
-        doc.fontSize(10).fill(METRIC_UNIT).font('Helvetica').text(unit, x + cardWidth - 24, y + 10, {
-          align: 'left', width: 20
+        doc.fontSize(14).fill(METRIC_UNIT).font('Helvetica').text(unit, x + cardWidth - 32, y + 20, {
+          align: 'left', width: 28
         });
       }
       // Label
-      doc.fontSize(10).fill(METRIC_LABEL).font('Helvetica-Bold').text(label, x, y + 32, {
+      doc.fontSize(14).fill(METRIC_LABEL).font('Helvetica-Bold').text(label, x, y + 60, {
         align: 'center', width: cardWidth
       });
       // Grade
       if (grade) {
         const gradeColor = getGradeColor(grade);
-        doc.fontSize(8).fill(gradeColor).font('Helvetica-Bold').text(grade, x, y + cardHeight - 14, {
+        doc.fontSize(12).fill(gradeColor).font('Helvetica-Bold').text(grade, x, y + cardHeight - 24, {
           align: 'center', width: cardWidth
         });
       }
@@ -151,22 +152,23 @@ function generateReportPDF(reportData, outputFilePath) {
           drawMetricCard(cardsStartX + i * (cardWidth + cardSpacingX), y + cardHeight + cardSpacingY, row2Metrics[i].value, row2Metrics[i].label, row2Metrics[i].unit, row2Metrics[i].grade);
         }
       }
-      y += 2 * cardHeight + cardSpacingY + 10; // Move y below cards
+      y += 2 * cardHeight + cardSpacingY; // Move y below cards
     }
+    y += 40; // More space before strike zone
 
-    // Strike Zone Heat Map (scaled to fit)
-    const zonePanelWidth = 180;
-    const zonePanelHeight = 170;
+    // Strike Zone Heat Map (scaled up)
+    const zonePanelWidth = 270;
+    const zonePanelHeight = 350;
     const zonePanelX = panelX + (panelWidth - zonePanelWidth) / 2;
-    doc.roundedRect(zonePanelX, y, zonePanelWidth, zonePanelHeight, 8).fill(NAVY);
-    y += 10;
+    doc.roundedRect(zonePanelX, y, zonePanelWidth, zonePanelHeight, 14).fill(NAVY);
+    y += 20;
     // Title
-    doc.fontSize(10).fill('white').font('Helvetica-Bold').text('STRIKE ZONE HOT ZONES (Avg EV)', zonePanelX, y, {
+    doc.fontSize(16).fill('white').font('Helvetica-Bold').text('STRIKE ZONE HOT ZONES (Avg EV)', zonePanelX, y, {
       align: 'center', width: zonePanelWidth
     });
-    y += 18;
+    y += 32;
     // Grid
-    const zoneCellSize = 30;
+    const zoneCellSize = 45;
     const zoneGrid = [
       [10, null, 11],
       [1, 2, 3],
@@ -174,26 +176,26 @@ function generateReportPDF(reportData, outputFilePath) {
       [7, 8, 9],
       [12, null, 13],
     ];
-    const gridWidth = 3 * zoneCellSize + 2 * 4;
-    const gridHeight = 5 * zoneCellSize + 4 * 4;
+    const gridWidth = 3 * zoneCellSize + 2 * 8;
+    const gridHeight = 5 * zoneCellSize + 4 * 8;
     const zoneX = zonePanelX + (zonePanelWidth - gridWidth) / 2;
     const zoneY = y;
     for (let row = 0; row < zoneGrid.length; row++) {
       for (let col = 0; col < 3; col++) {
         const zone = zoneGrid[row][col];
-        const x = zoneX + col * (zoneCellSize + 4);
-        const zY = zoneY + row * (zoneCellSize + 4);
+        const x = zoneX + col * (zoneCellSize + 8);
+        const zY = zoneY + row * (zoneCellSize + 8);
         if (zone === null) continue;
         const ev = reportData.metrics?.exitVelocity?.hotZoneEVs?.[zone] ?? null;
         const cellColor = getZoneColor(ev);
         doc.save();
-        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 2).fill(cellColor);
-        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 2).stroke('white');
-        doc.lineWidth(1);
+        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 4).fill(cellColor);
+        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 4).stroke('white');
+        doc.lineWidth(2);
         doc.restore();
-        doc.fontSize(8).fill(ev !== null && ev !== undefined && ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(zone.toString(), x, zY + 3, { align: 'center', width: zoneCellSize });
+        doc.fontSize(14).fill(ev !== null && ev !== undefined && ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(zone.toString(), x, zY + 7, { align: 'center', width: zoneCellSize });
         if (ev !== null && ev !== undefined) {
-          doc.fontSize(7).fill(ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(ev.toFixed(1), x, zY + 13, { align: 'center', width: zoneCellSize });
+          doc.fontSize(12).fill(ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(ev.toFixed(1), x, zY + 24, { align: 'center', width: zoneCellSize });
         }
       }
     }
