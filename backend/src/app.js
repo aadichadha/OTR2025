@@ -224,19 +224,64 @@ app.post('/api/test-login', async (req, res) => {
     
     console.log('🔧 DIRECT TEST: Testing login for:', email);
     
-    // Import AuthService directly
-    const AuthService = require('./services/authService');
+    // Import required modules
+    const { User } = require('./models');
+    const bcrypt = require('bcryptjs');
+    const jwt = require('jsonwebtoken');
     
-    // Use the same logic as the regular login
-    const result = await AuthService.loginUser({ email, password });
+    // Find user directly
+    const user = await User.findOne({ where: { email } });
+    console.log('🔧 DIRECT TEST: User found:', user ? 'YES' : 'NO');
+    
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'Login failed', 
+        details: 'User not found'
+      });
+    }
+    
+    console.log('🔧 DIRECT TEST: User password field:', {
+      exists: !!user.password,
+      length: user.password ? user.password.length : 0,
+      startsWithHash: user.password ? user.password.startsWith('$2a$') : false
+    });
+    
+    // Test password comparison directly
+    console.log('🔧 DIRECT TEST: Testing password comparison...');
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log('🔧 DIRECT TEST: Password comparison result:', isValidPassword);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'Login failed', 
+        details: 'Invalid password'
+      });
+    }
+    
+    // Generate token
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    };
+    
+    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const token = jwt.sign(payload, secret, { expiresIn: '24h' });
     
     console.log('✅ DIRECT TEST: Login successful');
     
     res.json({
       success: true,
       message: 'Login successful',
-      user: result.user,
-      token: result.token
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      },
+      token: token
     });
     
   } catch (error) {
