@@ -179,7 +179,7 @@ const AdminDashboard = () => {
     <Box sx={{
       width: '100%',
       minHeight: 'calc(100vh - 64px)',
-      bgcolor: '#fff',
+      bgcolor: '#1c2c4d', // navy blue background
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -188,7 +188,7 @@ const AdminDashboard = () => {
       <Box sx={{
         width: '100%',
         maxWidth: 1400,
-        bgcolor: '#fff',
+        bgcolor: '#fff', // white panel
         borderRadius: 3,
         boxShadow: '0 4px 32px rgba(28,44,77,0.10)',
         border: '2px solid #1c2c4d',
