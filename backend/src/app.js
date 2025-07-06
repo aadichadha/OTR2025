@@ -120,7 +120,8 @@ const authLimiter = rateLimit({
   skip: (req) => req.method === 'OPTIONS' || req.path.includes('/debug/'), // Skip rate limiting for preflight requests and debug endpoints
 });
 
-app.use('/api/auth/', authLimiter);
+// Temporarily disabled auth rate limiting for debugging
+// app.use('/api/auth/', authLimiter);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
