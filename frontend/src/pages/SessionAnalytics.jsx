@@ -68,6 +68,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import getGradeColor from '../utils/getGradeColor';
+import safeToFixed from '../utils/safeToFixed';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -275,7 +276,7 @@ const SessionAnalytics = () => {
                     </Typography>
                     <Typography variant="h5" component="div">
                       {swings.length > 0 ? 
-                        (swings.reduce((sum, s) => sum + parseFloat(s.exit_velocity || 0), 0) / swings.length).toFixed(1) : 
+                        safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.exit_velocity || 0), 0) / swings.length), 1) : 
                         '0.0'} mph
                     </Typography>
                   </Box>
@@ -294,7 +295,7 @@ const SessionAnalytics = () => {
                     </Typography>
                     <Typography variant="h5" component="div">
                       {swings.length > 0 ? 
-                        (swings.reduce((sum, s) => sum + parseFloat(s.launch_angle || 0), 0) / swings.length).toFixed(1) : 
+                        safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.launch_angle || 0), 0) / swings.length), 1) : 
                         '0.0'}°
                     </Typography>
                   </Box>

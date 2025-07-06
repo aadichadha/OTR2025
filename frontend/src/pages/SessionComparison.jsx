@@ -61,6 +61,7 @@ import {
   Legend
 } from 'recharts';
 import api from '../services/api';
+import safeToFixed from '../utils/safeToFixed';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
@@ -166,9 +167,9 @@ const SessionComparison = () => {
     
     return {
       swingCount: swings.length,
-      avgExitVelocity: exitVelocities.length > 0 ? (exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length).toFixed(1) : 0,
-      bestExitVelocity: exitVelocities.length > 0 ? Math.max(...exitVelocities).toFixed(1) : 0,
-      avgLaunchAngle: launchAngles.length > 0 ? (launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length).toFixed(1) : 0
+      avgExitVelocity: exitVelocities.length > 0 ? safeToFixed((exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length), 1) : 0,
+      bestExitVelocity: exitVelocities.length > 0 ? safeToFixed(Math.max(...exitVelocities), 1) : 0,
+      avgLaunchAngle: launchAngles.length > 0 ? safeToFixed((launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length), 1) : 0
     };
   };
 
@@ -275,7 +276,7 @@ const SessionComparison = () => {
                       {(() => {
                         const allSwings = sessions.flatMap(s => s.exitVelocityData || []);
                         const angles = allSwings.map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
-                        return angles.length > 0 ? (angles.reduce((a, b) => a + b, 0) / angles.length).toFixed(1) : '0.0';
+                        return angles.length > 0 ? safeToFixed((angles.reduce((a, b) => a + b, 0) / angles.length), 1) : '0.0';
                       })()}°
                     </Typography>
                   </Box>

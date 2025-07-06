@@ -25,6 +25,7 @@ import FilterList from '@mui/icons-material/FilterList';
 import Analytics from '@mui/icons-material/Analytics';
 import SprayChart from '../components/visualizations/SprayChart';
 import api from '../services/api';
+import safeToFixed from '../utils/safeToFixed';
 
 const SessionVisualization = () => {
   const { id } = useParams();
@@ -95,9 +96,9 @@ const SessionVisualization = () => {
       const avgLA = filtered.reduce((sum, s) => sum + s.launch_angle, 0) / filtered.length;
       
       setFilteredMetrics({
-        maxExitVelocity: maxEV.toFixed(1),
-        avgExitVelocity: avgEV.toFixed(1),
-        avgLaunchAngle: avgLA.toFixed(1),
+        maxExitVelocity: safeToFixed(maxEV, 1),
+        avgExitVelocity: safeToFixed(avgEV, 1),
+        avgLaunchAngle: safeToFixed(avgLA, 1),
         swingCount: filtered.length
       });
     } else {

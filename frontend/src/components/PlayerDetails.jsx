@@ -100,7 +100,7 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
 
   const formatMetricValue = (value, decimals = 1) => {
     if (value === null || value === undefined) return 'N/A';
-    return value.toFixed(decimals);
+    return safeToFixed(value, decimals);
   };
 
   const renderMetrics = () => {

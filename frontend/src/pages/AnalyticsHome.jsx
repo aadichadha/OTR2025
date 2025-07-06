@@ -71,6 +71,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import SprayChart3D from '../components/visualizations/SprayChart3D';
+import safeToFixed from '../utils/safeToFixed';
 
 // Session type tags for filtering
 const SESSION_TYPES = [
@@ -392,14 +393,14 @@ const AnalyticsHome = () => {
     const hardHits = swingData.filter(swing => 
       swing.exit_velocity && parseFloat(swing.exit_velocity) >= 95
     ).length;
-    return ((hardHits / swingData.length) * 100).toFixed(1);
+    return safeToFixed(((hardHits / swingData.length) * 100), 1);
   };
 
   const getEVPercentile = () => {
     if (!playerBenchmarks || !playerProfile) return 50;
     const avgEV = parseFloat(playerProfile.average_exit_velocity);
     const benchmarkEV = parseFloat(playerBenchmarks.benchmark?.avg_exit_velocity || 75);
-    return Math.min(100, Math.max(0, (avgEV / benchmarkEV) * 100)).toFixed(1);
+    return safeToFixed(Math.min(100, Math.max(0, (avgEV / benchmarkEV) * 100)), 1);
   };
 
   const generateTrendChartData = () => {
@@ -912,10 +913,10 @@ const AnalyticsHome = () => {
                       {swingData.map((swing, index) => (
                         <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f8f9fa' } }}>
                           <TableCell sx={{ color: '#1c2c4d' }}>{swing.sessionId}</TableCell>
-                          <TableCell sx={{ color: '#1c2c4d' }}>{swing.exit_velocity?.toFixed(1)} MPH</TableCell>
-                          <TableCell sx={{ color: '#1c2c4d' }}>{swing.launch_angle?.toFixed(1)}°</TableCell>
-                          <TableCell sx={{ color: '#1c2c4d' }}>{swing.distance?.toFixed(0)} FT</TableCell>
-                          <TableCell sx={{ color: '#1c2c4d' }}>{swing.horiz_angle?.toFixed(1)}°</TableCell>
+                          <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
+                          <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.launch_angle, 1)}°</TableCell>
+                          <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.distance, 0)} FT</TableCell>
+                          <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.horiz_angle, 1)}°</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{swing.strike_zone}</TableCell>
                         </TableRow>
                       ))}
@@ -1242,7 +1243,7 @@ const PlayerProfileView = ({
                   cy="50%"
                   outerRadius={60}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${safeToFixed((percent * 100), 0)}%`}
                 >
                   {generateLaunchAngleDistribution().map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
