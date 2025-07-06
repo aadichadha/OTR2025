@@ -55,24 +55,50 @@ class AuthService {
   static async loginUser(credentials) {
     const { email, password } = credentials;
     console.log('[LOGIN DEBUG] Attempting login for:', email);
+    console.log('[LOGIN DEBUG] Password provided:', password ? 'YES' : 'NO');
+    
     // Find user
     const user = await User.findOne({ where: { email } });
-    console.log('[LOGIN DEBUG] Found user:', user);
+    console.log('[LOGIN DEBUG] Found user:', user ? {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      hasPassword: !!user.password,
+      passwordLength: user.password ? user.password.length : 0
+    } : 'NOT FOUND');
+    
     if (!user) {
+      console.log('[LOGIN ERROR] No user found with email:', email);
       throw new Error('Invalid email or password');
     }
+    
+    console.log('[LOGIN DEBUG] User password field:', {
+      exists: !!user.password,
+      length: user.password ? user.password.length : 0,
+      startsWithHash: user.password ? user.password.startsWith('$2a$') : false
+    });
+    
     // Verify password
+    console.log('[LOGIN DEBUG] Attempting password comparison...');
     const isValidPassword = await bcrypt.compare(password, user.password);
-    console.log('[LOGIN DEBUG] Password valid:', isValidPassword);
+    console.log('[LOGIN DEBUG] Password comparison result:', isValidPassword);
+    
     if (!isValidPassword) {
+      console.log('[LOGIN ERROR] Password mismatch for user:', email);
       throw new Error('Invalid email or password');
     }
+    
+    console.log('[LOGIN DEBUG] Password verified successfully');
+    
     // Generate JWT token
     const token = this.generateToken(user);
+    console.log('[LOGIN DEBUG] Token generated successfully');
+    
     return {
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role
       },
       token

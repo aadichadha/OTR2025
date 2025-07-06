@@ -56,6 +56,18 @@ function Login() {
     }
   };
 
+  const handleDevLogin = () => {
+    const devUser = {
+      id: 1,
+      email: 'dev@otr.com',
+      name: 'Dev User',
+      role: 'admin'
+    };
+    localStorage.setItem('user', JSON.stringify(devUser));
+    localStorage.setItem('token', 'dev-token');
+    window.location.reload();
+  };
+
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="calc(100vh - 64px)" bgcolor="background.default">
       <Paper 
@@ -185,6 +197,29 @@ function Login() {
               sx={{ fontSize: '0.7rem' }}
             />
           </Box>
+        </Box>
+
+        {/* Development Bypass */}
+        <Box sx={{ mt: 2, p: 2, bgcolor: '#fff3cd', borderRadius: 2, border: '1px solid #ffeaa7' }}>
+          <Typography variant="caption" sx={{ color: '#856404', fontWeight: 600, display: 'block', mb: 1 }}>
+            🚧 Development Mode:
+          </Typography>
+          <Button
+            onClick={handleDevLogin}
+            variant="outlined"
+            fullWidth
+            size="small"
+            sx={{ 
+              color: '#856404', 
+              borderColor: '#ffeaa7',
+              '&:hover': {
+                borderColor: '#856404',
+                backgroundColor: '#fff3cd'
+              }
+            }}
+          >
+            Skip Login (Dev Mode)
+          </Button>
         </Box>
       </Paper>
     </Box>

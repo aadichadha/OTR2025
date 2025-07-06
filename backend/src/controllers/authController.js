@@ -66,16 +66,25 @@ class AuthController {
    * Login user
    */
   static async login(req, res) {
+    console.log('🔍 LOGIN DEBUG - Start');
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+    
     try {
       const { email, password } = req.body;
 
+      console.log('📧 Email received:', email);
+      console.log('🔑 Password received:', password ? 'YES' : 'NO');
+
       // Validate required fields
       if (!email || !password) {
+        console.log('❌ Missing email or password');
         return res.status(400).json({ 
           error: 'Email and password are required' 
         });
       }
 
+      console.log('🔍 Calling AuthService.loginUser...');
       const result = await AuthService.loginUser({ email, password });
       console.log('[LOGIN DEBUG] result.user:', result.user);
       
@@ -398,6 +407,126 @@ class AuthController {
       res.status(500).json({ error: 'Failed to reset user password' });
     }
   }
+
+  /**
+   * DEBUG: Check users in database
+   */
+  static async checkUsers(req, res) {
+    try {
+      console.log('🔍 DEBUG: Checking users in database...');
+      
+      const users = await User.findAll({
+        attributes: ['id', 'email', 'name', 'role', 'password']
+      });
+      
+      console.log('📊 Found users:', users.length);
+      
+      const userList = users.map(user => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        hasPassword: !!user.password,
+        passwordLength: user.password ? user.password.length : 0
+      }));
+      
+      res.json({
+        totalUsers: users.length,
+        users: userList
+      });
+    } catch (error) {
+      console.error('💥 DEBUG: Error checking users:', error);
+      res.status(500).json({ error: 'Database error', details: error.message });
+    }
+  }
+
+  /**
+   * DEBUG: Create test user with proper hashing
+   */
+  static async createTestUser(req, res) {
+    try {
+      const bcrypt = require('bcryptjs');
+      
+      const email = 'admin@otr.com';
+      const password = 'password123';
+      const name = 'Admin User';
+      const role = 'admin';
+      
+      console.log('🔧 DEBUG: Creating test user:', email);
+      
+      // Hash password
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      
+      console.log('🔐 Password hashed successfully');
+      
+      // Check if user exists
+      const existingUser = await User.findOne({ where: { email } });
+      
+      if (existingUser) {
+        console.log('🔄 Updating existing user...');
+        await existingUser.update({
+          password: hashedPassword,
+          name: name,
+          role: role
+        });
+      } else {
+        console.log('➕ Creating new user...');
+        await User.create({
+          email: email,
+          password: hashedPassword,
+          name: name,
+          role: role
+        });
+      }
+      
+      console.log('✅ Test user created/updated successfully');
+      
+      res.json({
+        message: 'Test user created successfully',
+        testCredentials: {
+          email: 'admin@otr.com',
+          password: 'password123'
+        }
+      });
+      
+    } catch (error) {
+      console.error('💥 DEBUG: Error creating test user:', error);
+      res.status(500).json({ error: 'Failed to create user', details: error.message });
+    }
+  }
+
+  /**
+   * DEBUG: Test password hashing
+   */
+  static async testPassword(req, res) {
+    try {
+      const { password } = req.body;
+      const bcrypt = require('bcryptjs');
+      
+      console.log('🔧 DEBUG: Testing password hashing for:', password);
+      
+      // Hash the password
+      const saltRounds = 10;
+      const hash = await bcrypt.hash(password, saltRounds);
+      
+      // Immediately verify it
+      const isValid = await bcrypt.compare(password, hash);
+      
+      console.log('✅ Password test result:', isValid);
+      
+      res.json({
+        originalPassword: password,
+        hashedPassword: hash,
+        verificationResult: isValid,
+        message: isValid ? 'Password hashing working correctly' : 'Password hashing BROKEN'
+      });
+      
+    } catch (error) {
+      console.error('💥 DEBUG: Password test failed:', error);
+      res.status(500).json({ error: 'Password test failed', details: error.message });
+    }
+  }
 }
 
 router.get('/verify', authenticateToken, (req, res) => {
@@ -431,5 +560,10 @@ router.get('/test', authenticateToken, (req, res) => {
     }
   });
 });
+
+// DEBUG ROUTES - Remove in production
+router.get('/debug/check-users', AuthController.checkUsers);
+router.post('/debug/create-test-user', AuthController.createTestUser);
+router.post('/debug/test-password', AuthController.testPassword);
 
 module.exports = router; 

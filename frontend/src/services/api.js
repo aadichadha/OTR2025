@@ -11,7 +11,7 @@ const api = axios.create({ baseURL: API_URL });
 
 api.interceptors.request.use(config => {
   const token = getToken();
-  if (token) {
+  if (token && token !== 'dev-token') {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
   console.log('[API DEBUG] Request:', config.method?.toUpperCase(), config.url, 'Headers:', config.headers);

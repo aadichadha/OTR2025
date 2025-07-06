@@ -6,6 +6,15 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './theme';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 
+// 🚧 TEMPORARY BYPASS - REMOVE WHEN LOGIN IS FIXED
+localStorage.setItem('user', JSON.stringify({
+  id: 1,
+  email: 'admin@otr.com',
+  name: 'Admin User',
+  role: 'admin'
+}));
+localStorage.setItem('token', 'dev-token');
+
 // Import Montserrat font
 const fontLink = document.createElement('link');
 fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap';
