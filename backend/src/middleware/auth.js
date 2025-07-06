@@ -1,49 +1,43 @@
-const AuthService = require('../services/authService');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-/**
- * Middleware to verify JWT token and add user to request
- */
+// Middleware to verify JWT token
 const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-    console.log('[AUTH] Raw header:', authHeader);
-    console.log('[AUTH] Extracted token:', token);
-    if (!token) {
-      return res.status(401).json({ error: 'Access token required' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.userId);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
     }
-    // Verify token
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
-    let decoded;
-    try {
-      decoded = jwt.verify(token, secret);
-      console.log('[AUTH] Decoded token:', decoded);
-    } catch (err) {
-      console.error('[AUTH] Token verification error:', err);
-      return res.status(403).json({ error: 'Invalid or expired token', details: err.message });
-    }
-    // Get user data
-    const userId = decoded.userId;
-    console.log('[AUTH] Using userId for lookup:', userId);
-    const user = await AuthService.getUserById(userId);
+
     req.user = user;
     next();
   } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired token', details: error.message });
+    console.error('Token verification error:', error);
+    return res.status(403).json({ error: 'Invalid token' });
   }
 };
 
-/**
- * Middleware to check if user has required role
- */
-const requireRole = (requiredRole) => {
+// Middleware to check if user has specific permission
+const requirePermission = (permission) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (req.user.role !== requiredRole && req.user.role !== 'admin') {
+    if (req.user.role === 'admin') {
+      return next(); // Admin has all permissions
+    }
+
+    if (!req.user.hasPermission(permission)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
@@ -51,28 +45,77 @@ const requireRole = (requiredRole) => {
   };
 };
 
-/**
- * Optional authentication middleware (doesn't fail if no token)
- */
-const optionalAuth = async (req, res, next) => {
-  try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (token) {
-      const decoded = AuthService.verifyToken(token);
-      const user = await AuthService.getUserById(decoded.id);
-      req.user = user;
-    }
-  } catch (error) {
-    // Ignore token errors for optional auth
-  }
+// Middleware to check if user has specific role
+const requireRole = (roles) => {
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
   
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Insufficient role permissions' });
+    }
+
+    next();
+  };
+};
+
+// Middleware to check if user can access specific player data
+const canAccessPlayer = async (req, res, next) => {
+  const playerId = req.params.playerId || req.params.id;
+  
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // Admin and coaches can access all players
+  if (req.user.role === 'admin' || req.user.role === 'coach') {
+    return next();
+  }
+
+  // Players can only access their own data
+  if (req.user.role === 'player') {
+    // Check if the playerId matches the user's associated player
+    // This assumes there's a relationship between users and players
+    // You may need to adjust this based on your data model
+    if (req.user.id === parseInt(playerId)) {
+      return next();
+    }
+    return res.status(403).json({ error: 'Can only access own data' });
+  }
+
+  next();
+};
+
+// Middleware to check if user can access specific session data
+const canAccessSession = async (req, res, next) => {
+  const sessionId = req.params.sessionId || req.params.id;
+  
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // Admin and coaches can access all sessions
+  if (req.user.role === 'admin' || req.user.role === 'coach') {
+    return next();
+  }
+
+  // Players can only access their own sessions
+  if (req.user.role === 'player') {
+    // You'll need to implement session ownership check here
+    // This is a placeholder - adjust based on your session model
+    return res.status(403).json({ error: 'Can only access own sessions' });
+  }
+
   next();
 };
 
 module.exports = {
   authenticateToken,
+  requirePermission,
   requireRole,
-  optionalAuth
+  canAccessPlayer,
+  canAccessSession
 }; 
