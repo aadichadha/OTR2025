@@ -2,14 +2,13 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// PDF page setup
-const pageWidth = 612;  // US Letter portrait
+// EMERGENCY: Shrink everything
+const margin = 20;
+const pageWidth = 612;
 const pageHeight = 792;
-const margin = 36;
 const contentWidth = pageWidth - 2 * margin;
 const contentHeight = pageHeight - 2 * margin;
 
-// Color constants (same as web)
 const NAVY = '#1a2340';
 const PANEL_BG = '#fff';
 const CARD_BG = NAVY;
@@ -51,32 +50,30 @@ function generateReportPDF(reportData, outputFilePath) {
     const panelY = margin;
     const panelWidth = contentWidth;
     const panelHeight = contentHeight;
-    doc.roundedRect(panelX, panelY, panelWidth, panelHeight, 18).fill(PANEL_BG);
+    doc.roundedRect(panelX, panelY, panelWidth, panelHeight, 12).fill(PANEL_BG);
 
-    // Header (centered)
+    // Header (centered, small)
     const logoPath = path.resolve(__dirname, '../../frontend/public/images/otrbaseball-main.png');
     if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, panelX + 12, panelY + 18, { fit: [90, 32] });
+      doc.image(logoPath, panelX + 6, panelY + 8, { fit: [60, 20] });
     }
-    doc.fontSize(28).fill(NAVY).font('Helvetica-Bold').text('Performance Report', panelX, panelY + 18, {
-      align: 'center',
-      width: panelWidth
+    doc.fontSize(18).fill(NAVY).font('Helvetica-Bold').text('Performance Report', panelX, panelY + 8, {
+      align: 'center', width: panelWidth
     });
-    doc.fontSize(13).fill(METRIC_UNIT).font('Helvetica-Bold').text(
+    doc.fontSize(9).fill(METRIC_UNIT).font('Helvetica-Bold').text(
       `${reportData.player.name} • ${new Date(reportData.session.date).toLocaleDateString()} • ${reportData.session.type.toUpperCase()}`,
-      panelX, panelY + 52, {
-        align: 'center',
-        width: panelWidth
+      panelX, panelY + 28, {
+        align: 'center', width: panelWidth
       }
     );
 
     // --- Layout calculations ---
-    let y = panelY + 90;
-    // Metric cards: 2 rows of 3, smaller size
-    const cardWidth = 110;
-    const cardHeight = 70;
-    const cardSpacingX = 18;
-    const cardSpacingY = 18;
+    let y = panelY + 40; // Header: 40px
+    // Metric cards: 2 rows of 3, small size
+    const cardWidth = 120;
+    const cardHeight = 80;
+    const cardSpacingX = 10;
+    const cardSpacingY = 10;
     const cardsPerRow = 3;
     const totalCardsWidth = (cardWidth * cardsPerRow) + (cardSpacingX * (cardsPerRow - 1));
     const cardsStartX = panelX + (panelWidth - totalCardsWidth) / 2;
@@ -84,27 +81,27 @@ function generateReportPDF(reportData, outputFilePath) {
     // Draw metric cards
     const drawMetricCard = (x, y, value, label, unit, grade) => {
       doc.save();
-      doc.roundedRect(x, y, cardWidth, cardHeight, 12).fill(CARD_BG);
-      doc.roundedRect(x, y, cardWidth, cardHeight, 12).stroke(NAVY);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 8).fill(CARD_BG);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 8).stroke(NAVY);
       // Value
       const valueText = value !== null && value !== undefined ? Number(value).toFixed(1) : 'N/A';
-      doc.fontSize(24).fill(CARD_TEXT).font('Helvetica-Bold').text(valueText, x, y + 10, {
+      doc.fontSize(16).fill(CARD_TEXT).font('Helvetica-Bold').text(valueText, x, y + 10, {
         align: 'center', width: cardWidth
       });
       // Unit
       if (unit) {
-        doc.fontSize(13).fill(METRIC_UNIT).font('Helvetica').text(unit, x + cardWidth - 32, y + 10, {
-          align: 'left', width: 28
+        doc.fontSize(10).fill(METRIC_UNIT).font('Helvetica').text(unit, x + cardWidth - 24, y + 10, {
+          align: 'left', width: 20
         });
       }
       // Label
-      doc.fontSize(10).fill(METRIC_LABEL).font('Helvetica-Bold').text(label, x, y + 38, {
+      doc.fontSize(10).fill(METRIC_LABEL).font('Helvetica-Bold').text(label, x, y + 32, {
         align: 'center', width: cardWidth
       });
       // Grade
       if (grade) {
         const gradeColor = getGradeColor(grade);
-        doc.fontSize(9).fill(gradeColor).font('Helvetica-Bold').text(grade, x, y + cardHeight - 16, {
+        doc.fontSize(8).fill(gradeColor).font('Helvetica-Bold').text(grade, x, y + cardHeight - 14, {
           align: 'center', width: cardWidth
         });
       }
@@ -154,22 +151,22 @@ function generateReportPDF(reportData, outputFilePath) {
           drawMetricCard(cardsStartX + i * (cardWidth + cardSpacingX), y + cardHeight + cardSpacingY, row2Metrics[i].value, row2Metrics[i].label, row2Metrics[i].unit, row2Metrics[i].grade);
         }
       }
-      y += 2 * cardHeight + cardSpacingY + 24; // Move y below cards
+      y += 2 * cardHeight + cardSpacingY + 10; // Move y below cards
     }
 
     // Strike Zone Heat Map (scaled to fit)
-    const zonePanelWidth = 340;
-    const zonePanelHeight = 260;
+    const zonePanelWidth = 180;
+    const zonePanelHeight = 170;
     const zonePanelX = panelX + (panelWidth - zonePanelWidth) / 2;
-    doc.roundedRect(zonePanelX, y, zonePanelWidth, zonePanelHeight, 12).fill(NAVY);
-    y += 18;
+    doc.roundedRect(zonePanelX, y, zonePanelWidth, zonePanelHeight, 8).fill(NAVY);
+    y += 10;
     // Title
-    doc.fontSize(15).fill('white').font('Helvetica-Bold').text('STRIKE ZONE HOT ZONES (Avg EV)', zonePanelX, y, {
+    doc.fontSize(10).fill('white').font('Helvetica-Bold').text('STRIKE ZONE HOT ZONES (Avg EV)', zonePanelX, y, {
       align: 'center', width: zonePanelWidth
     });
-    y += 28;
+    y += 18;
     // Grid
-    const zoneCellSize = 38;
+    const zoneCellSize = 30;
     const zoneGrid = [
       [10, null, 11],
       [1, 2, 3],
@@ -177,26 +174,26 @@ function generateReportPDF(reportData, outputFilePath) {
       [7, 8, 9],
       [12, null, 13],
     ];
-    const gridWidth = 3 * zoneCellSize + 2 * 6;
-    const gridHeight = 5 * zoneCellSize + 4 * 6;
+    const gridWidth = 3 * zoneCellSize + 2 * 4;
+    const gridHeight = 5 * zoneCellSize + 4 * 4;
     const zoneX = zonePanelX + (zonePanelWidth - gridWidth) / 2;
     const zoneY = y;
     for (let row = 0; row < zoneGrid.length; row++) {
       for (let col = 0; col < 3; col++) {
         const zone = zoneGrid[row][col];
-        const x = zoneX + col * (zoneCellSize + 6);
-        const zY = zoneY + row * (zoneCellSize + 6);
+        const x = zoneX + col * (zoneCellSize + 4);
+        const zY = zoneY + row * (zoneCellSize + 4);
         if (zone === null) continue;
         const ev = reportData.metrics?.exitVelocity?.hotZoneEVs?.[zone] ?? null;
         const cellColor = getZoneColor(ev);
         doc.save();
-        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 4).fill(cellColor);
-        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 4).stroke('white');
-        doc.lineWidth(1.5);
+        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 2).fill(cellColor);
+        doc.roundedRect(x, zY, zoneCellSize, zoneCellSize, 2).stroke('white');
+        doc.lineWidth(1);
         doc.restore();
-        doc.fontSize(11).fill(ev !== null && ev !== undefined && ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(zone.toString(), x, zY + 5, { align: 'center', width: zoneCellSize });
+        doc.fontSize(8).fill(ev !== null && ev !== undefined && ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(zone.toString(), x, zY + 3, { align: 'center', width: zoneCellSize });
         if (ev !== null && ev !== undefined) {
-          doc.fontSize(10).fill(ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(ev.toFixed(1), x, zY + 20, { align: 'center', width: zoneCellSize });
+          doc.fontSize(7).fill(ev > 85 ? 'white' : NAVY).font('Helvetica-Bold').text(ev.toFixed(1), x, zY + 13, { align: 'center', width: zoneCellSize });
         }
       }
     }
@@ -207,5 +204,4 @@ function generateReportPDF(reportData, outputFilePath) {
   });
 }
 
-module.exports = { generateReportPDF }; 
 module.exports = { generateReportPDF }; 
