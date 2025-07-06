@@ -3,6 +3,7 @@ import { Box, Typography, Grid, Card, Button, CircularProgress } from '@mui/mate
 import otrLogo from '/images/otrbaseball-main.png';
 import DownloadIcon from '@mui/icons-material/Download';
 import { getToken } from '../services/auth';
+import getGradeColor from '../utils/getGradeColor';
 
 const NAVY = '#1a2340';
 const PANEL_BG = '#fff';
@@ -121,9 +122,7 @@ function ReportDisplay({ report }) {
 
 function MetricCard({ label, value, unit, grade }) {
   // Color for grade
-  let gradeColor = '#7ecbff';
-  if (grade === 'Above Average' || grade === 'Complete' || grade === 'Distance') gradeColor = '#3ecb7e';
-  if (grade === 'Below Average') gradeColor = '#ff8c00';
+  let gradeColor = grade ? getGradeColor(grade) : '#7ecbff';
   return (
     <Grid item xs={12} sm={6} md={4} lg={2}>
       <Card sx={{ p: 2.5, textAlign: 'center', bgcolor: CARD_BG, border: 'none', borderRadius: 4, boxShadow: '0 2px 12px rgba(28,44,77,0.18)', minWidth: 120, minHeight: 80 }}>

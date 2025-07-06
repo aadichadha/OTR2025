@@ -67,6 +67,7 @@ import {
   Radar
 } from 'recharts';
 import api from '../services/api';
+import getGradeColor from '../utils/getGradeColor';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -174,17 +175,6 @@ const SessionAnalytics = () => {
     if (trend > 0) return { icon: <TrendingUp color="success" />, color: 'success' };
     if (trend < 0) return { icon: <TrendingDown color="error" />, color: 'error' };
     return { icon: <TrendingFlat color="action" />, color: 'action' };
-  };
-
-  const getGradeColor = (grade) => {
-    switch (grade) {
-      case 'A': return 'success';
-      case 'B': return 'info';
-      case 'C': return 'warning';
-      case 'D': return 'error';
-      case 'F': return 'error';
-      default: return 'default';
-    }
   };
 
   if (loading) {

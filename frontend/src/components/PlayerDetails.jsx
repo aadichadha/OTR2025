@@ -35,6 +35,7 @@ import LocalOffer from '@mui/icons-material/LocalOffer';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../services/api';
+import getGradeColor from '../utils/getGradeColor';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -98,14 +99,6 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
   const formatMetricValue = (value, decimals = 1) => {
     if (value === null || value === undefined) return 'N/A';
     return value.toFixed(decimals);
-  };
-
-  const getGradeColor = (grade) => {
-    if (!grade) return 'default';
-    if (grade === 'Above Average') return 'success';
-    if (grade === 'Average') return 'warning';
-    if (grade === 'Below Average') return 'error';
-    return 'default';
   };
 
   const renderMetrics = () => {
