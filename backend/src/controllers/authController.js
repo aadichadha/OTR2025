@@ -570,6 +570,37 @@ class AuthController {
       res.status(500).json({ error: 'Password test failed', details: error.message });
     }
   }
+
+  /**
+   * DEBUG: Test login without rate limiting
+   */
+  static async testLogin(req, res) {
+    try {
+      const { email, password } = req.body;
+      
+      console.log('🔧 DEBUG: Testing login for:', email);
+      
+      // Use the same logic as the regular login but without rate limiting
+      const result = await AuthService.loginUser({ email, password });
+      
+      console.log('✅ Test login successful');
+      
+      res.json({
+        success: true,
+        message: 'Login successful',
+        user: result.user,
+        token: result.token
+      });
+      
+    } catch (error) {
+      console.error('💥 DEBUG: Test login failed:', error);
+      res.status(401).json({ 
+        success: false,
+        error: 'Login failed', 
+        details: error.message 
+      });
+    }
+  }
 }
 
 router.get('/verify', authenticateToken, (req, res) => {
@@ -609,5 +640,6 @@ router.get('/debug/check-users', AuthController.checkUsers);
 router.post('/debug/create-test-user', AuthController.createTestUser);
 router.post('/debug/test-password', AuthController.testPassword);
 router.post('/debug/fix-all-passwords', AuthController.fixAllPasswords);
+router.post('/debug/test-login', AuthController.testLogin);
 
 module.exports = router; 
