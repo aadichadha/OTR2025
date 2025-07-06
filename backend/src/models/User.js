@@ -34,7 +34,8 @@ const User = sequelize.define('User', {
   },
   permissions: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    defaultValue: null
   },
   created_by: {
     type: DataTypes.INTEGER,

@@ -10,20 +10,33 @@ class AuthService {
     const { email, password, name } = userData;
     const role = 'player'; // Always register as player
     console.log('[REGISTER DEBUG] Attempting to register:', email, name, role);
+    
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     console.log('[REGISTER DEBUG] Existing user:', existingUser);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
-    // Create user
-    const user = await User.create({
+    
+    // Create user with minimal required fields
+    const userDataToCreate = {
       name,
       email,
       password,
       role
-    });
+    };
+    
+    // Try to add permissions if the column exists
+    try {
+      const permissions = User.getRolePermissions(role);
+      userDataToCreate.permissions = permissions;
+    } catch (error) {
+      console.log('[REGISTER WARNING] Could not set permissions, continuing without:', error.message);
+    }
+    
+    const user = await User.create(userDataToCreate);
     console.log('[REGISTER DEBUG] Created user:', user);
+    
     // Generate JWT token
     const token = this.generateToken(user);
     return {

@@ -67,7 +67,7 @@ class AuthController {
    */
   static async login(req, res) {
     try {
-      const { email, password, expectedRole } = req.body;
+      const { email, password } = req.body;
 
       // Validate required fields
       if (!email || !password) {
@@ -84,19 +84,30 @@ class AuthController {
         return res.status(401).json({ error: 'Login failed: user not found or id is null' });
       }
 
-      // Validate expected role if provided
-      if (expectedRole && result.user.role !== expectedRole) {
-        return res.status(403).json({ 
-          error: `Role mismatch. Expected ${expectedRole}, but user is ${result.user.role}` 
-        });
+      // Get user permissions - handle missing permissions column gracefully
+      let permissions = [];
+      try {
+        permissions = User.getRolePermissions(result.user.role);
+      } catch (error) {
+        console.log('[LOGIN WARNING] Could not get role permissions, using defaults:', error.message);
+        // Set default permissions based on role
+        if (result.user.role === 'admin') {
+          permissions = ['view_all_players', 'manage_players', 'manage_coaches', 'manage_users', 'view_own_data', 'download_reports', 'view_analytics', 'view_admin_dashboard'];
+        } else if (result.user.role === 'coach') {
+          permissions = ['view_all_players', 'manage_players', 'view_own_data', 'download_reports', 'view_analytics', 'view_coach_dashboard'];
+        } else {
+          permissions = ['view_own_data', 'download_reports', 'view_player_dashboard'];
+        }
       }
-
-      // Get user permissions
-      const permissions = User.getRolePermissions(result.user.role);
       
-      // Update user permissions if not set
+      // Update user permissions if not set (but don't fail if permissions column doesn't exist)
       if (!result.user.permissions) {
-        await result.user.update({ permissions });
+        try {
+          await result.user.update({ permissions });
+        } catch (error) {
+          console.log('[LOGIN WARNING] Could not update user permissions:', error.message);
+          // Continue without updating permissions
+        }
       }
 
       const token = jwt.sign({ 
