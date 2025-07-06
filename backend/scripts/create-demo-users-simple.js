@@ -1,71 +1,17 @@
-const { Sequelize } = require('sequelize');
 const bcrypt = require('bcryptjs');
+const { sequelize } = require('../src/config/database');
 
-// Instructions for the user
-console.log('🚀 OTR Baseball - Create Demo Users');
-console.log('==================================');
+console.log('🚀 OTR Baseball - Create Demo Users (Simple)');
+console.log('============================================');
 console.log('');
 
-// Check if DATABASE_URL is provided
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  console.error('❌ ERROR: DATABASE_URL not found!');
-  console.log('');
-  console.log('Please set your production DATABASE_URL:');
-  console.log('export DATABASE_URL="postgresql://username:password@host:port/database"');
-  process.exit(1);
-}
-
 async function createDemoUsers() {
-  let sequelize;
-  
   try {
-    console.log('🔗 Connecting to production PostgreSQL database...');
-    console.log('Host:', new URL(databaseUrl).hostname);
-    
-    // Connect directly to production database
-    sequelize = new Sequelize(databaseUrl, {
-      dialect: 'postgres',
-      logging: false,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      }
-    });
-    
+    console.log('🔗 Connecting to database...');
     await sequelize.authenticate();
-    console.log('✅ Production database connection established');
+    console.log('✅ Database connection established');
 
     console.log('🔄 Creating demo users...');
-
-    // Define role permissions
-    const rolePermissions = {
-      admin: [
-        'view_all_players',
-        'manage_players',
-        'manage_coaches',
-        'manage_users',
-        'view_own_data',
-        'download_reports',
-        'view_analytics',
-        'view_admin_dashboard'
-      ],
-      coach: [
-        'view_all_players',
-        'manage_players',
-        'view_own_data',
-        'download_reports',
-        'view_analytics',
-        'view_coach_dashboard'
-      ],
-      player: [
-        'view_own_data',
-        'download_reports',
-        'view_player_dashboard'
-      ]
-    };
 
     // Hash password for all users (password123)
     const hashedPassword = await bcrypt.hash('password123', 10);
@@ -78,21 +24,41 @@ async function createDemoUsers() {
         password: hashedPassword,
         name: 'Admin User',
         role: 'admin',
-        permissions: JSON.stringify(rolePermissions.admin)
+        permissions: JSON.stringify([
+          'view_all_players',
+          'manage_players',
+          'manage_coaches',
+          'manage_users',
+          'view_own_data',
+          'download_reports',
+          'view_analytics',
+          'view_admin_dashboard'
+        ])
       },
       {
         email: 'coach@otr.com',
         password: hashedPassword,
         name: 'Coach User',
         role: 'coach',
-        permissions: JSON.stringify(rolePermissions.coach)
+        permissions: JSON.stringify([
+          'view_all_players',
+          'manage_players',
+          'view_own_data',
+          'download_reports',
+          'view_analytics',
+          'view_coach_dashboard'
+        ])
       },
       {
         email: 'player@otr.com',
         password: hashedPassword,
         name: 'Player User',
         role: 'player',
-        permissions: JSON.stringify(rolePermissions.player)
+        permissions: JSON.stringify([
+          'view_own_data',
+          'download_reports',
+          'view_player_dashboard'
+        ])
       }
     ];
 
@@ -101,7 +67,7 @@ async function createDemoUsers() {
       try {
         // Check if user already exists
         const [existingUsers] = await sequelize.query(
-          'SELECT id FROM users WHERE email = $1',
+          'SELECT id FROM users WHERE email = ?',
           {
             bind: [userData.email],
             type: sequelize.QueryTypes.SELECT
@@ -113,8 +79,8 @@ async function createDemoUsers() {
           
           await sequelize.query(
             `UPDATE users 
-             SET name = $1, role = $2, permissions = $3, password = $4
-             WHERE email = $5`,
+             SET name = ?, role = ?, permissions = ?, password = ?
+             WHERE email = ?`,
             {
               bind: [
                 userData.name,
@@ -130,7 +96,7 @@ async function createDemoUsers() {
           // Create new user
           await sequelize.query(
             `INSERT INTO users (name, email, password, role, permissions, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
             {
               bind: [
                 userData.name,
@@ -165,10 +131,8 @@ async function createDemoUsers() {
       detail: error.detail
     });
   } finally {
-    if (sequelize) {
-      await sequelize.close();
-      console.log('🔌 Database connection closed');
-    }
+    await sequelize.close();
+    console.log('🔌 Database connection closed');
   }
 }
 
