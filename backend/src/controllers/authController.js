@@ -775,6 +775,22 @@ router.post('/debug/test-login', AuthController.testLogin);
 router.post('/debug/regenerate-admin-password', AuthController.regenerateAdminPassword);
 router.get('/debug/bcrypt-test', AuthController.testBcrypt);
 router.get('/debug/check-admin-password', AuthController.checkAdminPassword);
+router.get('/debug/raw-admin-password', async (req, res) => {
+  try {
+    const user = await require('../models').User.findOne({ where: { email: 'admin@otr.com' } });
+    if (!user) {
+      return res.status(404).json({ error: 'Admin user not found' });
+    }
+    res.json({
+      email: user.email,
+      password: user.password,
+      length: user.password.length,
+      startsWith: user.password.substring(0, 7)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Force restart
 module.exports = router; 

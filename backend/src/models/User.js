@@ -56,13 +56,21 @@ const User = sequelize.define('User', {
   updatedAt: 'updated_at',
   hooks: {
     beforeCreate: async (user) => {
+      console.log('[HOOK DEBUG] beforeCreate - password before:', user.password);
       if (user.password && !user.password.startsWith('$2a$')) {
         user.password = await bcrypt.hash(user.password, 10);
+        console.log('[HOOK DEBUG] beforeCreate - password hashed:', user.password);
+      } else {
+        console.log('[HOOK DEBUG] beforeCreate - password already hashed, skipping');
       }
     },
     beforeUpdate: async (user) => {
+      console.log('[HOOK DEBUG] beforeUpdate - password before:', user.password);
       if (user.changed('password') && !user.password.startsWith('$2a$')) {
         user.password = await bcrypt.hash(user.password, 10);
+        console.log('[HOOK DEBUG] beforeUpdate - password hashed:', user.password);
+      } else {
+        console.log('[HOOK DEBUG] beforeUpdate - password already hashed or not changed, skipping');
       }
     }
   }
