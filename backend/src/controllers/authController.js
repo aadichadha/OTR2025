@@ -532,8 +532,8 @@ class AuthController {
           continue;
         }
         
-        // Update the user
-        await user.update({ password: hashedPassword });
+        // Update the user (bypass hooks to avoid double-hashing)
+        await user.update({ password: hashedPassword }, { hooks: false });
         
         // Test again after database save
         const savedUser = await User.findOne({ where: { email: user.email } });
@@ -653,8 +653,8 @@ class AuthController {
         return res.status(500).json({ error: 'New hash failed verification' });
       }
       
-      // Update user with new hash
-      await user.update({ password: newHash });
+      // Update user with new hash (bypass hooks to avoid double-hashing)
+      await user.update({ password: newHash }, { hooks: false });
       
       // Test again after database save
       const savedUser = await User.findOne({ where: { email: 'admin@otr.com' } });
