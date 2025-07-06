@@ -71,10 +71,13 @@ class AuthController {
     console.log('Request headers:', req.headers);
     
     try {
-      const { email, password } = req.body;
+      const { email, password: rawPassword } = req.body;
+      const password = rawPassword ? rawPassword.trim() : rawPassword;
 
       console.log('📧 Email received:', email);
       console.log('🔑 Password received:', password ? 'YES' : 'NO');
+      console.log('🔑 Password length:', password ? password.length : 0);
+      console.log('🔑 Password first char:', password ? `"${password.charAt(0)}"` : 'N/A');
 
       // Validate required fields
       if (!email || !password) {

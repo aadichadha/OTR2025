@@ -53,9 +53,12 @@ class AuthService {
    * Login user
    */
   static async loginUser(credentials) {
-    const { email, password } = credentials;
+    const { email, password: rawPassword } = credentials;
+    const password = rawPassword ? rawPassword.trim() : rawPassword;
     console.log('[LOGIN DEBUG] Attempting login for:', email);
     console.log('[LOGIN DEBUG] Password provided:', password ? 'YES' : 'NO');
+    console.log('[LOGIN DEBUG] Password length:', password ? password.length : 0);
+    console.log('[LOGIN DEBUG] Password first char:', password ? `"${password.charAt(0)}"` : 'N/A');
     
     // Find user
     const user = await User.findOne({ where: { email } });

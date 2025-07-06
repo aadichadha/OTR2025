@@ -264,7 +264,8 @@ app.get('/api/debug/user/:email', async (req, res) => {
 // Direct login test endpoint (bypasses all rate limiting)
 app.post('/api/test-login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password: rawPassword } = req.body;
+    const password = rawPassword ? rawPassword.trim() : rawPassword;
     
     console.log('🔧 DIRECT TEST: Testing login for:', email);
     
