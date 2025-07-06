@@ -36,6 +36,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../services/api';
 import getGradeColor from '../utils/getGradeColor';
+import safeToFixed from '../utils/safeToFixed';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -115,7 +116,7 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)' }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                  {formatMetricValue(metrics.batSpeed.avg)}
+                  {safeToFixed(metrics.batSpeed.avg, 1)}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Avg Bat Speed (MPH)
@@ -133,7 +134,7 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white', boxShadow: '0 4px 20px rgba(240, 147, 251, 0.3)' }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                  {formatMetricValue(metrics.batSpeed.max)}
+                  {safeToFixed(metrics.batSpeed.max, 1)}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Max Bat Speed (MPH)
@@ -149,7 +150,7 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', boxShadow: '0 4px 20px rgba(79, 172, 254, 0.3)' }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                  {formatMetricValue(metrics.exitVelocity.avg)}
+                  {safeToFixed(metrics.exitVelocity.avg, 1)}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Avg Exit Velocity (MPH)
@@ -167,7 +168,7 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white', boxShadow: '0 4px 20px rgba(67, 233, 123, 0.3)' }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                  {formatMetricValue(metrics.exitVelocity.max)}
+                  {safeToFixed(metrics.exitVelocity.max, 1)}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Max Exit Velocity (MPH)
@@ -895,9 +896,9 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
                               onClick={() => setSelectedSwing(swing)}
                             >
                               <TableCell sx={{ color: '#1c2c4d' }}>{idx + 1}</TableCell>
-                              <TableCell sx={{ color: '#1c2c4d' }}>{swing.exit_velocity?.toFixed(1)} MPH</TableCell>
-                              <TableCell sx={{ color: '#1c2c4d' }}>{swing.launch_angle?.toFixed(1)}°</TableCell>
-                              <TableCell sx={{ color: '#1c2c4d' }}>{swing.distance?.toFixed(0)} FT</TableCell>
+                              <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
+                              <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.launch_angle, 1)}°</TableCell>
+                              <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.distance, 0)} FT</TableCell>
                               <TableCell sx={{ color: '#1c2c4d' }}>{swing.strike_zone}</TableCell>
                             </TableRow>
                           ))}
@@ -935,9 +936,9 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
                 <DialogContent sx={{ pt: 2, bgcolor: '#fff' }}>
                   {selectedSwing && (
                     <Box>
-                      <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Exit Velocity:</b> {selectedSwing.exit_velocity} MPH</Typography>
-                      <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Launch Angle:</b> {selectedSwing.launch_angle}°</Typography>
-                      <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Distance:</b> {selectedSwing.distance} FT</Typography>
+                      <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Exit Velocity:</b> {safeToFixed(selectedSwing.exit_velocity, 1)} MPH</Typography>
+                      <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Launch Angle:</b> {safeToFixed(selectedSwing.launch_angle, 1)}°</Typography>
+                      <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Distance:</b> {safeToFixed(selectedSwing.distance, 0)} FT</Typography>
                       <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Strike Zone:</b> {selectedSwing.strike_zone}</Typography>
                       <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Horizontal Angle:</b> {selectedSwing.horiz_angle}</Typography>
                       <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Time:</b> {selectedSwing.created_at}</Typography>
@@ -1055,7 +1056,7 @@ function ReportDisplay({ report, player }) {
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', boxShadow: '0 4px 20px rgba(79, 172, 254, 0.3)' }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                {exitVelocityMetrics.avgExitVelocity ? exitVelocityMetrics.avgExitVelocity.toFixed(1) : 'N/A'}
+                {safeToFixed(exitVelocityMetrics.avgExitVelocity, 1)}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 Exit Velocity (MPH)
@@ -1075,7 +1076,7 @@ function ReportDisplay({ report, player }) {
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white', boxShadow: '0 4px 20px rgba(67, 233, 123, 0.3)' }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                {exitVelocityMetrics.avgLaunchAngle ? exitVelocityMetrics.avgLaunchAngle.toFixed(1) : 'N/A'}
+                {safeToFixed(exitVelocityMetrics.avgLaunchAngle, 1)}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 Launch Angle (°)
@@ -1226,9 +1227,9 @@ function ReportDisplay({ report, player }) {
                       onClick={() => setSelectedSwing(swing)}
                     >
                       <TableCell sx={{ color: '#1c2c4d' }}>{idx + 1}</TableCell>
-                      <TableCell sx={{ color: '#1c2c4d' }}>{swing.exit_velocity?.toFixed(1)} MPH</TableCell>
-                      <TableCell sx={{ color: '#1c2c4d' }}>{swing.launch_angle?.toFixed(1)}°</TableCell>
-                      <TableCell sx={{ color: '#1c2c4d' }}>{swing.distance?.toFixed(0)} FT</TableCell>
+                      <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
+                      <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.launch_angle, 1)}°</TableCell>
+                      <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.distance, 0)} FT</TableCell>
                       <TableCell sx={{ color: '#1c2c4d' }}>{swing.strike_zone}</TableCell>
                     </TableRow>
                   ))}
@@ -1266,9 +1267,9 @@ function ReportDisplay({ report, player }) {
         <DialogContent sx={{ pt: 2, bgcolor: '#fff' }}>
           {selectedSwing && (
             <Box>
-              <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Exit Velocity:</b> {selectedSwing.exit_velocity} MPH</Typography>
-              <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Launch Angle:</b> {selectedSwing.launch_angle}°</Typography>
-              <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Distance:</b> {selectedSwing.distance} FT</Typography>
+              <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Exit Velocity:</b> {safeToFixed(selectedSwing.exit_velocity, 1)} MPH</Typography>
+              <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Launch Angle:</b> {safeToFixed(selectedSwing.launch_angle, 1)}°</Typography>
+              <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Distance:</b> {safeToFixed(selectedSwing.distance, 0)} FT</Typography>
               <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Strike Zone:</b> {selectedSwing.strike_zone}</Typography>
               <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Horizontal Angle:</b> {selectedSwing.horiz_angle}</Typography>
               <Typography variant="body2" sx={{ mb: 1, color: '#1c2c4d' }}><b>Time:</b> {selectedSwing.created_at}</Typography>
@@ -1324,7 +1325,7 @@ function HotZoneCell({ zone, ev }) {
       }}
     >
       <span style={{ fontSize: '1rem', opacity: 0.8, fontWeight: 600 }}>{zone}</span>
-      <span style={{ fontSize: '0.85rem', marginTop: 2 }}>{ev !== null && ev !== undefined ? `${ev.toFixed(1)}` : ''}</span>
+      <span style={{ fontSize: '0.85rem', marginTop: 2 }}>{ev !== null && ev !== undefined ? `${safeToFixed(ev, 1)}` : ''}</span>
     </Box>
   );
 }

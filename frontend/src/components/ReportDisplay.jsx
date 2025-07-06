@@ -4,6 +4,7 @@ import otrLogo from '/images/otrbaseball-main.png';
 import DownloadIcon from '@mui/icons-material/Download';
 import { getToken } from '../services/auth';
 import getGradeColor from '../utils/getGradeColor';
+import safeToFixed from '../utils/safeToFixed';
 
 const NAVY = '#1a2340';
 const PANEL_BG = '#fff';
@@ -40,7 +41,7 @@ function HotZoneCell({ zone, ev }) {
       }}
     >
       <span style={{ fontSize: '1rem', opacity: 0.8, fontWeight: 600 }}>{zone}</span>
-      <span style={{ fontSize: '0.85rem', marginTop: 2 }}>{ev !== null && ev !== undefined ? `${ev.toFixed(1)}` : ''}</span>
+      <span style={{ fontSize: '0.85rem', marginTop: 2 }}>{ev !== null && ev !== undefined ? safeToFixed(ev, 1) : ''}</span>
     </Box>
   );
 }
@@ -126,7 +127,7 @@ function MetricCard({ label, value, unit, grade }) {
   return (
     <Grid item xs={12} sm={6} md={4} lg={2}>
       <Card sx={{ p: 2.5, textAlign: 'center', bgcolor: CARD_BG, border: 'none', borderRadius: 4, boxShadow: '0 2px 12px rgba(28,44,77,0.18)', minWidth: 120, minHeight: 80 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, color: CARD_TEXT, mb: 0.5, fontSize: '2.2rem', letterSpacing: 1 }}>{value !== null && value !== undefined ? Number(value).toFixed(1) : 'N/A'}{unit && <span style={{ fontSize: '1.2rem', color: METRIC_UNIT, marginLeft: 4 }}>{unit}</span>}</Typography>
+        <Typography variant="h3" sx={{ fontWeight: 700, color: CARD_TEXT, mb: 0.5, fontSize: '2.2rem', letterSpacing: 1 }}>{value !== null && value !== undefined ? safeToFixed(value, 1) : 'N/A'}{unit && <span style={{ fontSize: '1.2rem', color: METRIC_UNIT, marginLeft: 4 }}>{unit}</span>}</Typography>
         <Typography variant="subtitle2" sx={{ color: METRIC_LABEL, fontWeight: 700, fontSize: '1.05rem', letterSpacing: 0.5 }}>{label}</Typography>
         {grade && <Typography variant="caption" sx={{ color: gradeColor, fontWeight: 700, mt: 0.5 }}>{grade}</Typography>}
       </Card>
