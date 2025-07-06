@@ -16,19 +16,14 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { validateEnvironment } from './utils/environmentCheck';
 import { validateDeployment, generateDeploymentReport } from './utils/deploymentValidation';
 import { Box, CircularProgress } from '@mui/material';
+import PlayerDashboard from './pages/PlayerDashboard';
+import Leaderboard from './pages/Leaderboard';
 
 // Role-specific dashboard components (placeholder for now)
 const CoachDashboard = () => (
   <Box sx={{ p: 3 }}>
     <h2>Coach Dashboard</h2>
     <p>Player management and analytics access</p>
-  </Box>
-);
-
-const PlayerDashboard = () => (
-  <Box sx={{ p: 3 }}>
-    <h2>Player Dashboard</h2>
-    <p>Personal data and sessions only</p>
   </Box>
 );
 
@@ -140,6 +135,12 @@ function AppRoutes() {
           <Route path="/analytics" element={
             <ProtectedRoute requiredPermission="view_analytics">
               <AnalyticsHome />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/leaderboard" element={
+            <ProtectedRoute requiredPermission="view_own_data">
+              <Leaderboard />
             </ProtectedRoute>
           } />
 
