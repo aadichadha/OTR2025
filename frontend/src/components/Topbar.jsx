@@ -57,6 +57,11 @@ const Topbar = () => {
       baseItems.push({ label: 'Analytics', icon: <Assessment />, to: '/analytics' });
     }
 
+    // Add admin-specific items
+    if (user?.role === 'admin') {
+      baseItems.push({ label: 'User Management', icon: <AdminPanelSettings />, to: '/admin/dashboard' });
+    }
+
     return baseItems;
   };
 

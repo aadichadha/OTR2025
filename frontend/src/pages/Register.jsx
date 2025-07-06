@@ -73,6 +73,7 @@ function Register() {
     }
     setLoading(true);
     try {
+      // Register as player (role is set automatically by backend)
       await registerService(formData.name, formData.email, formData.password);
       // Auto-login after registration
       const loginRes = await loginService(formData.email, formData.password);

@@ -265,6 +265,128 @@ class AuthController {
       });
     }
   }
+
+  /**
+   * Get all users (admin only, advanced: pagination, search, filter)
+   */
+  static async getAllUsersAdvanced(req, res) {
+    try {
+      let { page = 1, pageSize = 20, search = '', role = '' } = req.query;
+      page = parseInt(page);
+      pageSize = parseInt(pageSize);
+      const where = {};
+      if (role) where.role = role;
+      if (search) {
+        where[User.sequelize.Op.or] = [
+          { name: { [User.sequelize.Op.iLike]: `%${search}%` } },
+          { email: { [User.sequelize.Op.iLike]: `%${search}%` } }
+        ];
+      }
+      const { count, rows } = await User.findAndCountAll({
+        where,
+        attributes: ['id', 'name', 'email', 'role', 'created_at', 'created_by'],
+        order: [['created_at', 'DESC']],
+        offset: (page - 1) * pageSize,
+        limit: pageSize
+      });
+      res.status(200).json({
+        users: rows,
+        total: count,
+        page,
+        pageSize
+      });
+    } catch (error) {
+      console.error('Get all users (advanced) error:', error);
+      res.status(500).json({ error: 'Failed to get users' });
+    }
+  }
+
+  /**
+   * Update user (admin only, can update name, email, role, permissions)
+   */
+  static async updateUser(req, res) {
+    try {
+      const { userId } = req.params;
+      const { name, email, role, permissions } = req.body;
+      const validRoles = ['admin', 'coach', 'player'];
+      if (role && !validRoles.includes(role)) {
+        return res.status(400).json({ error: 'Invalid role. Must be admin, coach, or player' });
+      }
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      // Check if email is already taken by another user
+      if (email && email !== user.email) {
+        const emailTaken = await User.findOne({ where: { email } });
+        if (emailTaken) {
+          return res.status(400).json({ error: 'Email is already taken' });
+        }
+      }
+      // Update user
+      await user.update({
+        name: name !== undefined ? name : user.name,
+        email: email !== undefined ? email : user.email,
+        role: role !== undefined ? role : user.role,
+        permissions: permissions !== undefined ? permissions : user.permissions
+      });
+      res.status(200).json({
+        message: 'User updated successfully',
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          permissions: user.permissions
+        }
+      });
+    } catch (error) {
+      console.error('Update user error:', error);
+      res.status(500).json({ error: 'Failed to update user' });
+    }
+  }
+
+  /**
+   * Delete user (admin only)
+   */
+  static async deleteUser(req, res) {
+    try {
+      const { userId } = req.params;
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      await user.destroy();
+      res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Delete user error:', error);
+      res.status(500).json({ error: 'Failed to delete user' });
+    }
+  }
+
+  /**
+   * Reset user password (admin only)
+   */
+  static async resetUserPassword(req, res) {
+    try {
+      const { userId } = req.params;
+      const { newPassword } = req.body;
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+      }
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      const bcrypt = require('bcryptjs');
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await user.update({ password: hashed });
+      res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('Reset user password error:', error);
+      res.status(500).json({ error: 'Failed to reset user password' });
+    }
+  }
 }
 
 router.get('/verify', authenticateToken, (req, res) => {
@@ -283,6 +405,10 @@ router.put('/profile', authenticateToken, AuthController.updateProfile);
 // Admin routes
 router.get('/users', authenticateToken, requireRole('admin'), AuthController.getAllUsers);
 router.put('/users/:userId/role', authenticateToken, requireRole('admin'), AuthController.updateUserRole);
+router.get('/users/advanced', authenticateToken, requireRole('admin'), AuthController.getAllUsersAdvanced);
+router.put('/users/:userId', authenticateToken, requireRole('admin'), AuthController.updateUser);
+router.delete('/users/:userId', authenticateToken, requireRole('admin'), AuthController.deleteUser);
+router.post('/users/:userId/reset-password', authenticateToken, requireRole('admin'), AuthController.resetUserPassword);
 
 router.get('/test', authenticateToken, (req, res) => {
   const permissions = User.getRolePermissions(req.user.role);

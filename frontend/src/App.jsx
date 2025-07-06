@@ -10,6 +10,7 @@ import Players from './pages/Players';
 import SessionVisualization from './pages/SessionVisualization';
 import Landing from './pages/Landing';
 import AnalyticsHome from './pages/AnalyticsHome';
+import AdminDashboard from './pages/AdminDashboard';
 import Topbar from './components/Topbar';
 import ErrorBoundary from './components/ErrorBoundary';
 import { validateEnvironment } from './utils/environmentCheck';
@@ -17,13 +18,6 @@ import { validateDeployment, generateDeploymentReport } from './utils/deployment
 import { Box, CircularProgress } from '@mui/material';
 
 // Role-specific dashboard components (placeholder for now)
-const AdminDashboard = () => (
-  <Box sx={{ p: 3 }}>
-    <h2>Admin Dashboard</h2>
-    <p>Full system access - manage players, coaches, and system settings</p>
-  </Box>
-);
-
 const CoachDashboard = () => (
   <Box sx={{ p: 3 }}>
     <h2>Coach Dashboard</h2>

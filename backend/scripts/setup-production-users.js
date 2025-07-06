@@ -92,14 +92,16 @@ async function setupProductionUsers() {
           // Create new user
           await sequelize.query(
             `INSERT INTO users (name, email, password, role, permissions, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             {
               replacements: [
                 userData.name,
                 userData.email,
                 userData.password,
                 userData.role,
-                userData.permissions
+                userData.permissions,
+                new Date(),
+                new Date()
               ]
             }
           );

@@ -42,12 +42,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (credentials, expectedRole = null) => {
+  const login = async (credentials) => {
     try {
-      const response = await api.post('/auth/login', {
-        ...credentials,
-        expectedRole
-      });
+      const response = await api.post('/auth/login', credentials);
 
       const { token, user } = response.data;
       

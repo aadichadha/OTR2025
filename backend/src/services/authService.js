@@ -7,7 +7,8 @@ class AuthService {
    * Register a new user
    */
   static async registerUser(userData) {
-    const { email, password, name, role = 'user' } = userData;
+    const { email, password, name } = userData;
+    const role = 'player'; // Always register as player
     console.log('[REGISTER DEBUG] Attempting to register:', email, name, role);
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
