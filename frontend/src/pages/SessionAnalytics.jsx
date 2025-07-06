@@ -493,7 +493,10 @@ const SessionAnalytics = () => {
                         </Typography>
                         <Chip 
                           label={`${benchmarks.percentiles.avg_exit_velocity}%`}
-                          color={getGradeColor(benchmarks.grades.avg_exit_velocity)}
+                          sx={{ 
+                            bgcolor: getGradeColor(benchmarks.grades?.avg_exit_velocity),
+                            color: 'white'
+                          }}
                         />
                       </Box>
                       <Typography variant="body2" color="textSecondary">
@@ -508,7 +511,10 @@ const SessionAnalytics = () => {
                         </Typography>
                         <Chip 
                           label={`${benchmarks.percentiles.best_exit_velocity}%`}
-                          color={getGradeColor(benchmarks.grades.best_exit_velocity)}
+                          sx={{ 
+                            bgcolor: getGradeColor(benchmarks.grades?.best_exit_velocity),
+                            color: 'white'
+                          }}
                         />
                       </Box>
                       <Typography variant="body2" color="textSecondary">
@@ -525,19 +531,27 @@ const SessionAnalytics = () => {
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="h6" gutterBottom>Average Exit Velocity</Typography>
                       <Chip 
-                        label={`Grade ${benchmarks.grades.avg_exit_velocity}`}
-                        color={getGradeColor(benchmarks.grades.avg_exit_velocity)}
+                        label={`Grade ${benchmarks.grades?.avg_exit_velocity || 'N/A'}`}
+                        sx={{ 
+                          bgcolor: getGradeColor(benchmarks.grades?.avg_exit_velocity),
+                          color: 'white',
+                          fontSize: '1.2rem', 
+                          p: 1 
+                        }}
                         size="large"
-                        sx={{ fontSize: '1.2rem', p: 1 }}
                       />
                     </Box>
                     <Box>
                       <Typography variant="h6" gutterBottom>Best Exit Velocity</Typography>
                       <Chip 
-                        label={`Grade ${benchmarks.grades.best_exit_velocity}`}
-                        color={getGradeColor(benchmarks.grades.best_exit_velocity)}
+                        label={`Grade ${benchmarks.grades?.best_exit_velocity || 'N/A'}`}
+                        sx={{ 
+                          bgcolor: getGradeColor(benchmarks.grades?.best_exit_velocity),
+                          color: 'white',
+                          fontSize: '1.2rem', 
+                          p: 1 
+                        }}
                         size="large"
-                        sx={{ fontSize: '1.2rem', p: 1 }}
                       />
                     </Box>
                   </CardContent>

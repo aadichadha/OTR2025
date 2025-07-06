@@ -189,9 +189,9 @@ const AdminDashboard = () => {
         width: '100%',
         maxWidth: 1400,
         bgcolor: '#fff',
-        borderRadius: 4,
+        borderRadius: 3,
         boxShadow: '0 4px 32px rgba(28,44,77,0.10)',
-        border: '2.5px solid #1c2c4d',
+        border: '2px solid #1c2c4d',
         p: { xs: 1, sm: 3 },
         display: 'flex',
         flexDirection: 'column',
@@ -202,7 +202,7 @@ const AdminDashboard = () => {
         <Box sx={{
           width: '100%',
           bgcolor: '#fff',
-          border: '3px solid #1c2c4d',
+          border: '2px solid #1c2c4d',
           borderRadius: 3,
           mb: 3,
           py: 1.2,
@@ -393,15 +393,51 @@ const AdminDashboard = () => {
         </Paper>
 
         {/* Edit User Dialog */}
-        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Edit User</DialogTitle>
-          <DialogContent>
+        <Dialog 
+          open={editDialogOpen} 
+          onClose={() => setEditDialogOpen(false)} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{ 
+            sx: { 
+              bgcolor: '#fff', 
+              borderRadius: 3, 
+              border: '2px solid #1c2c4d', 
+              color: '#1c2c4d' 
+            } 
+          }}
+        >
+          <DialogTitle sx={{ 
+            fontFamily: 'Inter, Roboto, Arial, sans-serif', 
+            bgcolor: '#fff', 
+            borderBottom: '2px solid #1c2c4d',
+            color: '#1c2c4d'
+          }}>
+            Edit User
+          </DialogTitle>
+          <DialogContent sx={{ bgcolor: '#fff', color: '#1c2c4d' }}>
             <TextField
               fullWidth
               label="Name"
               value={editForm.name}
               onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
               margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+              }}
             />
             <TextField
               fullWidth
@@ -410,13 +446,43 @@ const AdminDashboard = () => {
               value={editForm.email}
               onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
               margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+              }}
             />
             <FormControl fullWidth margin="normal">
-              <InputLabel>Role</InputLabel>
+              <InputLabel sx={{ color: '#1c2c4d' }}>Role</InputLabel>
               <Select
                 value={editForm.role}
                 onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                 label="Role"
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '& .MuiSelect-icon': {
+                    color: '#1c2c4d',
+                  },
+                }}
               >
                 <MenuItem value="admin">Admin</MenuItem>
                 <MenuItem value="coach">Coach</MenuItem>
@@ -424,32 +490,101 @@ const AdminDashboard = () => {
               </Select>
             </FormControl>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} variant="contained" disabled={loading}>
+          <DialogActions sx={{ bgcolor: '#fff', borderTop: '1px solid #1c2c4d' }}>
+            <Button 
+              onClick={() => setEditDialogOpen(false)}
+              sx={{ color: '#1c2c4d' }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveEdit} 
+              variant="contained" 
+              disabled={loading}
+              sx={{ 
+                bgcolor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: '#2d5aa0',
+                },
+              }}
+            >
               {loading ? <CircularProgress size={20} /> : 'Save'}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-          <DialogTitle>Confirm Delete</DialogTitle>
-          <DialogContent>
+        <Dialog 
+          open={deleteDialogOpen} 
+          onClose={() => setDeleteDialogOpen(false)}
+          PaperProps={{ 
+            sx: { 
+              bgcolor: '#fff', 
+              borderRadius: 3, 
+              border: '2px solid #1c2c4d', 
+              color: '#1c2c4d' 
+            } 
+          }}
+        >
+          <DialogTitle sx={{ 
+            fontFamily: 'Inter, Roboto, Arial, sans-serif', 
+            bgcolor: '#fff', 
+            borderBottom: '2px solid #1c2c4d',
+            color: '#1c2c4d'
+          }}>
+            Confirm Delete
+          </DialogTitle>
+          <DialogContent sx={{ bgcolor: '#fff', color: '#1c2c4d' }}>
             Are you sure you want to delete {deletingUser?.name}? This action cannot be undone.
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button onClick={confirmDelete} color="error" variant="contained" disabled={loading}>
+          <DialogActions sx={{ bgcolor: '#fff', borderTop: '1px solid #1c2c4d' }}>
+            <Button 
+              onClick={() => setDeleteDialogOpen(false)}
+              sx={{ color: '#1c2c4d' }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmDelete} 
+              color="error" 
+              variant="contained" 
+              disabled={loading}
+              sx={{ 
+                bgcolor: '#f44336',
+                '&:hover': {
+                  bgcolor: '#d32f2f',
+                },
+              }}
+            >
               {loading ? <CircularProgress size={20} /> : 'Delete'}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Password Reset Dialog */}
-        <Dialog open={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Reset Password for {resettingUser?.name}</DialogTitle>
-          <DialogContent>
+        <Dialog 
+          open={passwordDialogOpen} 
+          onClose={() => setPasswordDialogOpen(false)} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{ 
+            sx: { 
+              bgcolor: '#fff', 
+              borderRadius: 3, 
+              border: '2px solid #1c2c4d', 
+              color: '#1c2c4d' 
+            } 
+          }}
+        >
+          <DialogTitle sx={{ 
+            fontFamily: 'Inter, Roboto, Arial, sans-serif', 
+            bgcolor: '#fff', 
+            borderBottom: '2px solid #1c2c4d',
+            color: '#1c2c4d'
+          }}>
+            Reset Password for {resettingUser?.name}
+          </DialogTitle>
+          <DialogContent sx={{ bgcolor: '#fff', color: '#1c2c4d' }}>
             <TextField
               fullWidth
               label="New Password"
@@ -458,14 +593,44 @@ const AdminDashboard = () => {
               onChange={(e) => setNewPassword(e.target.value)}
               margin="normal"
               helperText="Password must be at least 6 characters long"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+                '& .MuiFormHelperText-root': {
+                  color: '#1c2c4d',
+                },
+              }}
             />
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setPasswordDialogOpen(false)}>Cancel</Button>
+          <DialogActions sx={{ bgcolor: '#fff', borderTop: '1px solid #1c2c4d' }}>
+            <Button 
+              onClick={() => setPasswordDialogOpen(false)}
+              sx={{ color: '#1c2c4d' }}
+            >
+              Cancel
+            </Button>
             <Button 
               onClick={confirmPasswordReset} 
               variant="contained" 
               disabled={loading || newPassword.length < 6}
+              sx={{ 
+                bgcolor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: '#2d5aa0',
+                },
+              }}
             >
               {loading ? <CircularProgress size={20} /> : 'Reset Password'}
             </Button>
