@@ -346,15 +346,23 @@ const AnalyticsHome = () => {
   };
 
   const getFilteredSessions = () => {
+    console.log('[DEBUG] getFilteredSessions - sessions:', sessions);
+    console.log('[DEBUG] getFilteredSessions - selectedSessionTypes:', selectedSessionTypes);
+    
     if (selectedSessionTypes.length === 0) {
+      console.log('[DEBUG] getFilteredSessions - returning all sessions:', sessions);
       return sessions;
     }
-    return sessions.filter(session => 
+    
+    const filtered = sessions.filter(session => 
       selectedSessionTypes.some(type => 
         session.session_type?.toLowerCase().includes(type.toLowerCase()) ||
         session.notes?.toLowerCase().includes(type.toLowerCase())
       )
     );
+    
+    console.log('[DEBUG] getFilteredSessions - filtered sessions:', filtered);
+    return filtered;
   };
 
   const getSelectedPlayer = () => {
