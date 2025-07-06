@@ -22,7 +22,7 @@ const getZoneColor = (avgEV) => {
 function generateReportPDF(reportData, outputFilePath) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ 
-      margin: 30,
+      margin: 0, // Remove default margins for full control
       size: 'A4'
     });
     const stream = fs.createWriteStream(outputFilePath);
@@ -51,19 +51,21 @@ function generateReportPDF(reportData, outputFilePath) {
     // Add OTR BASEBALL logo at the top
     const logoPath = path.resolve(__dirname, '../../frontend/public/images/otrbaseball-main.png');
     if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, 30, 20, { fit: [120, 44] });
+      doc.image(logoPath, 40, 30, { fit: [120, 44] });
     }
-    // Title - match web interface typography
-    doc.fontSize(32).fill('white').font('Helvetica-Bold').text('Performance Report', 170, 70);
+    // Title - match web interface typography and positioning
+    doc.fontSize(32).fill('white').font('Helvetica-Bold').text('Performance Report', 200, 50);
     doc.fontSize(16).fill(METRIC_UNIT).text(
       `${reportData.player.name} • ${new Date(reportData.session.date).toLocaleDateString()} • ${reportData.session.type.toUpperCase()}`,
-      170, 95
+      200, 85
     );
     let currentY = 140;
 
-    // White panel background - match web interface
-    doc.rect(30, currentY, 535, 600).fill(PANEL_BG);
-    currentY += 40;
+    // White panel background - match web interface (centered, with proper margins)
+    const panelWidth = 535;
+    const panelX = (595 - panelWidth) / 2; // Center the panel
+    doc.roundedRect(panelX, currentY, panelWidth, 600, 20).fill(PANEL_BG);
+    currentY += 60; // More padding inside panel
 
     // Draw metric cards - match web interface exactly
     const drawMetricCard = (x, y, width, height, value, label, unit, grade) => {
@@ -79,7 +81,7 @@ function generateReportPDF(reportData, outputFilePath) {
         width: width
       });
       
-      // Unit - match web interface (smaller, lighter color)
+      // Unit - match web interface (smaller, lighter color, positioned next to value)
       if (unit) {
         doc.fontSize(24).fill(METRIC_UNIT).font('Helvetica').text(unit, x + width - 60, y + 15, {
           align: 'left',
@@ -104,52 +106,56 @@ function generateReportPDF(reportData, outputFilePath) {
       doc.restore();
     };
 
-    // Draw metric cards based on session type - match web interface layout
+    // Draw metric cards based on session type - match web interface layout exactly
     const cardWidth = 160;
     const cardHeight = 100;
     const spacing = 20;
+    const cardsPerRow = 3;
+    const totalCardsWidth = (cardWidth * cardsPerRow) + (spacing * (cardsPerRow - 1));
+    const cardsStartX = panelX + (panelWidth - totalCardsWidth) / 2; // Center cards in panel
+    
     if (reportData.session.type === 'hittrax' && reportData.metrics?.exitVelocity) {
       const metrics = reportData.metrics.exitVelocity;
       // Row 1
       drawMetricCard(
-        50, currentY, cardWidth, cardHeight,
+        cardsStartX, currentY, cardWidth, cardHeight,
         metrics.maxExitVelocity,
         'MAX EXIT VELOCITY',
         'MPH',
         metrics.grades?.maxExitVelocity
       );
       drawMetricCard(
-        50 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        cardsStartX + cardWidth + spacing, currentY, cardWidth, cardHeight,
         metrics.avgExitVelocity,
         'AVG EXIT VELOCITY',
         'MPH',
         metrics.grades?.avgExitVelocity
       );
       drawMetricCard(
-        50 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
+        cardsStartX + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
         metrics.launchAngleTop5,
         'AVG LA (TOP 5% EV)',
         '°',
         metrics.grades?.launchAngleTop5
       );
-      currentY += cardHeight + 20;
+      currentY += cardHeight + 30; // More spacing between rows
       // Row 2
       drawMetricCard(
-        50, currentY, cardWidth, cardHeight,
+        cardsStartX, currentY, cardWidth, cardHeight,
         metrics.avgLaunchAngle,
         'AVG LAUNCH ANGLE',
         '°',
         metrics.grades?.avgLaunchAngle
       );
       drawMetricCard(
-        50 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        cardsStartX + cardWidth + spacing, currentY, cardWidth, cardHeight,
         metrics.barrels || 0,
         'BARRELS',
         '',
         'Quality'
       );
       drawMetricCard(
-        50 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
+        cardsStartX + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
         metrics.dataPoints || 0,
         'TOTAL SWINGS',
         '',
@@ -160,53 +166,58 @@ function generateReportPDF(reportData, outputFilePath) {
       const metrics = reportData.metrics.batSpeed;
       // Row 1
       drawMetricCard(
-        50, currentY, cardWidth, cardHeight,
+        cardsStartX, currentY, cardWidth, cardHeight,
         metrics.maxBatSpeed,
         'MAX BAT SPEED',
         'MPH',
         metrics.grades?.maxBatSpeed
       );
       drawMetricCard(
-        50 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        cardsStartX + cardWidth + spacing, currentY, cardWidth, cardHeight,
         metrics.avgBatSpeed,
         'AVG BAT SPEED',
         'MPH',
         metrics.grades?.avgBatSpeed
       );
       drawMetricCard(
-        50 + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
+        cardsStartX + (cardWidth + spacing) * 2, currentY, cardWidth, cardHeight,
         metrics.avgAttackAngle,
         'AVG ATTACK ANGLE',
         '°',
         metrics.grades?.attackAngle
       );
-      currentY += cardHeight + 20;
+      currentY += cardHeight + 30; // More spacing between rows
       // Row 2
       drawMetricCard(
-        50, currentY, cardWidth, cardHeight,
+        cardsStartX, currentY, cardWidth, cardHeight,
         metrics.avgTimeToContact,
         'AVG TIME TO CONTACT',
         'SEC',
         metrics.grades?.timeToContact
       );
       drawMetricCard(
-        50 + cardWidth + spacing, currentY, cardWidth, cardHeight,
+        cardsStartX + cardWidth + spacing, currentY, cardWidth, cardHeight,
         metrics.dataPoints || 0,
         'TOTAL SWINGS',
         '',
         'Complete'
       );
     }
-    currentY += cardHeight + 60;
+    currentY += cardHeight + 80; // More spacing before strike zone
 
     // Strike Zone Heat Map - match web interface exactly
-    // Navy background panel
-    doc.roundedRect(50, currentY, 495, 400, 16).fill(NAVY);
-    currentY += 30;
+    // Navy background panel - centered
+    const zonePanelWidth = 495;
+    const zonePanelX = panelX + (panelWidth - zonePanelWidth) / 2; // Center in white panel
+    doc.roundedRect(zonePanelX, currentY, zonePanelWidth, 400, 16).fill(NAVY);
+    currentY += 50; // More padding inside zone panel
     
-    // Title - match web interface typography
-    doc.fontSize(24).fill('white').font('Helvetica-Bold').text('STRIKE ZONE HOT ZONES (Avg EV)', 70, currentY);
-    currentY += 50;
+    // Title - match web interface typography, centered
+    doc.fontSize(24).fill('white').font('Helvetica-Bold').text('STRIKE ZONE HOT ZONES (Avg EV)', zonePanelX, currentY, {
+      align: 'center',
+      width: zonePanelWidth
+    });
+    currentY += 60; // More spacing after title
     
     const zoneCellSize = 60;
     const zoneGrid = [
@@ -216,7 +227,11 @@ function generateReportPDF(reportData, outputFilePath) {
       [7, 8, 9],
       [12, null, 13],
     ];
-    const zoneX = 70;
+    
+    // Calculate grid positioning to center it perfectly
+    const gridWidth = 3 * zoneCellSize + 2 * 8; // 3 cells + 2 gaps
+    const gridHeight = 5 * zoneCellSize + 4 * 8; // 5 cells + 4 gaps
+    const zoneX = zonePanelX + (zonePanelWidth - gridWidth) / 2; // Center grid in panel
     const zoneY = currentY;
     
     for (let row = 0; row < zoneGrid.length; row++) {
@@ -256,32 +271,32 @@ function generateReportPDF(reportData, outputFilePath) {
         }
       }
     }
-    currentY += zoneCellSize * zoneGrid.length + 100;
+    currentY += zoneY + gridHeight + 100;
 
-    // Session History
+    // Session History - centered in panel
     if (reportData.history && reportData.history.length > 1) {
-      doc.fontSize(20).fill('#333').text('Session History', 50, currentY);
+      doc.fontSize(20).fill('#333').text('Session History', panelX + 30, currentY);
       currentY += 30;
 
-      // History table
+      // History table - centered
       doc.fontSize(12).fill('#333');
-      doc.text('Date', 50, currentY);
-      doc.text('Type', 140, currentY);
-      doc.text('Avg Bat Speed', 220, currentY);
-      doc.text('Top Bat Speed', 300, currentY);
-      doc.text('Avg Exit Velo', 380, currentY);
-      doc.text('Top Exit Velo', 460, currentY);
+      doc.text('Date', panelX + 30, currentY);
+      doc.text('Type', panelX + 120, currentY);
+      doc.text('Avg Bat Speed', panelX + 200, currentY);
+      doc.text('Top Bat Speed', panelX + 280, currentY);
+      doc.text('Avg Exit Velo', panelX + 360, currentY);
+      doc.text('Top Exit Velo', panelX + 440, currentY);
       currentY += 20;
 
       // Table rows
       reportData.history.slice(-5).forEach(session => {
         doc.fontSize(10).fill('#666');
-        doc.text(new Date(session.sessionDate).toLocaleDateString(), 50, currentY);
-        doc.text(session.type.toUpperCase(), 140, currentY);
-        doc.text(session.avgBatSpeed ? session.avgBatSpeed.toFixed(1) : 'N/A', 220, currentY);
-        doc.text(session.topBatSpeed ? session.topBatSpeed.toFixed(1) : 'N/A', 300, currentY);
-        doc.text(session.avgExitVelocity ? session.avgExitVelocity.toFixed(1) : 'N/A', 380, currentY);
-        doc.text(session.topExitVelocity ? session.topExitVelocity.toFixed(1) : 'N/A', 460, currentY);
+        doc.text(new Date(session.sessionDate).toLocaleDateString(), panelX + 30, currentY);
+        doc.text(session.type.toUpperCase(), panelX + 120, currentY);
+        doc.text(session.avgBatSpeed ? session.avgBatSpeed.toFixed(1) : 'N/A', panelX + 200, currentY);
+        doc.text(session.topBatSpeed ? session.topBatSpeed.toFixed(1) : 'N/A', panelX + 280, currentY);
+        doc.text(session.avgExitVelocity ? session.avgExitVelocity.toFixed(1) : 'N/A', panelX + 360, currentY);
+        doc.text(session.topExitVelocity ? session.topExitVelocity.toFixed(1) : 'N/A', panelX + 440, currentY);
         currentY += 15;
       });
     }
