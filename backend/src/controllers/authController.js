@@ -719,4 +719,5 @@ router.post('/debug/test-login', AuthController.testLogin);
 router.post('/debug/regenerate-admin-password', AuthController.regenerateAdminPassword);
 router.get('/debug/bcrypt-test', AuthController.testBcrypt);
 
+// Force restart
 module.exports = router; 
