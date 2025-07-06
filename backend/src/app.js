@@ -110,7 +110,8 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api/', limiter);
+// Temporarily disabled general rate limiting for debugging
+// app.use('/api/', limiter);
 
 // Stricter rate limiting for auth routes (skip OPTIONS requests and debug endpoints)
 const authLimiter = rateLimit({
