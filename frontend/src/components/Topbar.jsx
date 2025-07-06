@@ -259,9 +259,17 @@ const Topbar = () => {
             '& .MuiPaper-root': {
               mt: 1,
               minWidth: 200,
+              bgcolor: '#fff',
               boxShadow: '0 4px 20px rgba(28,44,77,0.15)',
-              border: '1px solid #e0e3e8',
-              borderRadius: 2,
+              border: '2px solid #1c2c4d',
+              borderRadius: 3,
+              color: NAVY,
+            },
+            '& .MuiMenuItem-root': {
+              color: NAVY,
+              '&:hover': {
+                bgcolor: 'rgba(28,44,77,0.08)',
+              },
             }
           }}
         >

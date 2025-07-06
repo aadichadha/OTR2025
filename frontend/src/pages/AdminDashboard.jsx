@@ -179,7 +179,7 @@ const AdminDashboard = () => {
     <Box sx={{
       width: '100%',
       minHeight: 'calc(100vh - 64px)',
-      bgcolor: '#1c2c4d',
+      bgcolor: '#fff',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -310,11 +310,11 @@ const AdminDashboard = () => {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ backgroundColor: '#1c2c4d', color: '#fff', fontWeight: 600 }}>Name</TableCell>
-                  <TableCell sx={{ backgroundColor: '#1c2c4d', color: '#fff', fontWeight: 600 }}>Email</TableCell>
-                  <TableCell sx={{ backgroundColor: '#1c2c4d', color: '#fff', fontWeight: 600 }}>Role</TableCell>
-                  <TableCell sx={{ backgroundColor: '#1c2c4d', color: '#fff', fontWeight: 600 }}>Created</TableCell>
-                  <TableCell sx={{ backgroundColor: '#1c2c4d', color: '#fff', fontWeight: 600 }}>Actions</TableCell>
+                  <TableCell sx={{ backgroundColor: '#fff', color: '#1c2c4d', fontWeight: 600, borderBottom: '2px solid #1c2c4d' }}>Name</TableCell>
+                  <TableCell sx={{ backgroundColor: '#fff', color: '#1c2c4d', fontWeight: 600, borderBottom: '2px solid #1c2c4d' }}>Email</TableCell>
+                  <TableCell sx={{ backgroundColor: '#fff', color: '#1c2c4d', fontWeight: 600, borderBottom: '2px solid #1c2c4d' }}>Role</TableCell>
+                  <TableCell sx={{ backgroundColor: '#fff', color: '#1c2c4d', fontWeight: 600, borderBottom: '2px solid #1c2c4d' }}>Created</TableCell>
+                  <TableCell sx={{ backgroundColor: '#fff', color: '#1c2c4d', fontWeight: 600, borderBottom: '2px solid #1c2c4d' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
