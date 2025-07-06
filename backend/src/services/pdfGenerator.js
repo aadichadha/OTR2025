@@ -1,8 +1,10 @@
+// PDFKit Inter Font Setup: Uses Inter if present in frontend/public/fonts, else falls back to Helvetica.
+// Numbers: Inter-Bold, Labels: Inter-Medium, Status: Inter-SemiBold, Body: Inter-Regular
+
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// Final polish: Slightly smaller, match web fonts
 const margin = 35;
 const pageWidth = 612;
 const pageHeight = 792;
@@ -16,11 +18,12 @@ const CARD_TEXT = '#fff';
 const METRIC_LABEL = '#7ecbff';
 const METRIC_UNIT = '#b3c6e0';
 
-// Try to use Inter font if available
-let interFontPath = path.resolve(__dirname, '../../frontend/public/fonts/Inter-Regular.ttf');
-let interBoldFontPath = path.resolve(__dirname, '../../frontend/public/fonts/Inter-Bold.ttf');
-let interMediumFontPath = path.resolve(__dirname, '../../frontend/public/fonts/Inter-Medium.ttf');
-let interSemiBoldFontPath = path.resolve(__dirname, '../../frontend/public/fonts/Inter-SemiBold.ttf');
+// Inter font paths
+const fontDir = path.resolve(__dirname, '../../frontend/public/fonts');
+const interFontPath = path.join(fontDir, 'Inter-Regular.ttf');
+const interBoldFontPath = path.join(fontDir, 'Inter-Bold.ttf');
+const interMediumFontPath = path.join(fontDir, 'Inter-Medium.ttf');
+const interSemiBoldFontPath = path.join(fontDir, 'Inter-SemiBold.ttf');
 const hasInter = fs.existsSync(interFontPath) && fs.existsSync(interBoldFontPath) && fs.existsSync(interMediumFontPath) && fs.existsSync(interSemiBoldFontPath);
 
 const getZoneColor = (avgEV) => {
@@ -40,7 +43,7 @@ function generateReportPDF(reportData, outputFilePath) {
     const stream = fs.createWriteStream(outputFilePath);
     doc.pipe(stream);
 
-    // Register Inter font if available
+    // Register Inter font family if available
     if (hasInter) {
       doc.registerFont('Inter', interFontPath);
       doc.registerFont('Inter-Bold', interBoldFontPath);
@@ -67,7 +70,7 @@ function generateReportPDF(reportData, outputFilePath) {
     const panelHeight = contentHeight;
     doc.roundedRect(panelX, panelY, panelWidth, panelHeight, 16).fill(PANEL_BG);
 
-    // Header (centered, web font)
+    // Header (centered, Inter font)
     const logoPath = path.resolve(__dirname, '../../frontend/public/images/otrbaseball-main.png');
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, panelX + 10, panelY + 16, { fit: [80, 28] });
