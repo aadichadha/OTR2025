@@ -5,14 +5,9 @@ const path = require('path');
 
 let sequelize;
 
-if (process.env.NODE_ENV === 'production') {
-  // Production: PostgreSQL with DATABASE_URL
-  if (!process.env.DATABASE_URL) {
-    console.error('❌ DATABASE_URL is required in production environment');
-    process.exit(1);
-  }
-  
-  console.log('🔗 Using DATABASE_URL for production database connection');
+if (process.env.DATABASE_URL) {
+  // Use DATABASE_URL if provided (production or local testing with production DB)
+  console.log('🔗 Using DATABASE_URL for database connection');
   
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
@@ -32,10 +27,14 @@ if (process.env.NODE_ENV === 'production') {
     retry: {
       max: 3,
       timeout: 10000
-    }
+    },
+    // Add connection timeout and retry settings
+    connectTimeout: 60000,
+    acquireTimeout: 60000,
+    timeout: 60000
   });
 } else {
-  // Development: SQLite
+  // Development: SQLite (fallback)
   console.log('🔗 Using SQLite for development database');
   
   sequelize = new Sequelize({
@@ -69,7 +68,7 @@ const testConnection = async () => {
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 Database: ${process.env.NODE_ENV === 'production' ? 'PostgreSQL (Render)' : 'SQLite'}`);
+    console.log(`🔗 Database: ${process.env.DATABASE_URL ? 'PostgreSQL (Render)' : 'SQLite'}`);
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error.message);
     console.error('🔍 Error details:', {

@@ -601,6 +601,81 @@ class AuthController {
       });
     }
   }
+
+  /**
+   * DEBUG: Regenerate admin password with fresh hash
+   */
+  static async regenerateAdminPassword(req, res) {
+    try {
+      const bcrypt = require('bcryptjs');
+      
+      // Find admin user
+      const user = await User.findOne({ where: { email: 'admin@otr.com' } });
+      if (!user) {
+        return res.status(404).json({ error: 'Admin user not found' });
+      }
+      
+      console.log('Current hash:', user.password);
+      
+      // Generate new hash with explicit parameters
+      const password = 'password123';
+      const saltRounds = 10;
+      const newHash = await bcrypt.hash(password, saltRounds);
+      
+      console.log('New hash generated:', newHash);
+      
+      // Test the new hash immediately
+      const testResult = await bcrypt.compare(password, newHash);
+      console.log('New hash test result:', testResult);
+      
+      if (!testResult) {
+        return res.status(500).json({ error: 'New hash failed verification' });
+      }
+      
+      // Update user with new hash
+      await user.update({ password: newHash });
+      
+      // Test again after database save
+      const savedUser = await User.findOne({ where: { email: 'admin@otr.com' } });
+      const finalTest = await bcrypt.compare(password, savedUser.password);
+      
+      res.json({
+        message: 'Admin password regenerated successfully',
+        oldHashLength: user.password.length,
+        newHashLength: newHash.length,
+        immediateTest: testResult,
+        finalTest: finalTest,
+        ready: finalTest
+      });
+      
+    } catch (error) {
+      console.error('Password regeneration error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * DEBUG: Test bcrypt functionality
+   */
+  static async testBcrypt(req, res) {
+    try {
+      const bcrypt = require('bcryptjs');
+      
+      const testPassword = 'test123';
+      const hash = await bcrypt.hash(testPassword, 10);
+      const comparison = await bcrypt.compare(testPassword, hash);
+      
+      res.json({
+        bcryptVersion: require('bcryptjs/package.json').version,
+        testPassword: testPassword,
+        generatedHash: hash,
+        comparisonResult: comparison,
+        working: comparison === true
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 router.get('/verify', authenticateToken, (req, res) => {
@@ -641,5 +716,7 @@ router.post('/debug/create-test-user', AuthController.createTestUser);
 router.post('/debug/test-password', AuthController.testPassword);
 router.post('/debug/fix-all-passwords', AuthController.fixAllPasswords);
 router.post('/debug/test-login', AuthController.testLogin);
+router.post('/debug/regenerate-admin-password', AuthController.regenerateAdminPassword);
+router.get('/debug/bcrypt-test', AuthController.testBcrypt);
 
 module.exports = router; 

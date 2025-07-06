@@ -78,10 +78,26 @@ class AuthService {
       startsWithHash: user.password ? user.password.startsWith('$2a$') : false
     });
     
-    // Verify password
+    // Verify password with detailed debugging
+    console.log('[BCRYPT DEBUG] Original password:', JSON.stringify(password));
+    console.log('[BCRYPT DEBUG] Stored hash:', JSON.stringify(user.password));
+    console.log('[BCRYPT DEBUG] Hash details:', {
+      length: user.password.length,
+      firstChars: user.password.substring(0, 10),
+      type: typeof user.password,
+      encoding: Buffer.from(user.password).toString('hex').substring(0, 20)
+    });
+
+    // Test with a fresh hash of the same password
+    const testHash = await bcrypt.hash(password, 10);
+    console.log('[BCRYPT DEBUG] Fresh hash for same password:', testHash);
+    const testCompare = await bcrypt.compare(password, testHash);
+    console.log('[BCRYPT DEBUG] Fresh hash comparison:', testCompare);
+
+    // Try the actual comparison with explicit await
     console.log('[LOGIN DEBUG] Attempting password comparison...');
     const isValidPassword = await bcrypt.compare(password, user.password);
-    console.log('[LOGIN DEBUG] Password comparison result:', isValidPassword);
+    console.log('[BCRYPT DEBUG] Actual comparison result:', isValidPassword);
     
     if (!isValidPassword) {
       console.log('[LOGIN ERROR] Password mismatch for user:', email);
