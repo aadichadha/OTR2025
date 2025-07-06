@@ -70,7 +70,7 @@ class AuthService {
       encoding: Buffer.from(user.password).toString('hex').substring(0, 20)
     });
     // Test with a fresh hash of the same password
-    const bcrypt = require('bcrypt');
+    const bcrypt = require('bcryptjs');
     const testHash = await bcrypt.hash(password, 10);
     console.log('[BCRYPT DEBUG] Fresh hash for same password:', testHash);
     const testCompare = await bcrypt.compare(password, testHash);

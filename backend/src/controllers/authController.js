@@ -658,6 +658,13 @@ class AuthController {
       
       // Test again after database save
       const savedUser = await User.findOne({ where: { email: 'admin@otr.com' } });
+      console.log('Saved hash in DB:', savedUser.password);
+      console.log('Hash comparison details:', {
+        originalHash: newHash,
+        savedHash: savedUser.password,
+        hashesMatch: newHash === savedUser.password,
+        savedHashLength: savedUser.password.length
+      });
       const finalTest = await bcrypt.compare(password, savedUser.password);
       
       res.json({
