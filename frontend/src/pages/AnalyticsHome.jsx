@@ -171,7 +171,24 @@ const AnalyticsHome = () => {
   const fetchSessions = async (playerId) => {
     try {
       const res = await api.get(`/players/${playerId}/sessions`);
-      setSessions(res.data.sessions || []);
+      
+      // Handle both old and new response formats
+      let sessionsData = [];
+      if (res.data.success && res.data.data) {
+        // New format
+        sessionsData = res.data.data;
+      } else if (res.data.sessions) {
+        // Old format
+        sessionsData = res.data.sessions;
+      } else if (Array.isArray(res.data)) {
+        // Direct array format
+        sessionsData = res.data;
+      }
+      
+      console.log('[DEBUG] Analytics Sessions response:', res.data);
+      console.log('[DEBUG] Analytics Processed sessions:', sessionsData);
+      
+      setSessions(sessionsData);
     } catch (err) {
       console.error('Error fetching sessions:', err);
       setSessions([]);
@@ -536,11 +553,17 @@ const AnalyticsHome = () => {
             boxShadow: '0 4px 16px rgba(28,44,77,0.08)'
           }}>
             <Typography variant="h6" fontWeight="bold" mb={2} color="#1c2c4d">
-              Session Selection
+              Session Selection ({sessions.length} total sessions)
             </Typography>
             {loading ? (
               <Box display="flex" justifyContent="center" p={4}>
                 <CircularProgress sx={{ color: '#1c2c4d' }} />
+              </Box>
+            ) : getFilteredSessions().length === 0 ? (
+              <Box display="flex" justifyContent="center" p={4}>
+                <Typography variant="body1" color="#1c2c4d" sx={{ opacity: 0.7 }}>
+                  {sessions.length === 0 ? 'No sessions found for this player.' : 'No sessions match the current filters.'}
+                </Typography>
               </Box>
             ) : (
               <Grid container spacing={2}>
