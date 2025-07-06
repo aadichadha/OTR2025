@@ -1,5 +1,7 @@
 const { Player, Session, BatSpeedData, ExitVelocityData } = require('../models');
 const MetricsCalculator = require('../services/metricsCalculator');
+const { Op } = require('sequelize');
+const User = require('../models').User;
 
 class PlayerController {
   /**
@@ -355,6 +357,115 @@ class PlayerController {
       res.status(500).json({ error: 'Failed to retrieve session history' });
     }
   }
+
+  /**
+ * Get stats for the currently logged-in player
+ */
+  static async getMyStats(req, res) {
+    try {
+      const user = await User.findByPk(req.user.id);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      const player = await Player.findOne({ where: { name: user.name } });
+      if (!player) return res.status(404).json({ error: 'Player not found for user' });
+      // Aggregate stats (example: max/avg exit velo, bat speed, session count)
+      const sessions = await Session.findAll({ where: { player_id: player.id } });
+      let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null;
+      let exitVelocities = [], batSpeeds = [];
+      for (const session of sessions) {
+        if (session.session_type === 'hittrax') {
+          const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
+          exitVelocities.push(...evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite));
+        }
+        if (session.session_type === 'blast') {
+          const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
+          batSpeeds.push(...bss.map(b => parseFloat(b.bat_speed)).filter(Number.isFinite));
+        }
+      }
+      if (exitVelocities.length) {
+        maxExitVelocity = Math.max(...exitVelocities);
+        avgExitVelocity = exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length;
+      }
+      if (batSpeeds.length) {
+        maxBatSpeed = Math.max(...batSpeeds);
+        avgBatSpeed = batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length;
+      }
+      res.json({
+        maxExitVelocity,
+        avgExitVelocity,
+        maxBatSpeed,
+        avgBatSpeed,
+        sessionCount: sessions.length
+      });
+    } catch (error) {
+      console.error('Get my stats error:', error);
+      res.status(500).json({ error: 'Failed to retrieve player statistics' });
+    }
+  };
+
+  /**
+ * Get sessions for the currently logged-in player
+ */
+  static async getMySessions(req, res) {
+    try {
+      const user = await User.findByPk(req.user.id);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      const player = await Player.findOne({ where: { name: user.name } });
+      if (!player) return res.status(404).json({ error: 'Player not found for user' });
+      const sessions = await Session.findAll({ where: { player_id: player.id }, order: [['session_date', 'DESC']] });
+      res.json({ sessions });
+    } catch (error) {
+      console.error('Get my sessions error:', error);
+      res.status(500).json({ error: 'Failed to retrieve player sessions' });
+    }
+  };
+
+  /**
+ * Get leaderboard (all players, sorted by max exit velocity)
+ */
+  static async getLeaderboard(req, res) {
+    try {
+      const players = await Player.findAll();
+      const leaderboard = [];
+      for (const player of players) {
+        const sessions = await Session.findAll({ where: { player_id: player.id } });
+        let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null;
+        let exitVelocities = [], batSpeeds = [];
+        for (const session of sessions) {
+          if (session.session_type === 'hittrax') {
+            const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
+            exitVelocities.push(...evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite));
+          }
+          if (session.session_type === 'blast') {
+            const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
+            batSpeeds.push(...bss.map(b => parseFloat(b.bat_speed)).filter(Number.isFinite));
+          }
+        }
+        if (exitVelocities.length) {
+          maxExitVelocity = Math.max(...exitVelocities);
+          avgExitVelocity = exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length;
+        }
+        if (batSpeeds.length) {
+          maxBatSpeed = Math.max(...batSpeeds);
+          avgBatSpeed = batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length;
+        }
+        leaderboard.push({
+          id: player.id,
+          name: player.name,
+          level: player.high_school ? 'high_school' : player.college ? 'college' : player.little_league ? 'youth' : 'other',
+          maxExitVelocity,
+          avgExitVelocity,
+          maxBatSpeed,
+          avgBatSpeed,
+          sessionCount: sessions.length
+        });
+      }
+      leaderboard.sort((a, b) => (b.maxExitVelocity || 0) - (a.maxExitVelocity || 0));
+      res.json({ players: leaderboard });
+    } catch (error) {
+      console.error('Get leaderboard error:', error);
+      res.status(500).json({ error: 'Failed to retrieve leaderboard' });
+    }
+  };
 }
 
 module.exports = PlayerController; 
