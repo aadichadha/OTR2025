@@ -217,6 +217,50 @@ app.get('/api/health', (req, res) => {
   }
 });
 
+// Debug endpoint to check user data
+app.get('/api/debug/user/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    // Import required modules
+    const { User } = require('./models');
+    
+    // Find user directly
+    const user = await User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.json({ 
+        found: false,
+        message: 'User not found'
+      });
+    }
+    
+    res.json({
+      found: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        password: {
+          exists: !!user.password,
+          length: user.password ? user.password.length : 0,
+          startsWithHash: user.password ? user.password.startsWith('$2a$') : false,
+          firstChars: user.password ? user.password.substring(0, 20) : null,
+          lastChars: user.password ? user.password.substring(user.password.length - 10) : null
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('💥 DEBUG: Error checking user:', error);
+    res.status(500).json({ 
+      error: 'Failed to check user', 
+      details: error.message 
+    });
+  }
+});
+
 // Direct login test endpoint (bypasses all rate limiting)
 app.post('/api/test-login', async (req, res) => {
   try {
