@@ -217,6 +217,38 @@ app.get('/api/health', (req, res) => {
   }
 });
 
+// Direct login test endpoint (bypasses all rate limiting)
+app.post('/api/test-login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    console.log('🔧 DIRECT TEST: Testing login for:', email);
+    
+    // Import AuthService directly
+    const AuthService = require('./services/authService');
+    
+    // Use the same logic as the regular login
+    const result = await AuthService.loginUser({ email, password });
+    
+    console.log('✅ DIRECT TEST: Login successful');
+    
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: result.user,
+      token: result.token
+    });
+    
+  } catch (error) {
+    console.error('💥 DIRECT TEST: Login failed:', error);
+    res.status(401).json({ 
+      success: false,
+      error: 'Login failed', 
+      details: error.message 
+    });
+  }
+});
+
 // CORS test endpoint
 app.get('/api/cors-test', (req, res) => {
   try {
