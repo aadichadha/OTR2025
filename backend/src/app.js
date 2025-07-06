@@ -112,12 +112,12 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// Stricter rate limiting for auth routes (skip OPTIONS requests)
+// Stricter rate limiting for auth routes (skip OPTIONS requests and debug endpoints)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 requests per windowMs
   message: 'Too many authentication attempts, please try again later.',
-  skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
+  skip: (req) => req.method === 'OPTIONS' || req.path.includes('/debug/'), // Skip rate limiting for preflight requests and debug endpoints
 });
 
 app.use('/api/auth/', authLimiter);
