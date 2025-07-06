@@ -16,24 +16,30 @@ function generateReportPDF(reportData, outputFilePath) {
       doc.save();
       doc.roundedRect(x, y, width, height, 20).fill('#2D3748');
       doc.roundedRect(x, y, width, height, 20).stroke('#23293a');
-      // Value
-      doc.fontSize(32).fill('white').font('Helvetica-Bold').text(value.toString(), x, y + 18, {
+      
+      // Value - Much larger and bolder (48px equivalent)
+      doc.fontSize(48).fill('white').font('Helvetica-Bold').text(value.toString(), x, y + 15, {
         align: 'center',
         width: width
       });
-      // Label
-      doc.fontSize(13).fill('#CBD5E1').font('Helvetica-Bold').text(label, x, y + 60, {
+      
+      // Label - Smaller (14px equivalent)
+      doc.fontSize(14).fill('#A0AEC0').font('Helvetica-Bold').text(label, x, y + 70, {
         align: 'center',
         width: width
       });
-      // Unit
-      if (unit) doc.fontSize(11).fill('#A0AEC0').font('Helvetica').text(unit, x, y + 80, {
-        align: 'center',
-        width: width
-      });
-      // Status label (performance indicator)
+      
+      // Unit - Small (12px equivalent)
+      if (unit) {
+        doc.fontSize(12).fill('#A0AEC0').font('Helvetica').text(unit, x, y + 90, {
+          align: 'center',
+          width: width
+        });
+      }
+      
+      // Status label (performance indicator) - at bottom
       if (statusLabel) {
-        doc.fontSize(11).fill(statusColor).font('Helvetica-Bold').text(statusLabel, x, y + height - 24, {
+        doc.fontSize(11).fill(statusColor).font('Helvetica-Bold').text(statusLabel, x, y + height - 20, {
           align: 'center',
           width: width
         });
@@ -86,10 +92,10 @@ function generateReportPDF(reportData, outputFilePath) {
     let currentY = 140;
 
     // Metrics Section
-    // Draw metric cards with dark background, rounded corners, white text
-    const cardWidth = 170;
-    const cardHeight = 100;
-    const spacing = 20;
+    // Draw metric cards based on session type
+    const cardWidth = 180; // Slightly wider for better spacing
+    const cardHeight = 120; // Taller for better proportions
+    const spacing = 25; // More spacing between cards
     if (reportData.session.type === 'hittrax' && reportData.metrics?.exitVelocity) {
       const metrics = reportData.metrics.exitVelocity;
       // Row 1
@@ -117,7 +123,7 @@ function generateReportPDF(reportData, outputFilePath) {
         getStatusColor(metrics.grades?.launchAngleTop5),
         metrics.grades?.launchAngleTop5
       );
-      currentY += cardHeight + 20;
+      currentY += cardHeight + 30; // More spacing between rows
       // Row 2
       drawMetricCard(
         30, currentY, cardWidth, cardHeight,
@@ -171,7 +177,7 @@ function generateReportPDF(reportData, outputFilePath) {
         getStatusColor(metrics.grades?.attackAngle),
         metrics.grades?.attackAngle
       );
-      currentY += cardHeight + 20;
+      currentY += cardHeight + 30; // More spacing between rows
       // Row 2
       drawMetricCard(
         30, currentY, cardWidth, cardHeight,
@@ -190,12 +196,12 @@ function generateReportPDF(reportData, outputFilePath) {
         'Complete'
       );
     }
-    currentY += cardHeight + 80;
+    currentY += cardHeight + 100; // More spacing before strike zone
 
     // Strike Zone Heat Map (5x3 grid)
-    doc.fontSize(20).fill('white').text('Strike Zone Hot Zones (Avg EV)', 30, currentY);
-    currentY += 30;
-    const zoneCellSize = 60;
+    doc.fontSize(24).fill('white').font('Helvetica-Bold').text('Strike Zone Hot Zones (Avg EV)', 30, currentY);
+    currentY += 40; // More spacing after title
+    const zoneCellSize = 70; // Larger cells for better visibility
     const zoneGrid = [
       [10, null, 11],
       [1, 2, 3],
@@ -227,18 +233,18 @@ function generateReportPDF(reportData, outputFilePath) {
         doc.save();
         doc.rect(x, y, zoneCellSize, zoneCellSize).fill(cellColor);
         doc.restore();
-        // Draw zone number (small, top left)
-        doc.fontSize(10).fill('white').font('Helvetica-Bold').text(zone.toString(), x + 6, y + 6);
-        // Draw value (large, centered)
+        // Draw zone number (larger, top left)
+        doc.fontSize(16).fill('white').font('Helvetica-Bold').text(zone.toString(), x + 8, y + 8);
+        // Draw value (much larger, centered)
         if (ev !== null) {
-          doc.fontSize(18).fill('white').font('Helvetica-Bold').text(ev.toFixed(1), x, y + 22, {
+          doc.fontSize(24).fill('white').font('Helvetica-Bold').text(ev.toFixed(1), x, y + 25, {
             align: 'center',
             width: zoneCellSize
           });
         }
       }
     }
-    currentY += zoneCellSize * zoneGrid.length + 30;
+    currentY += zoneCellSize * zoneGrid.length + 50; // More spacing after grid
 
     // Session History
     if (reportData.history && reportData.history.length > 1) {
