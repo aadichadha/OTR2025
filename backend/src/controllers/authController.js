@@ -497,6 +497,49 @@ class AuthController {
   }
 
   /**
+   * DEBUG: Fix all user passwords in production
+   */
+  static async fixAllPasswords(req, res) {
+    try {
+      const bcrypt = require('bcryptjs');
+      
+      console.log('🔧 DEBUG: Fixing all user passwords...');
+      
+      // Get all users
+      const users = await User.findAll();
+      console.log(`📊 Found ${users.length} users to fix`);
+      
+      // Update each user's password
+      for (const user of users) {
+        console.log(`🔄 Fixing password for: ${user.email}`);
+        
+        // Hash the password properly
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        
+        // Update the user
+        await user.update({ password: hashedPassword });
+        
+        console.log(`✅ Fixed password for: ${user.email}`);
+      }
+      
+      console.log('🎉 All passwords fixed successfully!');
+      
+      res.json({
+        message: 'All passwords fixed successfully',
+        usersFixed: users.length,
+        testCredentials: {
+          email: 'any_user_email',
+          password: 'password123'
+        }
+      });
+      
+    } catch (error) {
+      console.error('💥 DEBUG: Error fixing passwords:', error);
+      res.status(500).json({ error: 'Failed to fix passwords', details: error.message });
+    }
+  }
+
+  /**
    * DEBUG: Test password hashing
    */
   static async testPassword(req, res) {
@@ -565,5 +608,6 @@ router.get('/test', authenticateToken, (req, res) => {
 router.get('/debug/check-users', AuthController.checkUsers);
 router.post('/debug/create-test-user', AuthController.createTestUser);
 router.post('/debug/test-password', AuthController.testPassword);
+router.post('/debug/fix-all-passwords', AuthController.fixAllPasswords);
 
 module.exports = router; 
