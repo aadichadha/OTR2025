@@ -793,55 +793,6 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
             <Alert severity="info">No swings found for this session.</Alert>
           ) : (
             <Box>
-              {/* Metrics Grid */}
-              <Card sx={{ 
-                mb: 4, 
-                p: 3, 
-                textAlign: 'center', 
-                bgcolor: '#fff',
-                border: '1.5px solid #e0e3e8',
-                borderRadius: 4,
-                boxShadow: '0 4px 16px rgba(28,44,77,0.08)',
-                color: '#1c2c4d'
-              }}>
-                <Typography variant="h5" sx={{ mb: 3, fontWeight: 700, color: '#1c2c4d', letterSpacing: 0.5 }}>
-                  Performance Metrics
-                </Typography>
-                {renderMetrics()}
-              </Card>
-
-              {/* Strike Zone Heat Map */}
-              {(currentReport?.metrics?.batSpeed?.hotZoneEVs || currentReport?.metrics?.exitVelocity?.hotZoneEVs) && (
-                <Card sx={{ 
-                  p: 3, 
-                  textAlign: 'center', 
-                  mb: 4,
-                  bgcolor: '#fff',
-                  border: '1.5px solid #e0e3e8',
-                  borderRadius: 4,
-                  boxShadow: '0 4px 16px rgba(28,44,77,0.08)',
-                  color: '#1c2c4d'
-                }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#1c2c4d' }}>
-                    STRIKE ZONE HOT ZONES (Avg EV)
-                  </Typography>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, maxWidth: 350, mx: 'auto' }}>
-                    {[10, null, 11].map((zone, idx) => zone ? (
-                      <HotZoneCell key={zone} zone={zone} ev={(currentReport?.metrics?.batSpeed?.hotZoneEVs || currentReport?.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />
-                    ) : <Box key={idx} />)}
-                    {[1, 2, 3].map(zone => <HotZoneCell key={zone} zone={zone} ev={(currentReport?.metrics?.batSpeed?.hotZoneEVs || currentReport?.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />)}
-                    {[4, 5, 6].map(zone => <HotZoneCell key={zone} zone={zone} ev={(currentReport?.metrics?.batSpeed?.hotZoneEVs || currentReport?.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />)}
-                    {[7, 8, 9].map(zone => <HotZoneCell key={zone} zone={zone} ev={(currentReport?.metrics?.batSpeed?.hotZoneEVs || currentReport?.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />)}
-                    {[12, null, 13].map((zone, idx) => zone ? (
-                      <HotZoneCell key={zone} zone={zone} ev={(currentReport?.metrics?.batSpeed?.hotZoneEVs || currentReport?.metrics?.exitVelocity?.hotZoneEVs)?.[zone]} />
-                    ) : <Box key={idx + 'b'} />)}
-                  </Box>
-                  <Typography variant="body2" color="textSecondary" sx={{ mt: 2, color: '#1c2c4d' }}>
-                    Each zone shows the average exit velocity (mph) for that strike zone
-                  </Typography>
-                </Card>
-              )}
-
               {/* Swing History Section */}
               <Card sx={{ 
                 p: 3, 
