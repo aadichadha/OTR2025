@@ -509,15 +509,33 @@ class AuthController {
       const users = await User.findAll();
       console.log(`📊 Found ${users.length} users to fix`);
       
-      // Update each user's password
+      // Update each user's password with detailed debugging
       for (const user of users) {
         console.log(`🔄 Fixing password for: ${user.email}`);
         
-        // Hash the password properly
-        const hashedPassword = await bcrypt.hash('password123', 10);
+        // Hash the password properly with detailed logging
+        const password = 'password123';
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        
+        console.log(`[BCRYPT DEBUG] Generated hash for ${user.email}:`, hashedPassword);
+        
+        // Test the hash immediately
+        const testResult = await bcrypt.compare(password, hashedPassword);
+        console.log(`[BCRYPT DEBUG] Test result for ${user.email}:`, testResult);
+        
+        if (!testResult) {
+          console.error(`[BCRYPT ERROR] Hash verification failed for ${user.email}`);
+          continue;
+        }
         
         // Update the user
         await user.update({ password: hashedPassword });
+        
+        // Test again after database save
+        const savedUser = await User.findOne({ where: { email: user.email } });
+        const finalTest = await bcrypt.compare(password, savedUser.password);
+        console.log(`[BCRYPT DEBUG] Final test for ${user.email}:`, finalTest);
         
         console.log(`✅ Fixed password for: ${user.email}`);
       }
