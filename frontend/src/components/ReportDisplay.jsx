@@ -6,6 +6,8 @@ import { getToken } from '../services/auth';
 import getGradeColor from '../utils/getGradeColor';
 import safeToFixed from '../utils/safeToFixed';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 const NAVY = '#1a2340';
 const PANEL_BG = '#fff';
 const CARD_BG = NAVY;
@@ -152,7 +154,7 @@ function DownloadPDFButton({ report }) {
       return;
     }
     try {
-      const res = await fetch(`https://otr2025.onrender.com/api/sessions/${sessionId}/report`, {
+      const res = await fetch(`${API_URL}/sessions/${sessionId}/report`, {
         method: 'GET',
         credentials: 'include',
         headers: {
