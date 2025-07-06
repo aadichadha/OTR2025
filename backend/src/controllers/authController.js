@@ -704,6 +704,34 @@ class AuthController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * DEBUG: Check admin password in database
+   */
+  static async checkAdminPassword(req, res) {
+    try {
+      const user = await User.findOne({ where: { email: 'admin@otr.com' } });
+      if (!user) {
+        return res.status(404).json({ error: 'Admin user not found' });
+      }
+      
+      const bcrypt = require('bcryptjs');
+      const testPassword = 'password123';
+      const comparison = await bcrypt.compare(testPassword, user.password);
+      
+      res.json({
+        email: user.email,
+        passwordHash: user.password,
+        hashLength: user.password.length,
+        hashStartsWith: user.password.substring(0, 7),
+        testPassword: testPassword,
+        comparisonResult: comparison,
+        working: comparison === true
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 router.get('/verify', authenticateToken, (req, res) => {
@@ -746,6 +774,7 @@ router.post('/debug/fix-all-passwords', AuthController.fixAllPasswords);
 router.post('/debug/test-login', AuthController.testLogin);
 router.post('/debug/regenerate-admin-password', AuthController.regenerateAdminPassword);
 router.get('/debug/bcrypt-test', AuthController.testBcrypt);
+router.get('/debug/check-admin-password', AuthController.checkAdminPassword);
 
 // Force restart
 module.exports = router; 
