@@ -1,25 +1,66 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login as loginService } from '../services/auth';
-import { Box, TextField, Button, Typography, Alert, CircularProgress, Paper } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
+import { 
+  Box, 
+  TextField, 
+  Button, 
+  Typography, 
+  Alert, 
+  CircularProgress, 
+  Paper,
+  ToggleButtonGroup,
+  ToggleButton,
+  Chip
+} from '@mui/material';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SportsIcon from '@mui/icons-material/Sports';
+import PersonIcon from '@mui/icons-material/Person';
 
 function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [selectedRole, setSelectedRole] = useState('player');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRoleChange = (event, newRole) => {
+    if (newRole !== null) {
+      setSelectedRole(newRole);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    
     try {
-      await loginService(formData.email, formData.password);
-      navigate('/');
+      const result = await login(formData, selectedRole);
+      
+      if (result.success) {
+        // Redirect based on role
+        switch (result.user.role) {
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          case 'coach':
+            navigate('/coach/dashboard');
+            break;
+          case 'player':
+            navigate('/player/dashboard');
+            break;
+          default:
+            navigate('/');
+        }
+      } else {
+        setError(result.error);
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
     } finally {
@@ -41,11 +82,75 @@ function Login() {
           border: '1.5px solid #e0e3e8'
         }}
       >
-        <Typography variant="h4" align="center" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 700, mb: 3 }}>
+        <Typography variant="h4" align="center" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 700, mb: 2 }}>
           Login
         </Typography>
+        
+        <Typography variant="body2" align="center" sx={{ color: '#1c2c4d', opacity: 0.7, mb: 4 }}>
+          Select your role and enter your credentials
+        </Typography>
+
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
         <form onSubmit={handleSubmit}>
+          {/* Role Selection */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="subtitle2" sx={{ color: '#1c2c4d', mb: 2, fontWeight: 600 }}>
+              Login as:
+            </Typography>
+            <ToggleButtonGroup
+              value={selectedRole}
+              exclusive
+              onChange={handleRoleChange}
+              fullWidth
+              sx={{
+                '& .MuiToggleButton-root': {
+                  border: '1.5px solid #e0e3e8',
+                  color: '#1c2c4d',
+                  fontWeight: 600,
+                  py: 1.5,
+                  '&.Mui-selected': {
+                    backgroundColor: '#1c2c4d',
+                    color: '#fff',
+                    '&:hover': {
+                      backgroundColor: '#2d5aa0',
+                    }
+                  },
+                  '&:hover': {
+                    backgroundColor: '#f8f9fa',
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="admin" sx={{ flexDirection: 'column', gap: 1 }}>
+                <AdminPanelSettingsIcon />
+                <Box>
+                  <Typography variant="body2" fontWeight="bold">Admin</Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                    Full system access
+                  </Typography>
+                </Box>
+              </ToggleButton>
+              <ToggleButton value="coach" sx={{ flexDirection: 'column', gap: 1 }}>
+                <SportsIcon />
+                <Box>
+                  <Typography variant="body2" fontWeight="bold">Coach</Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                    Player management & analytics
+                  </Typography>
+                </Box>
+              </ToggleButton>
+              <ToggleButton value="player" sx={{ flexDirection: 'column', gap: 1 }}>
+                <PersonIcon />
+                <Box>
+                  <Typography variant="body2" fontWeight="bold">Player</Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                    Personal data only
+                  </Typography>
+                </Box>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
           <TextField
             label="Email"
             name="email"
@@ -122,9 +227,36 @@ function Login() {
             disabled={loading}
             startIcon={loading && <CircularProgress size={18} />}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Logging in...' : `Login as ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`}
           </Button>
         </form>
+
+        {/* Demo Credentials */}
+        <Box sx={{ mt: 4, p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e3e8' }}>
+          <Typography variant="caption" sx={{ color: '#1c2c4d', fontWeight: 600, display: 'block', mb: 1 }}>
+            Demo Credentials:
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Chip 
+              label="Admin: admin@otr.com / password123" 
+              size="small" 
+              variant="outlined"
+              sx={{ fontSize: '0.7rem' }}
+            />
+            <Chip 
+              label="Coach: coach@otr.com / password123" 
+              size="small" 
+              variant="outlined"
+              sx={{ fontSize: '0.7rem' }}
+            />
+            <Chip 
+              label="Player: player@otr.com / password123" 
+              size="small" 
+              variant="outlined"
+              sx={{ fontSize: '0.7rem' }}
+            />
+          </Box>
+        </Box>
       </Paper>
     </Box>
   );
