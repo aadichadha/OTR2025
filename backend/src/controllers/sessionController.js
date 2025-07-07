@@ -1,6 +1,7 @@
 const { Session, Player, BatSpeedData, ExitVelocityData } = require('../models');
 const { aggregateReportData } = require('../services/reportAggregator');
 const { generateReportPDF } = require('../services/pdfGenerator');
+const emailService = require('../services/emailService');
 const path = require('path');
 const fs = require('fs');
 
@@ -328,6 +329,52 @@ class SessionController {
       console.error('Download session report error:', error);
       res.status(500).json({ 
         error: 'Failed to generate session report' 
+      });
+    }
+  }
+
+  /**
+   * Email session report with PDF attachment
+   */
+  static async emailSessionReport(req, res) {
+    try {
+      const { sessionId } = req.params;
+      const { recipientEmail } = req.body;
+
+      // Validate recipient email
+      if (!recipientEmail) {
+        return res.status(400).json({ error: 'Recipient email is required' });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(recipientEmail)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
+
+      // Verify session exists
+      const session = await Session.findByPk(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Generate report data
+      const reportData = await aggregateReportData(sessionId);
+
+      // Send email with PDF attachment
+      const result = await emailService.sendSessionReport(sessionId, recipientEmail, reportData);
+
+      res.status(200).json({
+        message: 'Session report sent successfully',
+        recipient: recipientEmail,
+        messageId: result.messageId
+      });
+
+    } catch (error) {
+      console.error('Email session report error:', error);
+      res.status(500).json({ 
+        error: 'Failed to send session report email',
+        details: error.message
       });
     }
   }

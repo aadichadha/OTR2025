@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Card, CardContent, Grid, Button, CircularProgress, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Button, CircularProgress, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Alert, TextField } from '@mui/material';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,6 +24,7 @@ const PlayerDashboard = () => {
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [swingLogModal, setSwingLogModal] = useState({ open: false, swings: [], loading: false, error: '', sessionId: null });
   const [reportModal, setReportModal] = useState({ open: false, report: null, loading: false, error: '', sessionId: null });
+  const [emailModal, setEmailModal] = useState({ open: false, sessionId: null, email: '', loading: false, error: '', success: false });
 
   useEffect(() => {
     fetchData();
@@ -113,9 +114,51 @@ const PlayerDashboard = () => {
   };
 
   const handleEmailReport = (sessionId) => {
-    const subject = encodeURIComponent(`Baseball Analytics Report - Session ${sessionId}`);
-    const body = encodeURIComponent(`Please find attached the baseball analytics report for session ${sessionId}.\n\nFrom: otrdatatrack@gmail.com\nOne-time password: exwx bdjz xjid qhmh`);
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+    setEmailModal({ open: true, sessionId, email: '', loading: false, error: '', success: false });
+  };
+
+  const handleCloseEmailModal = () => {
+    setEmailModal({ open: false, sessionId: null, email: '', loading: false, error: '', success: false });
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailModal.email.trim()) {
+      setEmailModal(prev => ({ ...prev, error: 'Please enter a valid email address' }));
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailModal.email)) {
+      setEmailModal(prev => ({ ...prev, error: 'Please enter a valid email address' }));
+      return;
+    }
+
+    setEmailModal(prev => ({ ...prev, loading: true, error: '' }));
+    
+    try {
+      await api.post(`/sessions/${emailModal.sessionId}/email`, {
+        recipientEmail: emailModal.email
+      });
+      
+      setEmailModal(prev => ({ 
+        ...prev, 
+        loading: false, 
+        success: true, 
+        error: '' 
+      }));
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        handleCloseEmailModal();
+      }, 2000);
+      
+    } catch (err) {
+      setEmailModal(prev => ({ 
+        ...prev, 
+        loading: false, 
+        error: err.response?.data?.error || 'Failed to send email' 
+      }));
+    }
   };
 
   const handleOpenSwingLog = async (sessionId) => {
@@ -334,6 +377,58 @@ const PlayerDashboard = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseReport}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Email Modal */}
+      <Dialog open={emailModal.open} onClose={handleCloseEmailModal} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ color: NAVY, fontWeight: 700 }}>Email Session Report</DialogTitle>
+        <DialogContent>
+          {emailModal.success ? (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              Report sent successfully to {emailModal.email}!
+            </Alert>
+          ) : (
+            <>
+              <Typography sx={{ mb: 2, color: NAVY }}>
+                Enter the email address where you'd like to send the session report:
+              </Typography>
+              <TextField
+                fullWidth
+                label="Recipient Email"
+                type="email"
+                value={emailModal.email}
+                onChange={(e) => setEmailModal(prev => ({ ...prev, email: e.target.value, error: '' }))}
+                error={!!emailModal.error}
+                helperText={emailModal.error}
+                disabled={emailModal.loading}
+                sx={{ mb: 2 }}
+              />
+              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem' }}>
+                The email will include:
+                <br />• Session details and metrics
+                <br />• PDF report attachment
+                <br />• Professional formatting
+              </Typography>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {!emailModal.success && (
+            <Button onClick={handleCloseEmailModal} disabled={emailModal.loading}>
+              Cancel
+            </Button>
+          )}
+          {!emailModal.success && (
+            <Button 
+              onClick={handleSendEmail} 
+              variant="contained" 
+              disabled={emailModal.loading || !emailModal.email.trim()}
+              sx={{ bgcolor: NAVY, '&:hover': { bgcolor: '#3a7bd5' } }}
+            >
+              {emailModal.loading ? 'Sending...' : 'Send Report'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

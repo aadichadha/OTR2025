@@ -161,6 +161,7 @@ try {
   app.delete('/api/sessions/:sessionId', authenticateToken, SessionController.deleteSession);
   app.get('/api/sessions/:sessionId', authenticateToken, SessionController.getSessionDetails);
   app.get('/api/sessions/:sessionId/report', authenticateToken, SessionController.downloadSessionReport);
+  app.post('/api/sessions/:sessionId/email', authenticateToken, SessionController.emailSessionReport);
   app.get('/api/sessions/:sessionId/report-data', authenticateToken, SessionController.getSessionReportData);
   app.get('/api/sessions/:sessionId/swings', authenticateToken, SessionController.getSessionSwings);
   console.log('✅ Session routes loaded');
