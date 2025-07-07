@@ -588,20 +588,21 @@ function Players() {
             <Grid container spacing={2} sx={{ mt: 1 }}>
               <Grid item xs={12}>
                 <TextField 
-                  label="Player Name" 
+                  label="Player Name *" 
                   name="name" 
                   value={form.name} 
                   onChange={handleChange} 
                   fullWidth 
                   required 
+                  placeholder="Enter player's full name"
                   sx={{
-                    '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                    '& .MuiInputLabel-root': { color: '#1c2c4d', fontWeight: 600 },
                     '& .MuiOutlinedInput-root': {
-                      '& fieldset': { borderColor: '#1c2c4d' },
+                      '& fieldset': { borderColor: '#1c2c4d', borderWidth: 2 },
                       '&:hover fieldset': { borderColor: '#3a7bd5' },
-                      '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                      '&.Mui-focused fieldset': { borderColor: '#1c2c4d', borderWidth: 2 }
                     },
-                    '& .MuiInputBase-input': { color: '#1c2c4d' }
+                    '& .MuiInputBase-input': { color: '#1c2c4d', fontWeight: 500 }
                   }}
                 />
               </Grid>
@@ -648,20 +649,20 @@ function Players() {
               
               <Grid item xs={12}>
                 <FormControl fullWidth sx={{ minWidth: 260 }}>
-                  <InputLabel sx={{ color: '#1c2c4d' }}>Player Level</InputLabel>
+                  <InputLabel sx={{ color: '#1c2c4d', fontWeight: 600 }}>Player Level *</InputLabel>
                   <Select
                     name="player_level"
                     value={form.player_level}
                     onChange={handleChange}
-                    label="Player Level"
+                    label="Player Level *"
                     MenuProps={{ PaperProps: { sx: { minWidth: 260 } } }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: '#1c2c4d' },
+                        '& fieldset': { borderColor: '#1c2c4d', borderWidth: 2 },
                         '&:hover fieldset': { borderColor: '#3a7bd5' },
-                        '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                        '&.Mui-focused fieldset': { borderColor: '#1c2c4d', borderWidth: 2 }
                       },
-                      '& .MuiSelect-select': { color: '#1c2c4d' }
+                      '& .MuiSelect-select': { color: '#1c2c4d', fontWeight: 500 }
                     }}
                   >
                     {Object.entries(PLAYER_LEVELS).map(([key, level]) => (
@@ -826,7 +827,7 @@ function Players() {
               
               <Grid item xs={12}>
                 <FormControl fullWidth sx={{ minWidth: 260 }}>
-                  <InputLabel sx={{ color: '#1c2c4d' }}>Position(s)</InputLabel>
+                  <InputLabel sx={{ color: '#1c2c4d', fontWeight: 600 }}>Position(s) *</InputLabel>
                   <Select
                     name="position"
                     multiple
@@ -835,7 +836,7 @@ function Players() {
                       const value = e.target.value;
                       setForm(prev => ({ ...prev, position: typeof value === 'string' ? value.split(',') : value }));
                     }}
-                    label="Position(s)"
+                    label="Position(s) *"
                     MenuProps={{ PaperProps: { sx: { minWidth: 260 } } }}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -880,11 +881,11 @@ function Players() {
                     )}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: '#1c2c4d' },
+                        '& fieldset': { borderColor: '#1c2c4d', borderWidth: 2 },
                         '&:hover fieldset': { borderColor: '#3a7bd5' },
-                        '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                        '&.Mui-focused fieldset': { borderColor: '#1c2c4d', borderWidth: 2 }
                       },
-                      '& .MuiSelect-select': { color: '#1c2c4d' }
+                      '& .MuiSelect-select': { color: '#1c2c4d', fontWeight: 500 }
                     }}
                   >
                     {POSITIONS.map(pos => (
@@ -908,15 +909,17 @@ function Players() {
               disabled={
                 !form.name ||
                 !form.player_level ||
-                !Array.isArray(form.position) || form.position.length === 0 ||
-                (form.player_level === 'youth' && (!form.team_type || !form.team_name)) ||
-                (form.player_level === 'high_school' && (!form.team_type || !form.team_name)) ||
-                (form.player_level === 'college' && !form.team_name) ||
-                (form.player_level === 'professional' && (!form.team_type || !form.team_name))
+                !Array.isArray(form.position) || form.position.length === 0
               }
             >
               {editPlayer ? 'Update Player' : 'Add Player'}
             </Button>
+            {/* Debug info */}
+            <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: '0.8rem' }}>
+              <Typography variant="caption" color="textSecondary">
+                Debug: Name: "{form.name}" | Level: "{form.player_level}" | Position: {JSON.stringify(form.position)}
+              </Typography>
+            </Box>
           </DialogActions>
         </Dialog>
       </Box>
