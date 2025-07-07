@@ -114,7 +114,8 @@ User.getRolePermissions = function(role) {
     player: [
       'view_own_data',
       'download_reports',
-      'view_player_dashboard'
+      'view_player_dashboard',
+      'view_analytics'
     ]
   };
   

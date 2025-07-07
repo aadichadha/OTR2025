@@ -19,6 +19,7 @@ import { Box, CircularProgress } from '@mui/material';
 import PlayerDashboard from './pages/PlayerDashboard';
 import Leaderboard from './pages/Leaderboard';
 import ProfileSettings from './pages/ProfileSettings';
+import SessionReport from './pages/SessionReport';
 
 // Role-specific dashboard components (placeholder for now)
 const CoachDashboard = () => <Home />;
@@ -143,6 +144,12 @@ function AppRoutes() {
           <Route path="/profile" element={
             <ProtectedRoute>
               <ProfileSettings />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/sessions/:id/report-data" element={
+            <ProtectedRoute requiredPermission="view_own_data">
+              <SessionReport />
             </ProtectedRoute>
           } />
 
