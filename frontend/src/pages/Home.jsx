@@ -84,153 +84,50 @@ export default function Home() {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: NAVY,
-        py: 6,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
-    >
-      <Box sx={{ width: '100%', maxWidth: 1200, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <img
-            src="/images/otrbaseball-simple.png"
-            alt="OTR Baseball Logo"
-            style={{
-              maxWidth: '200px',
-              width: '90%',
-              marginBottom: 16,
-              border: '2px solid #1c2c4d',
-              borderRadius: '8px',
-              padding: '8px',
-              backgroundColor: 'white'
-            }}
-          />
-          <Typography variant="h3" sx={{ fontWeight: 900, color: NAVY, mb: 2, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-            Coach Dashboard
-          </Typography>
-          <Typography variant="h6" sx={{ color: NAVY, opacity: 0.8 }}>
-            Professional baseball analytics platform for tracking player performance
-          </Typography>
-        </Box>
-
-        {/* Quick Stats */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={4}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, textAlign: 'center' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ width: '100%', maxWidth: 900, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 }, mx: 'auto' }}>
+        <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 3, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+          Coach Dashboard
+        </Typography>
+        <Grid container spacing={4} justifyContent="center" alignItems="center">
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, mb: 3 }}>
               <CardContent>
-                <People sx={{ fontSize: 48, color: NAVY, mb: 1 }} />
-                <Typography variant="h4" sx={{ color: NAVY, fontWeight: 700 }}>
-                  {loading ? <CircularProgress size={24} /> : stats.totalPlayers}
-                </Typography>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 600 }}>Total Players</Typography>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Current Users</Typography>
+                <Typography variant="h2" sx={{ color: NAVY, fontWeight: 900, textAlign: 'center' }}>{stats.totalPlayers}</Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={4}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, textAlign: 'center' }}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, mb: 3 }}>
               <CardContent>
-                <Assessment sx={{ fontSize: 48, color: NAVY, mb: 1 }} />
-                <Typography variant="h4" sx={{ color: NAVY, fontWeight: 700 }}>
-                  {loading ? <CircularProgress size={24} /> : stats.totalSessions}
-                </Typography>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 600 }}>Total Sessions</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, textAlign: 'center' }}>
-              <CardContent>
-                <Upload sx={{ fontSize: 48, color: NAVY, mb: 1 }} />
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 600, mb: 2 }}>Upload Data</Typography>
-                <Button 
-                  variant="contained" 
-                  startIcon={<AddIcon />}
-                  sx={{ bgcolor: NAVY, color: '#fff', fontWeight: 700, '&:hover': { bgcolor: '#3a7bd5' } }}
-                  onClick={() => navigate('/upload')}
-                >
-                  New Upload
-                </Button>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Total Sessions</Typography>
+                <Typography variant="h2" sx={{ color: NAVY, fontWeight: 900, textAlign: 'center' }}>{stats.totalSessions}</Typography>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
-
-        {/* Quick Actions */}
-        <Grid container spacing={4} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
+        <Grid container spacing={4} justifyContent="center" alignItems="center" sx={{ mt: 2 }}>
+          <Grid item xs={12}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
               <CardContent>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Quick Actions</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Button
-                    variant="contained"
-                    startIcon={<People />}
-                    sx={{ bgcolor: NAVY, color: '#fff', fontWeight: 700, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}
-                    onClick={() => navigate('/players')}
-                  >
-                    Manage Players
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Assessment />}
-                    sx={{ borderColor: NAVY, color: NAVY, fontWeight: 700, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
-                    onClick={() => navigate('/analytics')}
-                  >
-                    View Analytics
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<EmojiEventsIcon />}
-                    sx={{ borderColor: NAVY, color: NAVY, fontWeight: 700, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
-                    onClick={() => navigate('/leaderboard')}
-                  >
-                    Leaderboard
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Recent Activity</Typography>
-                {loading ? (
-                  <CircularProgress />
-                ) : stats.recentSessions.length > 0 ? (
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Recent Sessions</Typography>
+                {loading ? <CircularProgress /> : (
                   <Box>
-                    {stats.recentSessions.map((session) => (
-                      <Box key={session.id} sx={{ 
-                        mb: 1, 
-                        p: 1, 
-                        borderRadius: 2, 
-                        bgcolor: '#fff', 
-                        border: '1px solid #e0e3e8',
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between'
-                      }}>
-                        <Box>
-                          <Typography variant="body2" sx={{ color: NAVY, fontWeight: 600 }}>
-                            {formatDate(session.session_date)}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: NAVY }}>
-                            {session.session_type?.toUpperCase() || 'Unknown Type'}
-                          </Typography>
+                    {stats.recentSessions.length === 0 ? (
+                      <Typography color="error">No recent sessions found.</Typography>
+                    ) : (
+                      stats.recentSessions.map((session, idx) => (
+                        <Box key={idx} sx={{ mb: 2, p: 2, borderRadius: 2, bgcolor: '#fff', border: '1px solid #e0e3e8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box>
+                            <Typography variant="body1" sx={{ color: NAVY, fontWeight: 600, mb: 0.5 }}>{formatDate(session.session_date)}</Typography>
+                            <Typography variant="body2" sx={{ color: NAVY, mb: 1 }}>{session.session_type?.toUpperCase() || 'Unknown Type'}</Typography>
+                            <Chip label={session.session_type?.toUpperCase() || 'Unknown'} color={getSessionTypeColor(session.session_type)} size="small" />
+                          </Box>
                         </Box>
-                        <Chip 
-                          label={session.session_type?.toUpperCase() || 'Unknown'} 
-                          color={getSessionTypeColor(session.session_type)}
-                          size="small" 
-                        />
-                      </Box>
-                    ))}
+                      ))
+                    )}
                   </Box>
-                ) : (
-                  <Typography color="text.secondary">No recent sessions</Typography>
                 )}
               </CardContent>
             </Card>

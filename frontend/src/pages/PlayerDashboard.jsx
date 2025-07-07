@@ -4,6 +4,8 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DownloadIcon from '@mui/icons-material/Download';
+import EmailIcon from '@mui/icons-material/Email';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -81,6 +83,35 @@ const PlayerDashboard = () => {
 
   const handleViewAnalytics = () => {
     navigate('/analytics');
+  };
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+  const handleDownloadReport = async (sessionId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.get(`${API_URL}/sessions/${sessionId}/report`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `report_session_${sessionId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Failed to download report');
+      console.error('Error downloading report:', err);
+    }
+  };
+
+  const handleEmailReport = (sessionId) => {
+    const subject = encodeURIComponent(`Baseball Analytics Report - Session ${sessionId}`);
+    const body = encodeURIComponent(`Please find attached the baseball analytics report for session ${sessionId}.\n\nFrom: otrdatatrack@gmail.com\nOne-time password: exwx bdjz xjid qhmh`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
   return (
@@ -166,6 +197,22 @@ const PlayerDashboard = () => {
                             title="View Report"
                           >
                             <VisibilityIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDownloadReport(session.id)}
+                            sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
+                            title="Download Report"
+                          >
+                            <DownloadIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEmailReport(session.id)}
+                            sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
+                            title="Email Report"
+                          >
+                            <EmailIcon />
                           </IconButton>
                           <IconButton
                             size="small"

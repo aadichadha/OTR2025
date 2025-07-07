@@ -53,7 +53,7 @@ const Topbar = () => {
       baseItems.push({ label: 'Players', icon: <Group />, to: '/players' });
     }
 
-    if (hasPermission('view_analytics')) {
+    if (hasPermission('view_analytics') && user?.role !== 'player') {
       baseItems.push({ label: 'Analytics', icon: <Assessment />, to: '/analytics' });
     }
 
