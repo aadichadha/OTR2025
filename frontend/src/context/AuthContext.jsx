@@ -102,6 +102,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (userData) => {
+    setUser(userData);
+  };
+
   const hasPermission = (permission) => {
     if (!user) return false;
     if (user.role === 'admin') return true;
@@ -128,6 +132,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
+    updateUser,
     hasPermission,
     hasRole,
     canAccessPlayer,

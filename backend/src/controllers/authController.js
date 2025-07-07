@@ -223,6 +223,60 @@ class AuthController {
   }
 
   /**
+   * Change user password
+   */
+  static async changePassword(req, res) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user.id;
+
+      // Validate required fields
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ 
+          error: 'Current password and new password are required' 
+        });
+      }
+
+      // Validate new password strength
+      if (newPassword.length < 6) {
+        return res.status(400).json({ 
+          error: 'New password must be at least 6 characters long' 
+        });
+      }
+
+      // Get user and verify current password
+      const user = await AuthService.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ 
+          error: 'User not found' 
+        });
+      }
+
+      const isValidPassword = await AuthService.verifyPassword(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ 
+          error: 'Current password is incorrect' 
+        });
+      }
+
+      // Hash new password and update user
+      const hashedPassword = await AuthService.hashPassword(newPassword);
+      await user.update({ password: hashedPassword });
+
+      res.status(200).json({
+        message: 'Password changed successfully',
+        success: true
+      });
+
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ 
+        error: 'Failed to change password' 
+      });
+    }
+  }
+
+  /**
    * Get all users (admin only)
    */
   static async getAllUsers(req, res) {
@@ -746,6 +800,7 @@ router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
 router.get('/profile', authenticateToken, AuthController.getProfile);
 router.put('/profile', authenticateToken, AuthController.updateProfile);
+router.put('/change-password', authenticateToken, AuthController.changePassword);
 
 // Admin routes
 router.get('/users', authenticateToken, requireRole('admin'), AuthController.getAllUsers);

@@ -18,6 +18,7 @@ import { validateDeployment, generateDeploymentReport } from './utils/deployment
 import { Box, CircularProgress } from '@mui/material';
 import PlayerDashboard from './pages/PlayerDashboard';
 import Leaderboard from './pages/Leaderboard';
+import ProfileSettings from './pages/ProfileSettings';
 
 // Role-specific dashboard components (placeholder for now)
 const CoachDashboard = () => <Home />;
@@ -136,6 +137,12 @@ function AppRoutes() {
           <Route path="/leaderboard" element={
             <ProtectedRoute>
               <Leaderboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <ProfileSettings />
             </ProtectedRoute>
           } />
 

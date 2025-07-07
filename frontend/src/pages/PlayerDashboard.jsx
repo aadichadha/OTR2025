@@ -72,7 +72,11 @@ const PlayerDashboard = () => {
   };
 
   const handleViewSession = (sessionId) => {
-    navigate(`/sessions/${sessionId}/visualize`);
+    navigate(`/sessions/${sessionId}/report-data`);
+  };
+
+  const handleViewSwings = (sessionId) => {
+    navigate(`/sessions/${sessionId}/swings`);
   };
 
   const handleViewAnalytics = () => {
@@ -159,13 +163,23 @@ const PlayerDashboard = () => {
                             size="small"
                             onClick={() => handleViewSession(session.id)}
                             sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
+                            title="View Report"
                           >
                             <VisibilityIcon />
                           </IconButton>
                           <IconButton
                             size="small"
+                            onClick={() => handleViewSwings(session.id)}
+                            sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
+                            title="View Swings"
+                          >
+                            📊
+                          </IconButton>
+                          <IconButton
+                            size="small"
                             onClick={() => handleDeleteSession(session)}
                             sx={{ color: '#d32f2f', '&:hover': { bgcolor: '#ffebee' } }}
+                            title="Delete Session"
                           >
                             <DeleteIcon />
                           </IconButton>

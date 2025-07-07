@@ -157,6 +157,23 @@ const Leaderboard = () => {
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: NAVY },
                       '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' }
                     }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          backgroundColor: '#fff',
+                          '& .MuiMenuItem-root': {
+                            color: NAVY,
+                            '&:hover': {
+                              backgroundColor: '#e3f2fd'
+                            },
+                            '&.Mui-selected': {
+                              backgroundColor: '#d2e3fa',
+                              color: NAVY
+                            }
+                          }
+                        }
+                      }
+                    }}
                   >
                     {levels.map((level) => (
                       <MenuItem key={level} value={level} sx={{ color: NAVY }}>
@@ -178,6 +195,23 @@ const Leaderboard = () => {
                       '& .MuiSelect-select': { color: NAVY },
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: NAVY },
                       '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' }
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          backgroundColor: '#fff',
+                          '& .MuiMenuItem-root': {
+                            color: NAVY,
+                            '&:hover': {
+                              backgroundColor: '#e3f2fd'
+                            },
+                            '&.Mui-selected': {
+                              backgroundColor: '#d2e3fa',
+                              color: NAVY
+                            }
+                          }
+                        }
+                      }
                     }}
                   >
                     {sortOptions.map((option) => (
