@@ -382,15 +382,17 @@ const PlayerDashboard = () => {
 
       {/* Email Modal */}
       <Dialog open={emailModal.open} onClose={handleCloseEmailModal} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: NAVY, fontWeight: 700 }}>Email Session Report</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ color: NAVY, fontWeight: 700, bgcolor: '#fff', borderBottom: '1px solid #e0e3e8' }}>
+          Email Session Report
+        </DialogTitle>
+        <DialogContent sx={{ bgcolor: '#fff', pt: 2 }}>
           {emailModal.success ? (
-            <Alert severity="success" sx={{ mb: 2 }}>
+            <Alert severity="success" sx={{ mb: 2, bgcolor: '#e8f5e8', color: '#2e7d32' }}>
               Report sent successfully to {emailModal.email}!
             </Alert>
           ) : (
             <>
-              <Typography sx={{ mb: 2, color: NAVY }}>
+              <Typography sx={{ mb: 2, color: NAVY, fontWeight: 500 }}>
                 Enter the email address where you'd like to send the session report:
               </Typography>
               <TextField
@@ -402,10 +404,32 @@ const PlayerDashboard = () => {
                 error={!!emailModal.error}
                 helperText={emailModal.error}
                 disabled={emailModal.loading}
-                sx={{ mb: 2 }}
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: NAVY,
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: NAVY,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: NAVY,
+                    '&.Mui-focused': {
+                      color: NAVY,
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: NAVY,
+                  },
+                }}
               />
-              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem' }}>
-                The email will include:
+              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', bgcolor: '#f8f9fa', p: 2, borderRadius: 2, border: '1px solid #e0e3e8' }}>
+                <strong style={{ color: NAVY }}>The email will include:</strong>
                 <br />• Session details and metrics
                 <br />• PDF report attachment
                 <br />• Professional formatting
@@ -413,9 +437,13 @@ const PlayerDashboard = () => {
             </>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #e0e3e8', bgcolor: '#f8f9fa' }}>
           {!emailModal.success && (
-            <Button onClick={handleCloseEmailModal} disabled={emailModal.loading}>
+            <Button 
+              onClick={handleCloseEmailModal} 
+              disabled={emailModal.loading}
+              sx={{ color: NAVY, fontWeight: 600 }}
+            >
               Cancel
             </Button>
           )}
@@ -424,7 +452,15 @@ const PlayerDashboard = () => {
               onClick={handleSendEmail} 
               variant="contained" 
               disabled={emailModal.loading || !emailModal.email.trim()}
-              sx={{ bgcolor: NAVY, '&:hover': { bgcolor: '#3a7bd5' } }}
+              sx={{ 
+                bgcolor: NAVY, 
+                fontWeight: 600,
+                '&:hover': { bgcolor: '#3a7bd5' },
+                '&:disabled': {
+                  bgcolor: '#ccc',
+                  color: '#666',
+                }
+              }}
             >
               {emailModal.loading ? 'Sending...' : 'Send Report'}
             </Button>
