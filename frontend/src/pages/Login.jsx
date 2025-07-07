@@ -56,18 +56,6 @@ function Login() {
     }
   };
 
-  const handleDevLogin = () => {
-    const devUser = {
-      id: 1,
-      email: 'dev@otr.com',
-      name: 'Dev User',
-      role: 'admin'
-    };
-    localStorage.setItem('user', JSON.stringify(devUser));
-    localStorage.setItem('token', 'dev-token');
-    window.location.reload();
-  };
-
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="calc(100vh - 64px)" bgcolor="background.default">
       <Paper 
@@ -171,56 +159,6 @@ function Login() {
             {loading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
-
-        {/* Demo Credentials */}
-        <Box sx={{ mt: 4, p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e3e8' }}>
-          <Typography variant="caption" sx={{ color: '#1c2c4d', fontWeight: 600, display: 'block', mb: 1 }}>
-            Demo Credentials:
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Chip 
-              label="Admin: admin@otr.com / password123" 
-              size="small" 
-              variant="outlined"
-              sx={{ fontSize: '0.7rem' }}
-            />
-            <Chip 
-              label="Coach: coach@otr.com / password123" 
-              size="small" 
-              variant="outlined"
-              sx={{ fontSize: '0.7rem' }}
-            />
-            <Chip 
-              label="Player: player@otr.com / password123" 
-              size="small" 
-              variant="outlined"
-              sx={{ fontSize: '0.7rem' }}
-            />
-          </Box>
-        </Box>
-
-        {/* Development Bypass */}
-        <Box sx={{ mt: 2, p: 2, bgcolor: '#fff3cd', borderRadius: 2, border: '1px solid #ffeaa7' }}>
-          <Typography variant="caption" sx={{ color: '#856404', fontWeight: 600, display: 'block', mb: 1 }}>
-            🚧 Development Mode:
-          </Typography>
-          <Button
-            onClick={handleDevLogin}
-            variant="outlined"
-            fullWidth
-            size="small"
-            sx={{ 
-              color: '#856404', 
-              borderColor: '#ffeaa7',
-              '&:hover': {
-                borderColor: '#856404',
-                backgroundColor: '#fff3cd'
-              }
-            }}
-          >
-            Skip Login (Dev Mode)
-          </Button>
-        </Box>
       </Paper>
     </Box>
   );

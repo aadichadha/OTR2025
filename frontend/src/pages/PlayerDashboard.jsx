@@ -192,11 +192,19 @@ const PlayerDashboard = () => {
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <IconButton
                             size="small"
+                            onClick={() => handleViewSwings(session.id)}
+                            sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
+                            title="View Swings"
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
                             onClick={() => handleViewSession(session.id)}
                             sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
                             title="View Report"
                           >
-                            <VisibilityIcon />
+                            📊
                           </IconButton>
                           <IconButton
                             size="small"
@@ -213,14 +221,6 @@ const PlayerDashboard = () => {
                             title="Email Report"
                           >
                             <EmailIcon />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleViewSwings(session.id)}
-                            sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
-                            title="View Swings"
-                          >
-                            📊
                           </IconButton>
                           <IconButton
                             size="small"
