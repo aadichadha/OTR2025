@@ -169,8 +169,21 @@ function Players() {
         graduation_year: player.graduation_year || ''
       });
     } else {
+      // For new player, get the current user's name from localStorage or context
+      const token = localStorage.getItem('token');
+      let currentUserName = '';
+      
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          currentUserName = payload.name || '';
+        } catch (e) {
+          console.log('Could not decode token for user name');
+        }
+      }
+      
       setForm({ 
-        name: '', 
+        name: currentUserName, // Pre-fill with current user's name
         age: '', 
         player_level: '',
         team_type: '',
@@ -582,7 +595,7 @@ function Players() {
         {/* Edit/Add Player Dialog */}
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{ sx: { bgcolor: '#fff', borderRadius: 3, border: '2px solid #1c2c4d', color: '#1c2c4d' } }}>
           <DialogTitle sx={{ textAlign: 'center', pb: 2, color: '#1c2c4d', fontWeight: 800, fontSize: '2rem', letterSpacing: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif', bgcolor: '#fff', borderBottom: '2px solid #1c2c4d' }}>
-            {editPlayer ? 'Edit Player' : 'Add New Player'}
+            {editPlayer ? 'Edit Player' : 'Complete Player Profile'}
           </DialogTitle>
           <DialogContent sx={{ color: '#1c2c4d' }}>
             <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -595,6 +608,7 @@ function Players() {
                   fullWidth 
                   required 
                   placeholder="Enter player's full name"
+                  disabled={!editPlayer} // Disable for new players, enable for editing
                   sx={{
                     '& .MuiInputLabel-root': { color: '#1c2c4d', fontWeight: 600 },
                     '& .MuiOutlinedInput-root': {
@@ -602,7 +616,11 @@ function Players() {
                       '&:hover fieldset': { borderColor: '#3a7bd5' },
                       '&.Mui-focused fieldset': { borderColor: '#1c2c4d', borderWidth: 2 }
                     },
-                    '& .MuiInputBase-input': { color: '#1c2c4d', fontWeight: 500 }
+                    '& .MuiInputBase-input': { color: '#1c2c4d', fontWeight: 500 },
+                    '& .Mui-disabled': {
+                      backgroundColor: '#f5f5f5',
+                      '& .MuiInputBase-input': { color: '#1c2c4d', fontWeight: 600 }
+                    }
                   }}
                 />
               </Grid>
