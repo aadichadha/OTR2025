@@ -129,6 +129,12 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
           
+          <Route path="/sessions/:id/swings" element={
+            <ProtectedRoute requiredPermission="view_own_data">
+              <SessionVisualization />
+            </ProtectedRoute>
+          } />
+
           <Route path="/analytics" element={
             <ProtectedRoute requiredPermission="view_analytics">
               <AnalyticsHome />
