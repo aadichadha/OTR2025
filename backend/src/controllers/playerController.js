@@ -430,12 +430,15 @@ class PlayerController {
       const leaderboard = [];
       for (const player of players) {
         const sessions = await Session.findAll({ where: { player_id: player.id } });
-        let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null;
+        let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0;
         let exitVelocities = [], batSpeeds = [];
         for (const session of sessions) {
           if (session.session_type === 'hittrax') {
             const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
-            exitVelocities.push(...evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite));
+            const evValues = evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite);
+            exitVelocities.push(...evValues);
+            // Count barrels (exit velocity >= 95 mph)
+            barrels += evValues.filter(ev => ev >= 95).length;
           }
           if (session.session_type === 'blast') {
             const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
@@ -453,11 +456,12 @@ class PlayerController {
         leaderboard.push({
           id: player.id,
           name: player.name,
-          level: player.high_school ? 'high_school' : player.college ? 'college' : player.little_league ? 'youth' : 'other',
-          maxExitVelocity,
-          avgExitVelocity,
-          maxBatSpeed,
-          avgBatSpeed,
+          level: player.high_school ? 'High School' : player.college ? 'College' : player.little_league ? 'Youth' : 'Other',
+          maxExitVelocity: maxExitVelocity ? Math.round(maxExitVelocity * 10) / 10 : null,
+          avgExitVelocity: avgExitVelocity ? Math.round(avgExitVelocity * 10) / 10 : null,
+          maxBatSpeed: maxBatSpeed ? Math.round(maxBatSpeed * 10) / 10 : null,
+          avgBatSpeed: avgBatSpeed ? Math.round(avgBatSpeed * 10) / 10 : null,
+          barrels,
           sessionCount: sessions.length
         });
       }
