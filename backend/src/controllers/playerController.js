@@ -240,18 +240,25 @@ class PlayerController {
         });
       }
 
-      // Check if player has sessions
-      const sessionCount = await Session.count({ where: { player_id: id } });
-      if (sessionCount > 0) {
-        return res.status(400).json({ 
-          error: `Cannot delete player with ${sessionCount} session(s). Delete sessions first.` 
-        });
+      // Get all sessions for this player
+      const sessions = await Session.findAll({ where: { player_id: id } });
+      
+      // Delete all associated data for each session
+      for (const session of sessions) {
+        // Delete bat speed data
+        await BatSpeedData.destroy({ where: { session_id: session.id } });
+        // Delete exit velocity data
+        await ExitVelocityData.destroy({ where: { session_id: session.id } });
       }
-
+      
+      // Delete all sessions
+      await Session.destroy({ where: { player_id: id } });
+      
+      // Delete the player
       await player.destroy();
 
       res.status(200).json({
-        message: 'Player deleted successfully'
+        message: 'Player and all associated data deleted successfully'
       });
 
     } catch (error) {

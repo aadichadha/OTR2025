@@ -74,6 +74,7 @@ import SprayChart3D from '../components/visualizations/SprayChart3D';
 import BarrelsFilter from '../components/BarrelsFilter';
 import safeToFixed from '../utils/safeToFixed';
 import { useAuth } from '../context/AuthContext';
+import Refresh from '@mui/icons-material/Refresh';
 
 // Session type tags for filtering
 const SESSION_TYPES = [
@@ -143,6 +144,15 @@ const AnalyticsHome = () => {
 
   useEffect(() => {
     fetchPlayers();
+  }, []);
+
+  // Refresh players list periodically to catch new uploads
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchPlayers();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -500,9 +510,27 @@ const AnalyticsHome = () => {
         borderRadius: 4,
         boxShadow: '0 4px 16px rgba(28,44,77,0.08)'
       }}>
-        <Typography variant="h6" fontWeight="bold" mb={2} color="#1c2c4d">
-          Player Selection
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6" fontWeight="bold" color="#1c2c4d">
+            Player Selection
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={fetchPlayers}
+            disabled={loading}
+            sx={{
+              borderColor: '#1c2c4d',
+              color: '#1c2c4d',
+              '&:hover': {
+                borderColor: '#3a7bd5',
+                bgcolor: 'rgba(28,44,77,0.04)',
+              }
+            }}
+          >
+            Refresh Players
+          </Button>
+        </Box>
         <FormControl fullWidth>
           <InputLabel sx={{ color: '#1c2c4d' }}>Select Player</InputLabel>
           <Select

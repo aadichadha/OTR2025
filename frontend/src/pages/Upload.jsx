@@ -72,7 +72,7 @@ function Upload() {
         }
       });
       
-      setSuccess('Upload successful! Your file has been processed and the report is ready.');
+      setSuccess('Upload successful! Your file has been processed and the report is ready. You can now view this data in the Analytics section.');
       setUploadResult(response.data);
       console.log('[DEBUG] Upload response data:', response.data);
       console.log('[DEBUG] Report data being passed to ReportDisplay:', response.data.report);
