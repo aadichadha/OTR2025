@@ -208,6 +208,9 @@ const PlayerDashboard = () => {
                     <Typography variant="body1" sx={{ color: NAVY, mb: 1 }}>
                       Avg Bat Speed: <b>{roundNumber(stats.avgBatSpeed)} mph</b>
                     </Typography>
+                    <Typography variant="body1" sx={{ color: NAVY, mb: 1 }}>
+                      Barrels: <b>{stats.barrels || 0}</b>
+                    </Typography>
                     <Typography variant="body1" sx={{ color: NAVY }}>
                       Sessions: <b>{stats.sessionCount || 0}</b>
                     </Typography>

@@ -371,12 +371,15 @@ class PlayerController {
       if (!player) return res.status(404).json({ error: 'Player not found for user' });
       // Aggregate stats (example: max/avg exit velo, bat speed, session count)
       const sessions = await Session.findAll({ where: { player_id: player.id } });
-      let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null;
+      let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0;
       let exitVelocities = [], batSpeeds = [];
       for (const session of sessions) {
         if (session.session_type === 'hittrax') {
           const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
-          exitVelocities.push(...evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite));
+          const evValues = evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite);
+          exitVelocities.push(...evValues);
+          // Count barrels (exit velocity >= 95 mph)
+          barrels += evValues.filter(ev => ev >= 95).length;
         }
         if (session.session_type === 'blast') {
           const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
@@ -396,6 +399,7 @@ class PlayerController {
         avgExitVelocity,
         maxBatSpeed,
         avgBatSpeed,
+        barrels,
         sessionCount: sessions.length
       });
     } catch (error) {

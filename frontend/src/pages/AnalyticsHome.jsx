@@ -71,6 +71,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import SprayChart3D from '../components/visualizations/SprayChart3D';
+import BarrelsFilter from '../components/BarrelsFilter';
 import safeToFixed from '../utils/safeToFixed';
 import { useAuth } from '../context/AuthContext';
 
@@ -106,6 +107,7 @@ const AnalyticsHome = () => {
   const [players, setPlayers] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [swingData, setSwingData] = useState([]);
+  const [filteredSwingData, setFilteredSwingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
   
@@ -154,6 +156,11 @@ const AnalyticsHome = () => {
       fetchSwingData();
     }
   }, [selectedSessions, filters]);
+
+  // Update filtered swing data when swing data changes
+  useEffect(() => {
+    setFilteredSwingData(swingData);
+  }, [swingData]);
 
   // New effect for player profile data
   useEffect(() => {
@@ -816,7 +823,7 @@ const AnalyticsHome = () => {
             }}>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
                 <Typography variant="h6" fontWeight="bold" color="#1c2c4d">
-                  {viewMode === 'profile' ? 'Player Profile' : `Swing Data (${swingData.length} swings)`}
+                  {viewMode === 'profile' ? 'Player Profile' : `Swing Data (${filteredSwingData.length} swings)`}
                 </Typography>
                 <Box display="flex" gap={1}>
                   <Button
@@ -872,6 +879,15 @@ const AnalyticsHome = () => {
                 </Box>
               </Box>
 
+              {/* Barrels Filter */}
+              {swingData.length > 0 && viewMode !== 'profile' && (
+                <BarrelsFilter
+                  swingData={swingData}
+                  onFilteredDataChange={setFilteredSwingData}
+                  showStats={true}
+                />
+              )}
+
               {dataLoading ? (
                 <Box display="flex" justifyContent="center" p={4}>
                   <CircularProgress sx={{ color: '#1c2c4d' }} />
@@ -924,7 +940,7 @@ const AnalyticsHome = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {swingData.map((swing, index) => (
+                      {filteredSwingData.map((swing, index) => (
                         <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f8f9fa' } }}>
                           <TableCell sx={{ color: '#1c2c4d' }}>{swing.sessionId}</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
@@ -939,9 +955,9 @@ const AnalyticsHome = () => {
                 </TableContainer>
               ) : viewMode === 'chart' ? (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-                  {swingData.length > 0 ? (
+                  {filteredSwingData.length > 0 ? (
                     <SprayChart3D
-                      swings={swingData}
+                      swings={filteredSwingData}
                       width={800}
                       height={500}
                     />

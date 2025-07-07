@@ -67,6 +67,7 @@ import {
   Radar
 } from 'recharts';
 import api from '../services/api';
+import BarrelsFilter from '../components/BarrelsFilter';
 import getGradeColor from '../utils/getGradeColor';
 import safeToFixed from '../utils/safeToFixed';
 
@@ -82,6 +83,7 @@ const SessionAnalytics = () => {
   // Data states
   const [sessions, setSessions] = useState([]);
   const [swings, setSwings] = useState([]);
+  const [barrelsFilteredSwings, setBarrelsFilteredSwings] = useState([]);
   const [trends, setTrends] = useState([]);
   const [benchmarks, setBenchmarks] = useState(null);
   const [progress, setProgress] = useState(null);
@@ -102,6 +104,11 @@ const SessionAnalytics = () => {
   useEffect(() => {
     loadAllData();
   }, [playerId]);
+
+  // Update filtered swings when swings change
+  useEffect(() => {
+    setBarrelsFilteredSwings(swings);
+  }, [swings]);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -200,7 +207,7 @@ const SessionAnalytics = () => {
     );
   }
 
-  const filteredSwings = getFilteredSwings();
+  const filteredSwingsFromFilters = getFilteredSwings();
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -615,12 +622,23 @@ const SessionAnalytics = () => {
           {/* Swing Analysis Tab */}
           {activeTab === 4 && (
             <Grid container spacing={3}>
+              {/* Barrels Filter */}
+              {swings.length > 0 && (
+                <Grid item xs={12}>
+                  <BarrelsFilter
+                    swingData={swings}
+                    onFilteredDataChange={setBarrelsFilteredSwings}
+                    showStats={true}
+                  />
+                </Grid>
+              )}
+              
               <Grid item xs={12} lg={6}>
                 <Card>
                   <CardHeader title="Exit Velocity Distribution" />
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={filteredSwings.slice(0, 20)}>
+                      <BarChart data={barrelsFilteredSwings.slice(0, 20)}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="id" />
                         <YAxis />
@@ -636,7 +654,7 @@ const SessionAnalytics = () => {
                   <CardHeader title="Launch Angle vs Exit Velocity" />
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={filteredSwings.slice(0, 20)}>
+                      <LineChart data={barrelsFilteredSwings.slice(0, 20)}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="exit_velocity" />
                         <YAxis />
@@ -652,10 +670,10 @@ const SessionAnalytics = () => {
                   <CardHeader title="Filtered Swings" />
                   <CardContent>
                     <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                      Showing {filteredSwings.length} of {swings.length} swings
+                      Showing {barrelsFilteredSwings.length} of {swings.length} swings
                     </Typography>
                     <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
-                      {filteredSwings.slice(0, 50).map((swing) => (
+                      {barrelsFilteredSwings.slice(0, 50).map((swing) => (
                         <Box key={swing.id} sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
                           <Typography variant="body2">
                             Swing {swing.id}: {swing.exit_velocity} mph, {swing.launch_angle}° 
