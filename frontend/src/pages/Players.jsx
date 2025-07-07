@@ -258,6 +258,9 @@ function Players() {
         }
       }
 
+      console.log('🔍 [Players] Form data being sent:', playerData);
+      console.log('🔍 [Players] Form state:', form);
+
       if (editPlayer) {
         await axios.put(`${API_URL}/players/${editPlayer.id}`, playerData, { 
           headers: { Authorization: `Bearer ${token}` } 
@@ -268,6 +271,8 @@ function Players() {
           headers: { Authorization: `Bearer ${token}` } 
         });
         
+        console.log('🔍 [Players] Backend response:', response.data);
+        
         if (response.data.loginCredentials) {
           setSuccess(`Player and user account created successfully! Login credentials: Email: ${response.data.loginCredentials.email}, Password: ${response.data.loginCredentials.password}`);
         } else {
@@ -277,6 +282,7 @@ function Players() {
       handleClose();
       fetchPlayers();
     } catch (err) {
+      console.error('🔍 [Players] Error details:', err.response?.data);
       setError(err.response?.data?.error || 'Failed to save player.');
     }
   };

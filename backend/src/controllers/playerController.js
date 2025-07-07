@@ -9,8 +9,12 @@ class PlayerController {
    */
   static async createPlayer(req, res) {
     try {
+      console.log('🔍 [PlayerController] createPlayer called with body:', req.body);
       const { name, age, travel_team, high_school, little_league, college, position, graduation_year } = req.body;
       const userId = req.user.id;
+
+      console.log('🔍 [PlayerController] Extracted name:', name);
+      console.log('🔍 [PlayerController] User ID:', userId);
 
       // Get the current user to check their role
       const currentUser = await User.findByPk(userId);
@@ -22,10 +26,13 @@ class PlayerController {
 
       // Validate required fields
       if (!name) {
+        console.log('❌ [PlayerController] Name is missing or empty');
         return res.status(400).json({ 
           error: 'Player name is required' 
         });
       }
+
+      console.log('✅ [PlayerController] Name validation passed:', name);
 
       // Check if a player with this name already exists
       const existingPlayer = await Player.findOne({ where: { name } });
