@@ -143,14 +143,15 @@ try {
   // Player management routes (protected)
   app.post('/api/players', authenticateToken, PlayerController.createPlayer);
   app.get('/api/players', authenticateToken, PlayerController.getPlayers);
+  // New endpoints for player dashboard and leaderboard (must come before :id routes)
+  app.get('/api/players/me/stats', authenticateToken, PlayerController.getMyStats);
+  app.get('/api/players/me/sessions', authenticateToken, PlayerController.getMySessions);
+  app.get('/api/leaderboard', authenticateToken, PlayerController.getLeaderboard);
+  // Parameterized routes (must come after specific routes)
   app.get('/api/players/:id', authenticateToken, PlayerController.getPlayer);
   app.put('/api/players/:id', authenticateToken, PlayerController.updatePlayer);
   app.delete('/api/players/:id', authenticateToken, PlayerController.deletePlayer);
   app.get('/api/players/:id/stats', authenticateToken, PlayerController.getPlayerStats);
-  // New endpoints for player dashboard and leaderboard
-  app.get('/api/players/me/stats', authenticateToken, PlayerController.getMyStats);
-  app.get('/api/players/me/sessions', authenticateToken, PlayerController.getMySessions);
-  app.get('/api/leaderboard', authenticateToken, PlayerController.getLeaderboard);
   console.log('✅ Player routes loaded');
 
   // Session management routes (protected)
