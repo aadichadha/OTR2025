@@ -169,7 +169,7 @@ function Players() {
         graduation_year: player.graduation_year || ''
       });
     } else {
-      // For new player, get the current user's name from localStorage or context
+      // For new player, get the current user's name from JWT token
       const token = localStorage.getItem('token');
       let currentUserName = '';
       
