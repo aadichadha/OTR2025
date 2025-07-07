@@ -23,8 +23,7 @@ import {
   Select,
   MenuItem,
   Grid,
-  Chip,
-  Refresh
+  Chip
 } from '@mui/material';
 import Add from '@mui/icons-material/Add';
 import Edit from '@mui/icons-material/Edit';
