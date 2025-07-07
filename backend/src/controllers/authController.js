@@ -147,6 +147,77 @@ class AuthController {
   }
 
   /**
+   * Create a new user (admin only)
+   */
+  static async createUser(req, res) {
+    try {
+      const { name, email, password, role = 'player' } = req.body;
+
+      // Validate required fields
+      if (!name || !email || !password) {
+        return res.status(400).json({ 
+          error: 'Name, email, and password are required' 
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          error: 'Invalid email format' 
+        });
+      }
+
+      // Validate password strength
+      if (password.length < 6) {
+        return res.status(400).json({ 
+          error: 'Password must be at least 6 characters long' 
+        });
+      }
+
+      // Validate role
+      const validRoles = ['admin', 'coach', 'player'];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({ 
+          error: 'Invalid role. Must be admin, coach, or player' 
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ 
+          error: 'User with this email already exists' 
+        });
+      }
+
+      // Create user using AuthService
+      const result = await AuthService.registerUser({
+        name,
+        email,
+        password,
+        role
+      });
+
+      res.status(201).json({
+        message: 'User created successfully',
+        user: {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role
+        }
+      });
+
+    } catch (error) {
+      console.error('Create user error:', error);
+      res.status(400).json({ 
+        error: error.message 
+      });
+    }
+  }
+
+  /**
    * Get current user profile
    */
   static async getProfile(req, res) {
@@ -828,6 +899,7 @@ router.get('/verify', authenticateToken, (req, res) => {
 
 router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
+router.post('/create-user', authenticateToken, requireRole('admin'), AuthController.createUser); // Added createUser route
 router.get('/profile', authenticateToken, AuthController.getProfile);
 router.put('/profile', authenticateToken, AuthController.updateProfile);
 router.put('/change-password', authenticateToken, AuthController.changePassword);
