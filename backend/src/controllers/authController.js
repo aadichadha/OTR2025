@@ -433,8 +433,40 @@ class AuthController {
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
+
+      // Import Player model
+      const Player = require('../models/Player');
+      const Session = require('../models/Session');
+      const BatSpeedData = require('../models/BatSpeedData');
+      const ExitVelocityData = require('../models/ExitVelocityData');
+
+      // Find and delete associated player (linked by name)
+      const player = await Player.findOne({ where: { name: user.name } });
+      if (player) {
+        // Get all sessions for this player
+        const sessions = await Session.findAll({ where: { player_id: player.id } });
+        
+        // Delete all associated data for each session
+        for (const session of sessions) {
+          // Delete bat speed data
+          await BatSpeedData.destroy({ where: { session_id: session.id } });
+          // Delete exit velocity data
+          await ExitVelocityData.destroy({ where: { session_id: session.id } });
+        }
+        
+        // Delete all sessions
+        await Session.destroy({ where: { player_id: player.id } });
+        
+        // Delete the player
+        await player.destroy();
+      }
+
+      // Delete the user
       await user.destroy();
-      res.status(200).json({ message: 'User deleted successfully' });
+      
+      res.status(200).json({ 
+        message: 'User and all associated data deleted successfully' 
+      });
     } catch (error) {
       console.error('Delete user error:', error);
       res.status(500).json({ error: 'Failed to delete user' });

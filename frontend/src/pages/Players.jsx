@@ -23,7 +23,8 @@ import {
   Select,
   MenuItem,
   Grid,
-  Chip
+  Chip,
+  Refresh
 } from '@mui/material';
 import Add from '@mui/icons-material/Add';
 import Edit from '@mui/icons-material/Edit';
@@ -31,6 +32,7 @@ import Delete from '@mui/icons-material/Delete';
 import Visibility from '@mui/icons-material/Visibility';
 import Analytics from '@mui/icons-material/Analytics';
 import Close from '@mui/icons-material/Close';
+import Refresh from '@mui/icons-material/Refresh';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PlayerDetails from '../components/PlayerDetails';
@@ -108,6 +110,15 @@ function Players() {
   };
 
   useEffect(() => { fetchPlayers(); }, []);
+
+  // Refresh players list periodically to catch deletions
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchPlayers();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleOpen = (player = null) => {
     setEditPlayer(player);
@@ -377,7 +388,30 @@ function Players() {
           </Alert>
         )}
         
-        <Box display="flex" justifyContent="flex-end" mb={1.5} width="100%">
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} width="100%">
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={fetchPlayers}
+            disabled={loading}
+            sx={{
+              borderColor: '#1c2c4d',
+              color: '#1c2c4d',
+              fontWeight: 700,
+              borderRadius: 3,
+              px: 2.5,
+              py: 0.8,
+              fontSize: '0.98rem',
+              minWidth: 120,
+              boxShadow: '0 2px 8px rgba(28,44,77,0.08)',
+              '&:hover': {
+                borderColor: '#3a7bd5',
+                bgcolor: 'rgba(28,44,77,0.04)',
+              }
+            }}
+          >
+            Refresh
+          </Button>
           <Button
             variant="contained"
             startIcon={<Add />}
