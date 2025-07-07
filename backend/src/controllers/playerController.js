@@ -11,10 +11,15 @@ class PlayerController {
     try {
       console.log('🔍 [PlayerController] createPlayer called with body:', req.body);
       console.log('🔍 [PlayerController] User object:', req.user);
+      console.log('🔍 [PlayerController] Request body keys:', Object.keys(req.body));
+      console.log('🔍 [PlayerController] Request body values:', Object.values(req.body));
+      
       const { name, age, travel_team, high_school, little_league, college, position, graduation_year, team_name } = req.body;
       const userId = req.user.id;
 
       console.log('🔍 [PlayerController] Extracted name:', name);
+      console.log('🔍 [PlayerController] Name type:', typeof name);
+      console.log('🔍 [PlayerController] Name length:', name ? name.length : 'undefined');
       console.log('🔍 [PlayerController] User ID:', userId);
       console.log('🔍 [PlayerController] User ID type:', typeof userId);
 
@@ -26,26 +31,32 @@ class PlayerController {
         });
       }
 
-      // Validate required fields
-      if (!name || name.trim() === '') {
-        console.log('❌ [PlayerController] Name is missing or empty');
+      // Use the authenticated user's name if no name is provided in the request
+      const playerName = (name && name.trim() !== '') ? name.trim() : currentUser.name;
+      
+      console.log('🔍 [PlayerController] Using player name:', playerName);
+      console.log('🔍 [PlayerController] Name source:', (name && name.trim() !== '') ? 'request body' : 'authenticated user');
+
+      // Validate that we have a name (either from request or user)
+      if (!playerName || playerName.trim() === '') {
+        console.log('❌ [PlayerController] No name available from request or user');
         return res.status(400).json({ 
           error: 'Player name is required' 
         });
       }
 
-      console.log('✅ [PlayerController] Name validation passed:', name);
+      console.log('✅ [PlayerController] Name validation passed:', playerName);
 
       // Check if a player with this name already exists
-      const existingPlayer = await Player.findOne({ where: { name } });
+      const existingPlayer = await Player.findOne({ where: { name: playerName } });
       if (existingPlayer) {
         return res.status(400).json({ 
           error: 'A player with this name already exists' 
         });
       }
 
-      // Check if a user with this name already exists
-      const existingUser = await User.findOne({ where: { name } });
+      // Check if a user with this name already exists (excluding the current user)
+      const existingUser = await User.findOne({ where: { name: playerName, id: { [require('sequelize').Op.ne]: userId } } });
       if (existingUser) {
         return res.status(400).json({ 
           error: 'A user with this name already exists' 
@@ -91,7 +102,7 @@ class PlayerController {
 
       // Create the player
       const player = await Player.create({
-        name,
+        name: playerName,
         age,
         travel_team,
         high_school,
@@ -108,10 +119,10 @@ class PlayerController {
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       
       // Generate a unique email for the player
-      const email = `${name.toLowerCase().replace(/\s+/g, '.')}@otrbaseball.com`;
+      const email = `${playerName.toLowerCase().replace(/\s+/g, '.')}@otrbaseball.com`;
 
       const playerUser = await User.create({
-        name,
+        name: playerName,
         email,
         password: hashedPassword,
         role: 'player',
