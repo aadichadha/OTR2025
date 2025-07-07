@@ -128,9 +128,9 @@ function Upload() {
     const subject = encodeURIComponent(`Baseball Analytics Report - Session ${sessionId}`);
     const body = encodeURIComponent(`Please find attached the baseball analytics report for session ${sessionId}.
 
-Email: otrdatatrack@gmail.com
+From: otrdatatrack@gmail.com
 One-time password: exwx bdjz xjid qhmh`);
-    window.open(`mailto:otrdatatrack@gmail.com?subject=${subject}&body=${body}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
   // Helper component for a hot zone cell (copied from PlayerDetails.jsx)

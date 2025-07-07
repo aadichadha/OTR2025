@@ -294,9 +294,9 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
     const subject = encodeURIComponent(`Baseball Analytics Report - ${player.name} - Session ${sessionId}`);
     const body = encodeURIComponent(`Please find attached the baseball analytics report for ${player.name} from session ${sessionId}.
 
-Email: otrdatatrack@gmail.com
+From: otrdatatrack@gmail.com
 One-time password: exwx bdjz xjid qhmh`);
-    window.open(`mailto:otrdatatrack@gmail.com?subject=${subject}&body=${body}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
   const handleVisualizeData = (sessionId) => {
