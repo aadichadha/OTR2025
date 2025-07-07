@@ -73,6 +73,16 @@ const AdminDashboard = () => {
   const [resettingUser, setResettingUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
+  // Create user dialog
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'player'
+  });
+
   useEffect(() => {
     fetchUsers();
   }, [page, rowsPerPage, searchTerm, roleFilter]);
@@ -162,6 +172,53 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleCreateUser = () => {
+    setCreateForm({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'player'
+    });
+    setCreateDialogOpen(true);
+  };
+
+  const handleSaveCreate = async () => {
+    try {
+      // Validate form
+      if (!createForm.name || !createForm.email || !createForm.password) {
+        setError('Name, email, and password are required');
+        return;
+      }
+      
+      if (createForm.password !== createForm.confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+      
+      if (createForm.password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return;
+      }
+
+      setLoading(true);
+      await api.post('/auth/create-user', {
+        name: createForm.name,
+        email: createForm.email,
+        password: createForm.password,
+        role: createForm.role
+      });
+      
+      setSuccess('User created successfully');
+      setCreateDialogOpen(false);
+      fetchUsers();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getRoleColor = (role) => {
     switch (role) {
       case 'admin': return 'error';
@@ -230,7 +287,7 @@ const AdminDashboard = () => {
 
         {/* Search and Filter Controls */}
         <Grid container spacing={2} sx={{ mb: 3, width: '100%' }}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
             <TextField
               fullWidth
               placeholder="Search users..."
@@ -258,7 +315,7 @@ const AdminDashboard = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2}>
             <FormControl fullWidth>
               <InputLabel>Filter by Role</InputLabel>
               <Select
@@ -300,6 +357,23 @@ const AdminDashboard = () => {
               }}
             >
               Refresh
+            </Button>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleCreateUser}
+              startIcon={<AddIcon />}
+              sx={{
+                bgcolor: '#1c2c4d',
+                color: '#fff',
+                '&:hover': {
+                  bgcolor: '#2d5aa0',
+                },
+              }}
+            >
+              Create User
             </Button>
           </Grid>
         </Grid>
@@ -633,6 +707,179 @@ const AdminDashboard = () => {
               }}
             >
               {loading ? <CircularProgress size={20} /> : 'Reset Password'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Create User Dialog */}
+        <Dialog 
+          open={createDialogOpen} 
+          onClose={() => setCreateDialogOpen(false)} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{ 
+            sx: { 
+              bgcolor: '#fff', 
+              borderRadius: 3, 
+              border: '2px solid #1c2c4d', 
+              color: '#1c2c4d' 
+            } 
+          }}
+        >
+          <DialogTitle sx={{ 
+            fontFamily: 'Inter, Roboto, Arial, sans-serif', 
+            bgcolor: '#fff', 
+            borderBottom: '2px solid #1c2c4d',
+            color: '#1c2c4d'
+          }}>
+            Create New User
+          </DialogTitle>
+          <DialogContent sx={{ bgcolor: '#fff', color: '#1c2c4d' }}>
+            <TextField
+              fullWidth
+              label="Name *"
+              value={createForm.name}
+              onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Email *"
+              type="email"
+              value={createForm.email}
+              onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Password *"
+              type="password"
+              value={createForm.password}
+              onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+              margin="normal"
+              helperText="Password must be at least 6 characters long"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+                '& .MuiFormHelperText-root': {
+                  color: '#1c2c4d',
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Confirm Password *"
+              type="password"
+              value={createForm.confirmPassword}
+              onChange={(e) => setCreateForm({ ...createForm, confirmPassword: e.target.value })}
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+              }}
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel sx={{ color: '#1c2c4d' }}>Role *</InputLabel>
+              <Select
+                value={createForm.role}
+                onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
+                label="Role *"
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '& .MuiSelect-icon': {
+                    color: '#1c2c4d',
+                  },
+                }}
+              >
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="coach">Coach</MenuItem>
+                <MenuItem value="player">Player</MenuItem>
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ bgcolor: '#fff', borderTop: '1px solid #1c2c4d' }}>
+            <Button 
+              onClick={() => setCreateDialogOpen(false)}
+              sx={{ color: '#1c2c4d' }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveCreate} 
+              variant="contained" 
+              disabled={loading || !createForm.name || !createForm.email || !createForm.password || createForm.password !== createForm.confirmPassword || createForm.password.length < 6}
+              sx={{ 
+                bgcolor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: '#2d5aa0',
+                },
+              }}
+            >
+              {loading ? <CircularProgress size={20} /> : 'Create User'}
             </Button>
           </DialogActions>
         </Dialog>

@@ -27,12 +27,12 @@ const POSITIONS = [
 
 function Register() {
   const [formData, setFormData] = useState({
+    // User data
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
-  });
-  const [playerData, setPlayerData] = useState({
+    confirmPassword: '',
+    // Player data
     age: '',
     player_level: '',
     travel_team: '',
@@ -42,7 +42,6 @@ function Register() {
     position: '',
     graduation_year: ''
   });
-  const [step, setStep] = useState(1); // 1 = user, 2 = player
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -53,16 +52,12 @@ function Register() {
       [e.target.name]: e.target.value
     });
   };
-  const handlePlayerChange = (e) => {
-    setPlayerData({
-      ...playerData,
-      [e.target.name]: e.target.value
-    });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -71,37 +66,55 @@ function Register() {
       setError('Password must be at least 6 characters long');
       return;
     }
+    if (!formData.name.trim()) {
+      setError('Name is required');
+      return;
+    }
+    if (!formData.player_level) {
+      setError('Player level is required');
+      return;
+    }
+    if (!formData.position) {
+      setError('Position is required');
+      return;
+    }
+    
     setLoading(true);
     try {
-      // Register as player (role is set automatically by backend)
+      // Step 1: Register user account
+      console.log('🔍 [Register] Registering user with name:', formData.name);
       await registerService(formData.name, formData.email, formData.password);
-      // Auto-login after registration
+      
+      // Step 2: Auto-login after registration
+      console.log('🔍 [Register] Auto-logging in user');
       const loginRes = await loginService(formData.email, formData.password);
       setToken(loginRes.token);
-      setStep(2); // Show player profile form
-    } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePlayerSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
+      
+      // Step 3: Create player profile (name will be automatically used from authenticated user)
+      console.log('🔍 [Register] Creating player profile');
       const token = getToken();
-      const payload = {
-        ...playerData,
-        position: Array.isArray(playerData.position) ? playerData.position.join(',') : playerData.position
+      const playerPayload = {
+        age: formData.age,
+        player_level: formData.player_level,
+        travel_team: formData.travel_team,
+        high_school: formData.high_school,
+        college: formData.college,
+        team_name: formData.team_name,
+        position: Array.isArray(formData.position) ? formData.position.join(',') : formData.position,
+        graduation_year: formData.graduation_year
       };
-      await axios.post(`${API_URL}/players`, payload, {
+      
+      console.log('🔍 [Register] Player payload:', playerPayload);
+      
+      await axios.post(`${API_URL}/players`, playerPayload, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Navigate to players page
       navigate('/players');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create player profile');
+      console.error('🔍 [Register] Error:', err);
+      setError(err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -113,7 +126,7 @@ function Register() {
         elevation={6} 
         sx={{ 
           p: 6, 
-          width: 450, 
+          width: 500, 
           borderRadius: 4, 
           background: '#fff', 
           color: '#1c2c4d', 
@@ -121,446 +134,248 @@ function Register() {
           border: '1.5px solid #e0e3e8'
         }}
       >
-        {step === 1 ? (
-          <>
-            <Typography variant="h4" align="center" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 700, mb: 3 }}>
-              Register
-            </Typography>
-            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-            <form onSubmit={handleSubmit}>
-              <TextField 
-                label="Name" 
-                name="name" 
-                value={formData.name} 
-                onChange={handleChange} 
-                fullWidth 
-                margin="normal" 
-                required 
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e3e8',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '& input': {
-                      color: '#1c2c4d',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#1c2c4d',
-                  },
-                }}
-              />
-              <TextField 
-                label="Email" 
-                name="email" 
-                type="email" 
-                value={formData.email} 
-                onChange={handleChange} 
-                fullWidth 
-                margin="normal" 
-                required 
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e3e8',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '& input': {
-                      color: '#1c2c4d',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#1c2c4d',
-                  },
-                }}
-              />
-              <TextField 
-                label="Password" 
-                name="password" 
-                type="password" 
-                value={formData.password} 
-                onChange={handleChange} 
-                fullWidth 
-                margin="normal" 
-                required 
-                inputProps={{ minLength: 6 }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e3e8',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '& input': {
-                      color: '#1c2c4d',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#1c2c4d',
-                  },
-                }}
-              />
-              <TextField 
-                label="Confirm Password" 
-                name="confirmPassword" 
-                type="password" 
-                value={formData.confirmPassword} 
-                onChange={handleChange} 
-                fullWidth 
-                margin="normal" 
-                required 
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e3e8',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '& input': {
-                      color: '#1c2c4d',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#1c2c4d',
-                  },
-                }}
-              />
-              <Button 
-                type="submit" 
-                variant="contained" 
-                fullWidth 
-                sx={{ 
-                  mt: 3, 
-                  py: 1.5, 
-                  fontWeight: 700, 
-                  fontSize: '1.1rem',
-                  borderRadius: 2,
-                  background: 'linear-gradient(135deg, #1c2c4d 0%, #2d5aa0 100%)',
-                  color: '#fff',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #2d5aa0 0%, #1c2c4d 100%)',
-                  }
-                }} 
-                disabled={loading} 
-                startIcon={loading && <CircularProgress size={18} />}
-              >
-                {loading ? 'Signing Up...' : 'Sign Up!'}
-              </Button>
-            </form>
-          </>
-        ) : (
-          <>
-            <Typography variant="h4" align="center" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 700, mb: 3 }}>
-              Create Player Profile
-            </Typography>
-            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-            <form onSubmit={handlePlayerSubmit}>
-              <TextField 
-                label="Age" 
-                name="age" 
-                value={playerData.age} 
-                onChange={handlePlayerChange} 
-                fullWidth 
-                margin="normal" 
-                type="number" 
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e3e8',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '& input': {
-                      color: '#1c2c4d',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#1c2c4d',
-                  },
-                }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                <Box flex={1}>
-                  <FormControl fullWidth margin="normal" sx={{ minWidth: 120 }}>
-                    <InputLabel sx={{ color: '#1c2c4d' }}>Player Level</InputLabel>
-                    <Select
-                      name="player_level"
-                      value={playerData.player_level || ''}
-                      onChange={handlePlayerChange}
-                      label="Player Level"
-                      MenuProps={{ PaperProps: { sx: { minWidth: 120 } } }}
-                      sx={{
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#e0e3e8',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '& .MuiSelect-select, & .MuiSelect-multiple, & .MuiSelect-outlined, & .MuiSelect-root, & .MuiInputBase-input': {
-                          color: '#1c2c4d',
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: '#1c2c4d',
-                        },
-                      }}
-                    >
-                      {Object.entries(PLAYER_LEVELS).map(([key, level]) => (
-                        <MenuItem key={key} value={key}>{level.label}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-                <Box flex={1}>
-                  <FormControl fullWidth margin="normal" sx={{ minWidth: 120 }}>
-                    <InputLabel sx={{ color: '#1c2c4d' }}>Position(s)</InputLabel>
-                    <Select
-                      name="position"
-                      multiple
-                      value={playerData.position || []}
-                      onChange={e => {
-                        const value = e.target.value;
-                        setPlayerData(prev => ({ ...prev, position: typeof value === 'string' ? value.split(',') : value }));
-                      }}
-                      label="Position(s)"
-                      MenuProps={{ PaperProps: { sx: { minWidth: 120 } } }}
-                      renderValue={selected =>
-                        Array.isArray(selected)
-                          ? selected.map(val => POSITIONS.find(p => p.value === val)?.label || val).join(', ')
-                          : ''
-                      }
-                      sx={{
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#e0e3e8',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '& .MuiSelect-select, & .MuiSelect-multiple, & .MuiSelect-outlined, & .MuiSelect-root, & .MuiInputBase-input': {
-                          color: '#1c2c4d',
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: '#1c2c4d',
-                        },
-                      }}
-                    >
-                      {POSITIONS.map(pos => (
-                        <MenuItem key={pos.value} value={pos.value}>{pos.label}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-              </Box>
-              {playerData.player_level === 'youth' && (
-                <>
-                  <TextField 
-                    label="Travel Team" 
-                    name="travel_team" 
-                    value={playerData.travel_team || ''} 
-                    onChange={handlePlayerChange} 
-                    fullWidth 
-                    margin="normal" 
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: '#e0e3e8',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '& input': {
-                          color: '#1c2c4d',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: '#1c2c4d',
-                      },
-                    }}
-                  />
-                  <TextField 
-                    label="Little League Team" 
-                    name="little_league" 
-                    value={playerData.little_league || ''} 
-                    onChange={handlePlayerChange} 
-                    fullWidth 
-                    margin="normal" 
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: '#e0e3e8',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '& input': {
-                          color: '#1c2c4d',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: '#1c2c4d',
-                      },
-                    }}
-                  />
-                </>
-              )}
-              {playerData.player_level === 'high_school' && (
-                <>
-                  <TextField 
-                    label="High School Team" 
-                    name="high_school" 
-                    value={playerData.high_school || ''} 
-                    onChange={handlePlayerChange} 
-                    fullWidth 
-                    margin="normal" 
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: '#e0e3e8',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '& input': {
-                          color: '#1c2c4d',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: '#1c2c4d',
-                      },
-                    }}
-                  />
-                  <TextField 
-                    label="Travel Team" 
-                    name="travel_team" 
-                    value={playerData.travel_team || ''} 
-                    onChange={handlePlayerChange} 
-                    fullWidth 
-                    margin="normal" 
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: '#e0e3e8',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#3a7bd5',
-                        },
-                        '& input': {
-                          color: '#1c2c4d',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: '#1c2c4d',
-                      },
-                    }}
-                  />
-                </>
-              )}
-              {playerData.player_level === 'college' && (
-                <TextField 
-                  label="College Name" 
-                  name="college" 
-                  value={playerData.college || ''} 
-                  onChange={handlePlayerChange} 
-                  fullWidth 
-                  margin="normal" 
+        <Typography variant="h4" align="center" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 700, mb: 3 }}>
+          Register
+        </Typography>
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+        
+        <form onSubmit={handleSubmit}>
+          {/* User Information Section */}
+          <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2, mt: 2 }}>
+            Account Information
+          </Typography>
+          
+          <TextField 
+            label="Full Name *" 
+            name="name" 
+            value={formData.name} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="normal" 
+            required 
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '& input': {
+                  color: '#1c2c4d',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#1c2c4d',
+              },
+            }}
+          />
+          
+          <TextField 
+            label="Email *" 
+            name="email" 
+            type="email" 
+            value={formData.email} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="normal" 
+            required 
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '& input': {
+                  color: '#1c2c4d',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#1c2c4d',
+              },
+            }}
+          />
+          
+          <TextField 
+            label="Password *" 
+            name="password" 
+            type="password" 
+            value={formData.password} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="normal" 
+            required 
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '& input': {
+                  color: '#1c2c4d',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#1c2c4d',
+              },
+            }}
+          />
+          
+          <TextField 
+            label="Confirm Password *" 
+            name="confirmPassword" 
+            type="password" 
+            value={formData.confirmPassword} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="normal" 
+            required 
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '& input': {
+                  color: '#1c2c4d',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#1c2c4d',
+              },
+            }}
+          />
+
+          {/* Player Information Section */}
+          <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2, mt: 4 }}>
+            Player Information
+          </Typography>
+          
+          <TextField 
+            label="Age" 
+            name="age" 
+            value={formData.age} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="normal" 
+            type="number" 
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '& input': {
+                  color: '#1c2c4d',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#1c2c4d',
+              },
+            }}
+          />
+          
+          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+            <Box flex={1}>
+              <FormControl fullWidth margin="normal" sx={{ minWidth: 120 }}>
+                <InputLabel sx={{ color: '#1c2c4d' }}>Player Level *</InputLabel>
+                <Select
+                  name="player_level"
+                  value={formData.player_level || ''}
+                  onChange={handleChange}
+                  label="Player Level *"
+                  MenuProps={{ PaperProps: { sx: { minWidth: 120 } } }}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: '#e0e3e8',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#3a7bd5',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#3a7bd5',
-                      },
-                      '& input': {
-                        color: '#1c2c4d',
-                      },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '& .MuiSelect-select, & .MuiSelect-multiple, & .MuiSelect-outlined, & .MuiSelect-root, & .MuiInputBase-input': {
+                      color: '#1c2c4d',
                     },
                     '& .MuiInputLabel-root': {
                       color: '#1c2c4d',
                     },
                   }}
-                />
-              )}
-              {playerData.player_level === 'professional' && (
-                <TextField 
-                  label="Team Name" 
-                  name="team_name" 
-                  value={playerData.team_name || ''} 
-                  onChange={handlePlayerChange} 
-                  fullWidth 
-                  margin="normal" 
+                >
+                  {Object.entries(PLAYER_LEVELS).map(([key, level]) => (
+                    <MenuItem key={key} value={key}>{level.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <Box flex={1}>
+              <FormControl fullWidth margin="normal" sx={{ minWidth: 120 }}>
+                <InputLabel sx={{ color: '#1c2c4d' }}>Position *</InputLabel>
+                <Select
+                  name="position"
+                  value={formData.position || ''}
+                  onChange={handleChange}
+                  label="Position *"
+                  MenuProps={{ PaperProps: { sx: { minWidth: 120 } } }}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: '#e0e3e8',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#3a7bd5',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#3a7bd5',
-                      },
-                      '& input': {
-                        color: '#1c2c4d',
-                      },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '& .MuiSelect-select, & .MuiSelect-multiple, & .MuiSelect-outlined, & .MuiSelect-root, & .MuiInputBase-input': {
+                      color: '#1c2c4d',
                     },
                     '& .MuiInputLabel-root': {
                       color: '#1c2c4d',
                     },
                   }}
-                />
-              )}
+                >
+                  {POSITIONS.map(pos => (
+                    <MenuItem key={pos.value} value={pos.value}>{pos.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+          
+          {formData.player_level === 'youth' && (
+            <>
               <TextField 
-                label="Graduation Year" 
-                name="graduation_year" 
-                value={playerData.graduation_year} 
-                onChange={handlePlayerChange} 
+                label="Travel Team" 
+                name="travel_team" 
+                value={formData.travel_team || ''} 
+                onChange={handleChange} 
                 fullWidth 
                 margin="normal" 
-                type="number" 
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': {
@@ -581,34 +396,214 @@ function Register() {
                   },
                 }}
               />
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                sx={{ 
-                  mt: 3, 
-                  py: 1.5, 
-                  fontWeight: 700, 
-                  fontSize: '1.1rem',
-                  borderRadius: 2,
-                  background: 'linear-gradient(135deg, #1c2c4d 0%, #2d5aa0 100%)',
-                  color: '#fff',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #2d5aa0 0%, #1c2c4d 100%)',
-                  }
+              <TextField 
+                label="Little League Team" 
+                name="little_league" 
+                value={formData.little_league || ''} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal" 
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '& input': {
+                      color: '#1c2c4d',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                  },
                 }}
-                disabled={
-                  !playerData.player_level ||
-                  (playerData.position?.length === 0) ||
-                  loading
-                }
-                startIcon={loading && <CircularProgress size={18} />}
-              >
-                {loading ? 'Saving...' : 'Create Player'}
-              </Button>
-            </form>
-          </>
-        )}
+              />
+            </>
+          )}
+          
+          {formData.player_level === 'high_school' && (
+            <>
+              <TextField 
+                label="High School Team" 
+                name="high_school" 
+                value={formData.high_school || ''} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal" 
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '& input': {
+                      color: '#1c2c4d',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                  },
+                }}
+              />
+              <TextField 
+                label="Travel Team" 
+                name="travel_team" 
+                value={formData.travel_team || ''} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal" 
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '& input': {
+                      color: '#1c2c4d',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                  },
+                }}
+              />
+            </>
+          )}
+          
+          {formData.player_level === 'college' && (
+            <TextField 
+              label="College Name" 
+              name="college" 
+              value={formData.college || ''} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#e0e3e8',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '& input': {
+                    color: '#1c2c4d',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+              }}
+            />
+          )}
+          
+          {formData.player_level === 'professional' && (
+            <TextField 
+              label="Team Name" 
+              name="team_name" 
+              value={formData.team_name || ''} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#e0e3e8',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '& input': {
+                    color: '#1c2c4d',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#1c2c4d',
+                },
+              }}
+            />
+          )}
+          
+          <TextField 
+            label="Graduation Year" 
+            name="graduation_year" 
+            value={formData.graduation_year} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="normal" 
+            type="number" 
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#3a7bd5',
+                },
+                '& input': {
+                  color: '#1c2c4d',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#1c2c4d',
+              },
+            }}
+          />
+          
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ 
+              mt: 4, 
+              py: 1.5, 
+              fontWeight: 700, 
+              fontSize: '1.1rem',
+              borderRadius: 2,
+              background: 'linear-gradient(135deg, #1c2c4d 0%, #2d5aa0 100%)',
+              color: '#fff',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #2d5aa0 0%, #1c2c4d 100%)',
+              }
+            }}
+            disabled={
+              !formData.name ||
+              !formData.email ||
+              !formData.password ||
+              !formData.confirmPassword ||
+              !formData.player_level ||
+              !formData.position ||
+              loading
+            }
+            startIcon={loading && <CircularProgress size={18} />}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </Button>
+        </form>
       </Paper>
     </Box>
   );

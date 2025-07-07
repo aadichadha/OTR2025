@@ -183,13 +183,21 @@ function Players() {
           console.log('🔍 [Players] Extracted name from JWT:', currentUserName);
         } catch (e) {
           console.log('Could not decode token for user name:', e);
+          // Try alternative JWT structure
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            currentUserName = payload.userId ? 'User' : '';
+            console.log('🔍 [Players] Alternative JWT payload:', payload);
+          } catch (e2) {
+            console.log('Could not decode token with alternative method:', e2);
+          }
         }
       }
       
       console.log('🔍 [Players] Setting form with name:', currentUserName);
       
       setForm({ 
-        name: currentUserName, // Pre-fill with current user's name
+        name: currentUserName || 'New Player', // Pre-fill with current user's name or default
         age: '', 
         player_level: '',
         team_type: '',
@@ -248,13 +256,9 @@ function Players() {
     try {
       // Debug: Log the current form state
       console.log('🔍 [Players] Current form state:', form);
-      console.log('🔍 [Players] Form name value:', form.name);
-      console.log('🔍 [Players] Form name type:', typeof form.name);
-      console.log('🔍 [Players] Form name length:', form.name ? form.name.length : 'undefined');
       
-      // Convert form data to backend format
+      // Convert form data to backend format (name will be automatically used from authenticated user)
       const playerData = {
-        name: form.name,
         age: form.age,
         position: Array.isArray(form.position) ? form.position.join(',') : form.position,
         graduation_year: form.graduation_year
@@ -938,7 +942,6 @@ function Players() {
               variant="contained"
               sx={{ backgroundColor: '#fff', color: '#1c2c4d', fontWeight: 700, borderRadius: 3, px: 3, py: 1, border: '2px solid #1c2c4d', '&:hover': { backgroundColor: '#eaf1fb' } }}
               disabled={
-                !form.name ||
                 !form.player_level ||
                 !Array.isArray(form.position) || form.position.length === 0
               }
@@ -948,7 +951,7 @@ function Players() {
             {/* Debug info */}
             <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: '0.8rem' }}>
               <Typography variant="caption" color="textSecondary">
-                Debug: Name: "{form.name}" | Level: "{form.player_level}" | Position: {JSON.stringify(form.position)}
+                Debug: Level: "{form.player_level}" | Position: {JSON.stringify(form.position)}
               </Typography>
             </Box>
           </DialogActions>
