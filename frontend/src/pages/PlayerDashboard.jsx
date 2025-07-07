@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Card, CardContent, Grid, Button, CircularProgress, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Button, CircularProgress, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -20,6 +20,8 @@ const PlayerDashboard = () => {
   const [sessions, setSessions] = useState([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState(null);
+  const [swingLogModal, setSwingLogModal] = useState({ open: false, swings: [], loading: false, error: '', sessionId: null });
+  const [reportModal, setReportModal] = useState({ open: false, report: null, loading: false, error: '', sessionId: null });
 
   useEffect(() => {
     fetchData();
@@ -114,6 +116,28 @@ const PlayerDashboard = () => {
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
+  const handleOpenSwingLog = async (sessionId) => {
+    setSwingLogModal({ open: true, swings: [], loading: true, error: '', sessionId });
+    try {
+      const res = await api.get(`/sessions/${sessionId}/swings`);
+      setSwingLogModal({ open: true, swings: res.data, loading: false, error: '', sessionId });
+    } catch (err) {
+      setSwingLogModal({ open: true, swings: [], loading: false, error: 'Failed to load swings', sessionId });
+    }
+  };
+  const handleCloseSwingLog = () => setSwingLogModal({ open: false, swings: [], loading: false, error: '', sessionId: null });
+
+  const handleOpenReport = async (sessionId) => {
+    setReportModal({ open: true, report: null, loading: true, error: '', sessionId });
+    try {
+      const res = await api.get(`/sessions/${sessionId}/report-data`);
+      setReportModal({ open: true, report: res.data, loading: false, error: '', sessionId });
+    } catch (err) {
+      setReportModal({ open: true, report: null, loading: false, error: 'Failed to load report', sessionId });
+    }
+  };
+  const handleCloseReport = () => setReportModal({ open: false, report: null, loading: false, error: '', sessionId: null });
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Box sx={{ width: '100%', maxWidth: 1200, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
@@ -192,7 +216,7 @@ const PlayerDashboard = () => {
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <IconButton
                             size="small"
-                            onClick={() => handleViewSwings(session.id)}
+                            onClick={() => handleOpenSwingLog(session.id)}
                             sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
                             title="View Swings"
                           >
@@ -200,7 +224,7 @@ const PlayerDashboard = () => {
                           </IconButton>
                           <IconButton
                             size="small"
-                            onClick={() => handleViewSession(session.id)}
+                            onClick={() => handleOpenReport(session.id)}
                             sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
                             title="View Report"
                           >
@@ -274,6 +298,45 @@ const PlayerDashboard = () => {
           <Button onClick={confirmDeleteSession} sx={{ color: '#d32f2f' }}>
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Swing Log Modal */}
+      <Dialog open={swingLogModal.open} onClose={handleCloseSwingLog} maxWidth="md" fullWidth>
+        <DialogTitle>Session Swing Log</DialogTitle>
+        <DialogContent>
+          {swingLogModal.loading ? <CircularProgress /> : swingLogModal.error ? <Alert severity="error">{swingLogModal.error}</Alert> : (
+            <Box>
+              {swingLogModal.swings.length === 0 ? <Typography>No swings found.</Typography> : (
+                <Box>
+                  {swingLogModal.swings.map((swing, idx) => (
+                    <Box key={idx} sx={{ mb: 2, p: 1, border: '1px solid #e0e3e8', borderRadius: 2 }}>
+                      <Typography variant="body2">Swing #{idx + 1}</Typography>
+                      <pre style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{JSON.stringify(swing, null, 2)}</pre>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSwingLog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Report Modal */}
+      <Dialog open={reportModal.open} onClose={handleCloseReport} maxWidth="md" fullWidth>
+        <DialogTitle>Session Report</DialogTitle>
+        <DialogContent>
+          {reportModal.loading ? <CircularProgress /> : reportModal.error ? <Alert severity="error">{reportModal.error}</Alert> : (
+            <Box>
+              <pre style={{ fontSize: 14, whiteSpace: 'pre-wrap' }}>{JSON.stringify(reportModal.report, null, 2)}</pre>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseReport}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
