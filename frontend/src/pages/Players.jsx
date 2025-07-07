@@ -608,7 +608,7 @@ function Players() {
                   fullWidth 
                   required 
                   placeholder="Enter player's full name"
-                  disabled={!editPlayer} // Disable for new players, enable for editing
+                  InputProps={{ readOnly: !editPlayer }}
                   sx={{
                     '& .MuiInputLabel-root': { color: '#1c2c4d', fontWeight: 600 },
                     '& .MuiOutlinedInput-root': {
