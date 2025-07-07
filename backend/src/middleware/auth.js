@@ -1,5 +1,37 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+
+// Domain validation middleware
+const validateDomain = (req, res, next) => {
+  const allowedDomains = [
+    'otrdatareport.com',
+    'www.otrdatareport.com',
+    'otr-2025-frontend.vercel.app', // Temporary during migration
+    'localhost:5173',
+    'localhost:3000'
+  ];
+  
+  const host = req.get('host');
+  const origin = req.get('origin');
+  
+  // Allow requests with no origin (like mobile apps or curl requests)
+  if (!origin && !host) {
+    return next();
+  }
+  
+  // Check if host or origin is in allowed list
+  const isAllowed = allowedDomains.some(domain => {
+    return (host && host.includes(domain)) || (origin && origin.includes(domain));
+  });
+  
+  if (isAllowed) {
+    next();
+  } else {
+    console.log('🚫 Domain validation failed:', { host, origin });
+    res.status(403).json({ error: 'Access denied - invalid domain' });
+  }
+};
 
 // Middleware to verify JWT token
 const authenticateToken = async (req, res, next) => {
@@ -123,5 +155,6 @@ module.exports = {
   requirePermission,
   requireRole,
   canAccessPlayer,
-  canAccessSession
+  canAccessSession,
+  validateDomain
 }; 
