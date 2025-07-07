@@ -72,6 +72,7 @@ import {
 import api from '../services/api';
 import SprayChart3D from '../components/visualizations/SprayChart3D';
 import safeToFixed from '../utils/safeToFixed';
+import { useAuth } from '../context/AuthContext';
 
 // Session type tags for filtering
 const SESSION_TYPES = [
@@ -101,6 +102,7 @@ const FILTERABLE_METRICS = {
 
 const AnalyticsHome = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
   const [players, setPlayers] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [swingData, setSwingData] = useState([]);
@@ -125,6 +127,17 @@ const AnalyticsHome = () => {
   const [playerBenchmarks, setPlayerBenchmarks] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [sessionHistory, setSessionHistory] = useState([]);
+
+  // Auto-select and lock player for player role
+  useEffect(() => {
+    if (user && user.role === 'player') {
+      setSelectedPlayer(user.id);
+      setSearchParams({ player: user.id });
+    }
+  }, [user]);
+
+  // Prevent player from changing player selector
+  const isPlayerLocked = user && user.role === 'player';
 
   useEffect(() => {
     fetchPlayers();
@@ -503,6 +516,7 @@ const AnalyticsHome = () => {
                 color: '#1c2c4d',
               },
             }}
+            disabled={isPlayerLocked}
           >
             <MenuItem value="">All Players</MenuItem>
             {players.map(player => (
