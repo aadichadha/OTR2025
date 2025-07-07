@@ -20,12 +20,7 @@ import PlayerDashboard from './pages/PlayerDashboard';
 import Leaderboard from './pages/Leaderboard';
 
 // Role-specific dashboard components (placeholder for now)
-const CoachDashboard = () => (
-  <Box sx={{ p: 3 }}>
-    <h2>Coach Dashboard</h2>
-    <p>Player management and analytics access</p>
-  </Box>
-);
+const CoachDashboard = () => <Home />;
 
 const UnauthorizedPage = () => (
   <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -87,7 +82,7 @@ function AppRoutes() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               {user?.role === 'admin' && <AdminDashboard />}
-              {user?.role === 'coach' && <CoachDashboard />}
+              {user?.role === 'coach' && <Home />}
               {user?.role === 'player' && <PlayerDashboard />}
             </ProtectedRoute>
           } />
@@ -102,7 +97,7 @@ function AppRoutes() {
           {/* Coach routes */}
           <Route path="/coach/dashboard" element={
             <ProtectedRoute allowedRoles={['coach']}>
-              <CoachDashboard />
+              <Home />
             </ProtectedRoute>
           } />
 
