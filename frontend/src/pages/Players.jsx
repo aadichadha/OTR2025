@@ -264,10 +264,15 @@ function Players() {
         });
         setSuccess('Player updated!');
       } else {
-        await axios.post(`${API_URL}/players`, playerData, { 
+        const response = await axios.post(`${API_URL}/players`, playerData, { 
           headers: { Authorization: `Bearer ${token}` } 
         });
-        setSuccess('Player added!');
+        
+        if (response.data.loginCredentials) {
+          setSuccess(`Player and user account created successfully! Login credentials: Email: ${response.data.loginCredentials.email}, Password: ${response.data.loginCredentials.password}`);
+        } else {
+          setSuccess('Player added!');
+        }
       }
       handleClose();
       fetchPlayers();

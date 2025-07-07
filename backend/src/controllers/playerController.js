@@ -9,19 +9,39 @@ class PlayerController {
    */
   static async createPlayer(req, res) {
     try {
-      const { age, travel_team, high_school, little_league, college, position, graduation_year } = req.body;
+      const { name, age, travel_team, high_school, little_league, college, position, graduation_year } = req.body;
       const userId = req.user.id;
 
-      // Get the user's name from their profile
-      const user = await require('../models').User.findByPk(userId);
-      if (!user) {
+      // Get the current user to check their role
+      const currentUser = await User.findByPk(userId);
+      if (!currentUser) {
         return res.status(404).json({ 
           error: 'User not found' 
         });
       }
 
-      // Use the user's name as the player name
-      const name = user.name;
+      // Validate required fields
+      if (!name) {
+        return res.status(400).json({ 
+          error: 'Player name is required' 
+        });
+      }
+
+      // Check if a player with this name already exists
+      const existingPlayer = await Player.findOne({ where: { name } });
+      if (existingPlayer) {
+        return res.status(400).json({ 
+          error: 'A player with this name already exists' 
+        });
+      }
+
+      // Check if a user with this name already exists
+      const existingUser = await User.findOne({ where: { name } });
+      if (existingUser) {
+        return res.status(400).json({ 
+          error: 'A user with this name already exists' 
+        });
+      }
 
       // Validate age if provided
       if (age && (age < 8 || age > 25)) {
@@ -50,8 +70,8 @@ class PlayerController {
         attempts++;
         
         // Check if code already exists
-        const existingPlayer = await Player.findOne({ where: { player_code: playerCode } });
-        if (!existingPlayer) break;
+        const existingPlayerWithCode = await Player.findOne({ where: { player_code: playerCode } });
+        if (!existingPlayerWithCode) break;
         
         if (attempts >= maxAttempts) {
           return res.status(500).json({ 
@@ -60,6 +80,7 @@ class PlayerController {
         }
       } while (true);
 
+      // Create the player
       const player = await Player.create({
         name,
         age,
@@ -72,9 +93,35 @@ class PlayerController {
         player_code: playerCode
       });
 
+      // Create a user account for the player
+      const bcrypt = require('bcryptjs');
+      const defaultPassword = 'password123'; // Default password for new players
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      
+      // Generate a unique email for the player
+      const email = `${name.toLowerCase().replace(/\s+/g, '.')}@otrbaseball.com`;
+
+      const playerUser = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        role: 'player',
+        created_by: userId
+      });
+
       res.status(201).json({
-        message: 'Player created successfully',
-        player
+        message: 'Player and user account created successfully',
+        player,
+        user: {
+          id: playerUser.id,
+          name: playerUser.name,
+          email: playerUser.email,
+          role: playerUser.role
+        },
+        loginCredentials: {
+          email: playerUser.email,
+          password: defaultPassword
+        }
       });
 
     } catch (error) {
