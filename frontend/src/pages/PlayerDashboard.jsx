@@ -25,6 +25,7 @@ const PlayerDashboard = () => {
         const sessionsRes = await api.get('/players/me/sessions');
         setSessions(sessionsRes.data.sessions || []);
       } catch (err) {
+        console.error('Error fetching dashboard data:', err);
         setStats(null);
         setSessions([]);
       } finally {
@@ -33,6 +34,14 @@ const PlayerDashboard = () => {
     };
     fetchData();
   }, []);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getSessionTypeColor = (type) => {
+    return type === 'blast' ? 'primary' : 'secondary';
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -47,11 +56,11 @@ const PlayerDashboard = () => {
                 <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 1 }}>Your Stats</Typography>
                 {loading ? <CircularProgress /> : stats ? (
                   <Box>
-                    <Typography variant="body1" sx={{ color: NAVY }}>Max Exit Velocity: <b>{stats.maxExitVelocity} mph</b></Typography>
-                    <Typography variant="body1" sx={{ color: NAVY }}>Avg Exit Velocity: <b>{stats.avgExitVelocity} mph</b></Typography>
-                    <Typography variant="body1" sx={{ color: NAVY }}>Max Bat Speed: <b>{stats.maxBatSpeed} mph</b></Typography>
-                    <Typography variant="body1" sx={{ color: NAVY }}>Avg Bat Speed: <b>{stats.avgBatSpeed} mph</b></Typography>
-                    <Typography variant="body1" sx={{ color: NAVY }}>Sessions: <b>{stats.sessionCount}</b></Typography>
+                    <Typography variant="body1" sx={{ color: NAVY }}>Max Exit Velocity: <b>{stats.maxExitVelocity || 'N/A'} mph</b></Typography>
+                    <Typography variant="body1" sx={{ color: NAVY }}>Avg Exit Velocity: <b>{stats.avgExitVelocity || 'N/A'} mph</b></Typography>
+                    <Typography variant="body1" sx={{ color: NAVY }}>Max Bat Speed: <b>{stats.maxBatSpeed || 'N/A'} mph</b></Typography>
+                    <Typography variant="body1" sx={{ color: NAVY }}>Avg Bat Speed: <b>{stats.avgBatSpeed || 'N/A'} mph</b></Typography>
+                    <Typography variant="body1" sx={{ color: NAVY }}>Sessions: <b>{stats.sessionCount || 0}</b></Typography>
                   </Box>
                 ) : <Typography color="error">No stats found.</Typography>}
               </CardContent>
@@ -66,10 +75,18 @@ const PlayerDashboard = () => {
                     {sessions.slice(0, 5).map((session) => (
                       <Box key={session.id} sx={{ mb: 1, p: 1, borderRadius: 2, bgcolor: '#fff', border: '1px solid #e0e3e8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Box>
-                          <Typography variant="body2" sx={{ color: NAVY, fontWeight: 600 }}>{session.date}</Typography>
-                          <Typography variant="body2" sx={{ color: NAVY }}>{session.type} - {session.location}</Typography>
+                          <Typography variant="body2" sx={{ color: NAVY, fontWeight: 600 }}>
+                            {formatDate(session.session_date)}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: NAVY }}>
+                            {session.session_type?.toUpperCase() || 'Unknown Type'}
+                          </Typography>
                         </Box>
-                        <Chip label={session.swingCount + ' swings'} color="primary" size="small" />
+                        <Chip 
+                          label={session.session_type?.toUpperCase() || 'Unknown'} 
+                          color={getSessionTypeColor(session.session_type)}
+                          size="small" 
+                        />
                       </Box>
                     ))}
                   </Box>
