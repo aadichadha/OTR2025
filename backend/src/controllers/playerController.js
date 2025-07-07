@@ -373,19 +373,45 @@ class PlayerController {
       const sessions = await Session.findAll({ where: { player_id: player.id } });
       let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0;
       let exitVelocities = [], batSpeeds = [];
+      let allExitVelocities = []; // For calculating top 10% threshold
+      
       for (const session of sessions) {
         if (session.session_type === 'hittrax') {
           const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
           const evValues = evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite);
           exitVelocities.push(...evValues);
-          // Count barrels (exit velocity >= 95 mph)
-          barrels += evValues.filter(ev => ev >= 95).length;
+          allExitVelocities.push(...evValues);
         }
         if (session.session_type === 'blast') {
           const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
           batSpeeds.push(...bss.map(b => parseFloat(b.bat_speed)).filter(Number.isFinite));
         }
       }
+      
+      // Calculate barrels: top 10% EV with launch angle 8-30 degrees
+      if (allExitVelocities.length > 0) {
+        const sortedEVs = allExitVelocities.sort((a, b) => b - a);
+        const top10PercentIndex = Math.floor(sortedEVs.length * 0.1);
+        const top10PercentThreshold = sortedEVs[top10PercentIndex] || 0;
+        
+        // Count barrels across all sessions
+        for (const session of sessions) {
+          if (session.session_type === 'hittrax') {
+            const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
+            for (const ev of evs) {
+              const exitVel = parseFloat(ev.exit_velocity);
+              const launchAngle = parseFloat(ev.launch_angle);
+              
+              if (exitVel >= top10PercentThreshold && 
+                  launchAngle >= 8 && 
+                  launchAngle <= 30) {
+                barrels++;
+              }
+            }
+          }
+        }
+      }
+      
       if (exitVelocities.length) {
         maxExitVelocity = Math.max(...exitVelocities);
         avgExitVelocity = exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length;
@@ -436,19 +462,45 @@ class PlayerController {
         const sessions = await Session.findAll({ where: { player_id: player.id } });
         let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0;
         let exitVelocities = [], batSpeeds = [];
+        let allExitVelocities = []; // For calculating top 10% threshold
+        
         for (const session of sessions) {
           if (session.session_type === 'hittrax') {
             const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
             const evValues = evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite);
             exitVelocities.push(...evValues);
-            // Count barrels (exit velocity >= 95 mph)
-            barrels += evValues.filter(ev => ev >= 95).length;
+            allExitVelocities.push(...evValues);
           }
           if (session.session_type === 'blast') {
             const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
             batSpeeds.push(...bss.map(b => parseFloat(b.bat_speed)).filter(Number.isFinite));
           }
         }
+        
+        // Calculate barrels: top 10% EV with launch angle 8-30 degrees
+        if (allExitVelocities.length > 0) {
+          const sortedEVs = allExitVelocities.sort((a, b) => b - a);
+          const top10PercentIndex = Math.floor(sortedEVs.length * 0.1);
+          const top10PercentThreshold = sortedEVs[top10PercentIndex] || 0;
+          
+          // Count barrels across all sessions
+          for (const session of sessions) {
+            if (session.session_type === 'hittrax') {
+              const evs = await ExitVelocityData.findAll({ where: { session_id: session.id } });
+              for (const ev of evs) {
+                const exitVel = parseFloat(ev.exit_velocity);
+                const launchAngle = parseFloat(ev.launch_angle);
+                
+                if (exitVel >= top10PercentThreshold && 
+                    launchAngle >= 8 && 
+                    launchAngle <= 30) {
+                  barrels++;
+                }
+              }
+            }
+          }
+        }
+        
         if (exitVelocities.length) {
           maxExitVelocity = Math.max(...exitVelocities);
           avgExitVelocity = exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length;

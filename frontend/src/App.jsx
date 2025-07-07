@@ -21,9 +21,6 @@ import Leaderboard from './pages/Leaderboard';
 import ProfileSettings from './pages/ProfileSettings';
 import SessionReport from './pages/SessionReport';
 
-// Role-specific dashboard components (placeholder for now)
-const CoachDashboard = () => <Home />;
-
 const UnauthorizedPage = () => (
   <Box sx={{ p: 3, textAlign: 'center' }}>
     <h2>Unauthorized Access</h2>
@@ -96,7 +93,7 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
 
-          {/* Coach routes */}
+          {/* Coach routes - just use Home page */}
           <Route path="/coach/dashboard" element={
             <ProtectedRoute allowedRoles={['coach']}>
               <Home />
