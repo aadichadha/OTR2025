@@ -9,6 +9,8 @@ import EmailIcon from '@mui/icons-material/Email';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ReportDisplay from '../components/ReportDisplay';
+import SwingLogTable from '../components/SwingLogTable';
 
 const NAVY = '#1c2c4d';
 
@@ -305,19 +307,12 @@ const PlayerDashboard = () => {
       <Dialog open={swingLogModal.open} onClose={handleCloseSwingLog} maxWidth="md" fullWidth>
         <DialogTitle>Session Swing Log</DialogTitle>
         <DialogContent>
-          {swingLogModal.loading ? <CircularProgress /> : swingLogModal.error ? <Alert severity="error">{swingLogModal.error}</Alert> : (
-            <Box>
-              {swingLogModal.swings.length === 0 ? <Typography>No swings found.</Typography> : (
-                <Box>
-                  {swingLogModal.swings.map((swing, idx) => (
-                    <Box key={idx} sx={{ mb: 2, p: 1, border: '1px solid #e0e3e8', borderRadius: 2 }}>
-                      <Typography variant="body2">Swing #{idx + 1}</Typography>
-                      <pre style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{JSON.stringify(swing, null, 2)}</pre>
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </Box>
+          {swingLogModal.loading ? (
+            <CircularProgress />
+          ) : swingLogModal.error ? (
+            <Alert severity="error">{swingLogModal.error}</Alert>
+          ) : (
+            <SwingLogTable swings={swingLogModal.swings} />
           )}
         </DialogContent>
         <DialogActions>
@@ -329,10 +324,12 @@ const PlayerDashboard = () => {
       <Dialog open={reportModal.open} onClose={handleCloseReport} maxWidth="md" fullWidth>
         <DialogTitle>Session Report</DialogTitle>
         <DialogContent>
-          {reportModal.loading ? <CircularProgress /> : reportModal.error ? <Alert severity="error">{reportModal.error}</Alert> : (
-            <Box>
-              <pre style={{ fontSize: 14, whiteSpace: 'pre-wrap' }}>{JSON.stringify(reportModal.report, null, 2)}</pre>
-            </Box>
+          {reportModal.loading ? (
+            <CircularProgress />
+          ) : reportModal.error ? (
+            <Alert severity="error">{reportModal.error}</Alert>
+          ) : (
+            <ReportDisplay report={reportModal.report} />
           )}
         </DialogContent>
         <DialogActions>
