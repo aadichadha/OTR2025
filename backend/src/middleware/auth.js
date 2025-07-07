@@ -11,8 +11,14 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('🔍 [Auth Middleware] Verifying token...');
+    console.log('🔍 [Auth Middleware] JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET');
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    console.log('🔍 [Auth Middleware] Token decoded:', decoded);
+    
     const user = await User.findByPk(decoded.userId);
+    console.log('🔍 [Auth Middleware] User found:', user ? user.id : 'NOT FOUND');
     
     if (!user) {
       return res.status(401).json({ error: 'User not found' });

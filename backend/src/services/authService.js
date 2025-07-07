@@ -57,27 +57,24 @@ class AuthService {
     const password = rawPassword ? rawPassword.trim() : rawPassword;
     console.log('[LOGIN DEBUG] Attempting login for:', email);
     console.log('[BCRYPT DEBUG] Original password:', JSON.stringify(password));
+    
     // Find user
     const user = await User.findOne({ where: { email } });
     if (!user) {
       throw new Error('Invalid email or password');
     }
+    
     console.log('[BCRYPT DEBUG] Stored hash:', JSON.stringify(user.password));
     console.log('[BCRYPT DEBUG] Hash details:', {
       length: user.password.length,
       firstChars: user.password.substring(0, 10),
-      type: typeof user.password,
-      encoding: Buffer.from(user.password).toString('hex').substring(0, 20)
+      type: typeof user.password
     });
-    // Test with a fresh hash of the same password
-    const bcrypt = require('bcryptjs');
-    const testHash = await bcrypt.hash(password, 10);
-    console.log('[BCRYPT DEBUG] Fresh hash for same password:', testHash);
-    const testCompare = await bcrypt.compare(password, testHash);
-    console.log('[BCRYPT DEBUG] Fresh hash comparison:', testCompare);
-    // Try the actual comparison with explicit await
+    
+    // Try the actual comparison
     const actualCompare = await bcrypt.compare(password, user.password);
     console.log('[BCRYPT DEBUG] Actual comparison result:', actualCompare);
+    
     if (!actualCompare) {
       throw new Error('Invalid email or password');
     }
@@ -106,6 +103,7 @@ class AuthService {
     const payload = {
       userId: user.id,
       email: user.email,
+      name: user.name,
       role: user.role
     };
 

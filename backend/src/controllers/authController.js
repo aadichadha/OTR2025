@@ -42,7 +42,8 @@ class AuthController {
         role
       });
 
-      const token = jwt.sign({ userId: result.user.id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
+      // Use the token from AuthService instead of generating a new one
+      const token = result.token;
       res.status(201).json({
         message: 'User registered successfully',
         token,
@@ -108,7 +109,7 @@ class AuthController {
         } else if (result.user.role === 'coach') {
           permissions = ['view_all_players', 'manage_players', 'view_own_data', 'download_reports', 'view_analytics', 'view_coach_dashboard'];
         } else {
-          permissions = ['view_own_data', 'download_reports', 'view_player_dashboard'];
+          permissions = ['view_own_data', 'download_reports', 'view_player_dashboard', 'view_analytics'];
         }
       }
       
@@ -122,11 +123,8 @@ class AuthController {
         }
       }
 
-      const token = jwt.sign({ 
-        userId: result.user.id,
-        role: result.user.role,
-        permissions: permissions
-      }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
+      // Use the token from AuthService instead of generating a new one
+      const token = result.token;
 
       res.status(200).json({
         message: 'Login successful',
