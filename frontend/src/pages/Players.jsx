@@ -173,14 +173,20 @@ function Players() {
       const token = localStorage.getItem('token');
       let currentUserName = '';
       
+      console.log('🔍 [Players] Token found:', !!token);
+      
       if (token) {
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           currentUserName = payload.name || '';
+          console.log('🔍 [Players] JWT payload:', payload);
+          console.log('🔍 [Players] Extracted name from JWT:', currentUserName);
         } catch (e) {
-          console.log('Could not decode token for user name');
+          console.log('Could not decode token for user name:', e);
         }
       }
+      
+      console.log('🔍 [Players] Setting form with name:', currentUserName);
       
       setForm({ 
         name: currentUserName, // Pre-fill with current user's name
@@ -240,6 +246,12 @@ function Players() {
     const token = localStorage.getItem('token');
     
     try {
+      // Debug: Log the current form state
+      console.log('🔍 [Players] Current form state:', form);
+      console.log('🔍 [Players] Form name value:', form.name);
+      console.log('🔍 [Players] Form name type:', typeof form.name);
+      console.log('🔍 [Players] Form name length:', form.name ? form.name.length : 'undefined');
+      
       // Convert form data to backend format
       const playerData = {
         name: form.name,
@@ -272,7 +284,8 @@ function Players() {
       }
 
       console.log('🔍 [Players] Form data being sent:', playerData);
-      console.log('🔍 [Players] Form state:', form);
+      console.log('🔍 [Players] PlayerData name value:', playerData.name);
+      console.log('🔍 [Players] PlayerData name type:', typeof playerData.name);
 
       if (editPlayer) {
         await axios.put(`${API_URL}/players/${editPlayer.id}`, playerData, { 
