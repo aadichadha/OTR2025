@@ -134,7 +134,7 @@ function AppRoutes() {
           } />
 
           <Route path="/leaderboard" element={
-            <ProtectedRoute requiredPermission="view_own_data">
+            <ProtectedRoute>
               <Leaderboard />
             </ProtectedRoute>
           } />
