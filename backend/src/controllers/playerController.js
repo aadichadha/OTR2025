@@ -146,6 +146,7 @@ class PlayerController {
       const player = await Player.findByPk(id, {
         include: [{
           model: Session,
+          as: 'sessions',
           attributes: ['id', 'session_date', 'session_type'],
           order: [['session_date', 'DESC']]
         }]
@@ -271,6 +272,7 @@ class PlayerController {
       const player = await Player.findByPk(id, {
         include: [{
           model: Session,
+          as: 'sessions',
           attributes: ['id', 'session_date', 'session_type'],
           required: false
         }]
@@ -283,11 +285,11 @@ class PlayerController {
       }
 
       const stats = {
-        totalSessions: player.Sessions.length,
-        blastSessions: player.Sessions.filter(s => s.session_type === 'blast').length,
-        hittraxSessions: player.Sessions.filter(s => s.session_type === 'hittrax').length,
-        lastSession: player.Sessions.length > 0 ? 
-          new Date(Math.max(...player.Sessions.map(s => new Date(s.session_date)))) : null
+        totalSessions: player.sessions.length,
+        blastSessions: player.sessions.filter(s => s.session_type === 'blast').length,
+        hittraxSessions: player.sessions.filter(s => s.session_type === 'hittrax').length,
+        lastSession: player.sessions.length > 0 ? 
+          new Date(Math.max(...player.sessions.map(s => new Date(s.session_date)))) : null
       };
 
       res.status(200).json({
