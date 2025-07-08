@@ -31,7 +31,7 @@ class PlayerController {
         });
       }
 
-      // Use the authenticated user's name if no name is provided in the request
+      // Use the name provided in the request, or fall back to authenticated user's name if not provided
       const playerName = (name && name.trim() !== '') ? name.trim() : currentUser.name;
       
       console.log('🔍 [PlayerController] Using player name:', playerName);
