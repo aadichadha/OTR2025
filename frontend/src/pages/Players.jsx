@@ -169,35 +169,9 @@ function Players() {
         graduation_year: player.graduation_year || ''
       });
     } else {
-      // For new player, get the current user's name from JWT token
-      const token = localStorage.getItem('token');
-      let currentUserName = '';
-      
-      console.log('🔍 [Players] Token found:', !!token);
-      
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          currentUserName = payload.name || '';
-          console.log('🔍 [Players] JWT payload:', payload);
-          console.log('🔍 [Players] Extracted name from JWT:', currentUserName);
-        } catch (e) {
-          console.log('Could not decode token for user name:', e);
-          // Try alternative JWT structure
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            currentUserName = payload.userId ? 'User' : '';
-            console.log('🔍 [Players] Alternative JWT payload:', payload);
-          } catch (e2) {
-            console.log('Could not decode token with alternative method:', e2);
-          }
-        }
-      }
-      
-      console.log('🔍 [Players] Setting form with name:', currentUserName);
-      
+      // For new player, start with empty form
       setForm({ 
-        name: currentUserName || 'New Player', // Pre-fill with current user's name or default
+        name: '', // Allow coaches to enter player name
         age: '', 
         player_level: '',
         team_type: '',
@@ -257,8 +231,9 @@ function Players() {
       // Debug: Log the current form state
       console.log('🔍 [Players] Current form state:', form);
       
-      // Convert form data to backend format (name will be automatically used from authenticated user)
+      // Convert form data to backend format
       const playerData = {
+        name: form.name, // Include the player name from the form
         age: form.age,
         position: Array.isArray(form.position) ? form.position.join(',') : form.position,
         graduation_year: form.graduation_year
@@ -625,7 +600,6 @@ function Players() {
                   fullWidth 
                   required 
                   placeholder="Enter player's full name"
-                  InputProps={{ readOnly: !editPlayer }}
                   sx={{
                     '& .MuiInputLabel-root': { color: '#1c2c4d', fontWeight: 600 },
                     '& .MuiOutlinedInput-root': {
