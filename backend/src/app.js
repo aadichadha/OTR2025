@@ -41,8 +41,8 @@ const PORT = parsePort(process.env.PORT) || 3001;
 const allowedOrigins = [
   'https://otr-2025-frontend.vercel.app', // Your Vercel frontend domain (temporary)
   'https://otr-2025-frontend-pd5mjq47m-aadis-projects-cfbb1119.vercel.app', // Current preview deployment
-  'https://otrdatareport.com', // New custom domain
-  'https://www.otrdatareport.com', // New custom domain with www
+  'https://otr-data.com', // New custom domain
+  'https://www.otr-data.com', // New custom domain with www
   'http://localhost:5173', // Local development
   'http://localhost:3000'  // Alternative local development
 ];
@@ -69,9 +69,9 @@ const corsOptions = {
       // Allow any Vercel preview deployment for the otr-2025-frontend project
       console.log('✅ CORS: Allowing Vercel preview deployment:', origin);
       callback(null, true);
-    } else if (origin.includes('otrdatareport.com')) {
-      // Allow any subdomain of otrdatareport.com
-      console.log('✅ CORS: Allowing otrdatareport.com subdomain:', origin);
+    } else if (origin.includes('otr-data.com')) {
+      // Allow any subdomain of otr-data.com
+      console.log('✅ CORS: Allowing otr-data.com subdomain:', origin);
       callback(null, true);
     } else {
       console.log('🚫 CORS: Blocking origin:', origin);

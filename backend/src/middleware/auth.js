@@ -5,8 +5,8 @@ const User = require('../models/User');
 // Domain validation middleware
 const validateDomain = (req, res, next) => {
   const allowedDomains = [
-    'otrdatareport.com',
-    'www.otrdatareport.com',
+    'otr-data.com',
+    'www.otr-data.com',
     'otr-2025-frontend.vercel.app', // Temporary during migration
     'localhost:5173',
     'localhost:3000'
