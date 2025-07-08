@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   define: {
     // Define environment variables for the new domain
-    __APP_DOMAIN__: JSON.stringify(process.env.VITE_APP_DOMAIN || 'otrdatareport.com'),
-    __APP_URL__: JSON.stringify(process.env.VITE_APP_URL || 'https://otrdatareport.com'),
+    __APP_DOMAIN__: JSON.stringify(process.env.VITE_APP_DOMAIN || 'otr-data.com'),
+    __APP_URL__: JSON.stringify(process.env.VITE_APP_URL || 'https://otr-data.com'),
   },
   build: {
     outDir: 'dist',
