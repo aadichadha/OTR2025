@@ -48,6 +48,29 @@ const User = sequelize.define('User', {
   team_id: {
     type: DataTypes.INTEGER,
     allowNull: true
+  },
+  // Invitation fields
+  invitation_token: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    unique: true
+  },
+  invitation_expires_at: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  invitation_status: {
+    type: DataTypes.ENUM('pending', 'accepted', 'expired'),
+    defaultValue: 'pending',
+    allowNull: false
+  },
+  invited_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
 }, {
   tableName: 'users',
@@ -88,6 +111,12 @@ User.prototype.hasPermission = function(permission) {
   if (!this.permissions) return false;
   
   return this.permissions.includes(permission);
+};
+
+// Instance method to check if invitation is expired
+User.prototype.isInvitationExpired = function() {
+  if (!this.invitation_expires_at) return false;
+  return new Date() > new Date(this.invitation_expires_at);
 };
 
 // Static method to get role permissions

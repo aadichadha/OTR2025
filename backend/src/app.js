@@ -145,6 +145,14 @@ try {
   app.use('/api/auth', authRouter);
   console.log('✅ Auth routes loaded');
 
+  // Invitation routes (protected)
+  app.post('/api/auth/invite-player', authenticateToken, AuthController.createPlayerInvitation);
+  app.get('/api/auth/verify-invitation/:token', AuthController.verifyInvitation);
+  app.post('/api/auth/complete-invitation', AuthController.completeInvitation);
+  app.get('/api/auth/pending-invitations', authenticateToken, AuthController.getPendingInvitations);
+  app.delete('/api/auth/invitations/:invitationId', authenticateToken, AuthController.cancelInvitation);
+  console.log('✅ Invitation routes loaded');
+
   // Protected routes
   // app.get('/api/auth/profile', authenticateToken, AuthController.getProfile);
   // app.put('/api/auth/profile', authenticateToken, AuthController.updateProfile);

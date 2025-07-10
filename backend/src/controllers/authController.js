@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
+const { User } = require('../models');
+const AuthService = require('../services/authService');
+const InvitationService = require('../services/invitationService');
 
 class AuthController {
   /**
@@ -885,6 +889,181 @@ class AuthController {
       });
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * Create a player invitation (coach/admin only)
+   */
+  static async createPlayerInvitation(req, res) {
+    try {
+      const { name, email, position, team } = req.body;
+      const inviterId = req.user.id;
+
+      // Check if inviter has permission
+      if (!['admin', 'coach'].includes(req.user.role)) {
+        return res.status(403).json({ 
+          error: 'Only coaches and admins can invite players' 
+        });
+      }
+
+      // Validate required fields
+      if (!name || !email) {
+        return res.status(400).json({ 
+          error: 'Name and email are required' 
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          error: 'Invalid email format' 
+        });
+      }
+
+      const invitationService = new InvitationService();
+      const result = await invitationService.createPlayerInvitation(inviterId, {
+        name,
+        email,
+        position,
+        team
+      });
+
+      res.status(201).json(result);
+
+    } catch (error) {
+      console.error('Create invitation error:', error);
+      
+      if (error.message === 'User with this email already has an account') {
+        return res.status(400).json({ 
+          error: 'User with this email already has an account' 
+        });
+      }
+      
+      res.status(500).json({ 
+        error: 'Failed to create invitation' 
+      });
+    }
+  }
+
+  /**
+   * Verify invitation token
+   */
+  static async verifyInvitation(req, res) {
+    try {
+      const { token } = req.params;
+
+      const invitationService = new InvitationService();
+      const user = await invitationService.verifyInvitationToken(token);
+
+      res.json({
+        message: 'Invitation token is valid',
+        user: {
+          name: user.name,
+          email: user.email,
+          expires_at: user.invitation_expires_at
+        }
+      });
+
+    } catch (error) {
+      console.error('Verify invitation error:', error);
+      res.status(400).json({ 
+        error: error.message 
+      });
+    }
+  }
+
+  /**
+   * Complete invitation by setting password
+   */
+  static async completeInvitation(req, res) {
+    try {
+      const { token, password } = req.body;
+
+      // Validate password
+      if (!password || password.length < 6) {
+        return res.status(400).json({ 
+          error: 'Password must be at least 6 characters long' 
+        });
+      }
+
+      const invitationService = new InvitationService();
+      const result = await invitationService.completeInvitation(token, password);
+
+      // Generate JWT token for immediate login
+      const user = await User.findByPk(result.user.id);
+      const jwtToken = AuthService.generateToken(user);
+
+      res.json({
+        message: result.message,
+        user: result.user,
+        token: jwtToken
+      });
+
+    } catch (error) {
+      console.error('Complete invitation error:', error);
+      res.status(400).json({ 
+        error: error.message 
+      });
+    }
+  }
+
+  /**
+   * Get pending invitations for coach/admin
+   */
+  static async getPendingInvitations(req, res) {
+    try {
+      const inviterId = req.user.id;
+
+      // Check if user has permission
+      if (!['admin', 'coach'].includes(req.user.role)) {
+        return res.status(403).json({ 
+          error: 'Only coaches and admins can view invitations' 
+        });
+      }
+
+      const invitationService = new InvitationService();
+      const invitations = await invitationService.getPendingInvitations(inviterId);
+
+      res.json({
+        invitations,
+        count: invitations.length
+      });
+
+    } catch (error) {
+      console.error('Get invitations error:', error);
+      res.status(500).json({ 
+        error: 'Failed to get invitations' 
+      });
+    }
+  }
+
+  /**
+   * Cancel an invitation
+   */
+  static async cancelInvitation(req, res) {
+    try {
+      const { invitationId } = req.params;
+      const inviterId = req.user.id;
+
+      // Check if user has permission
+      if (!['admin', 'coach'].includes(req.user.role)) {
+        return res.status(403).json({ 
+          error: 'Only coaches and admins can cancel invitations' 
+        });
+      }
+
+      const invitationService = new InvitationService();
+      const result = await invitationService.cancelInvitation(invitationId, inviterId);
+
+      res.json(result);
+
+    } catch (error) {
+      console.error('Cancel invitation error:', error);
+      res.status(400).json({ 
+        error: error.message 
+      });
     }
   }
 }
