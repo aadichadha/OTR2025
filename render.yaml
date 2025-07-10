@@ -14,7 +14,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://otr-2025-frontend.vercel.app
+        value: https://otr-data.com
     healthCheckPath: /api/health
 
 databases:
