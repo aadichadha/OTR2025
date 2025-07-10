@@ -21,6 +21,14 @@ class EmailService {
       }
     };
 
+    // Check if email credentials are properly configured
+    if (!process.env.EMAIL_PASSWORD) {
+      console.warn('⚠️  Email service not fully configured: EMAIL_PASSWORD not set');
+      console.log('📧 Email service will be disabled. Set EMAIL_PASSWORD to enable email functionality.');
+      this.transporter = null;
+      return;
+    }
+
     // Create transporter
     this.transporter = nodemailer.createTransport(emailConfig);
 
@@ -28,6 +36,8 @@ class EmailService {
     this.transporter.verify((error, success) => {
       if (error) {
         console.error('❌ Email service configuration error:', error);
+        console.log('📧 Email service will be disabled. Check EMAIL_PASSWORD and EMAIL_USER configuration.');
+        this.transporter = null;
       } else {
         console.log('✅ Email service is ready to send messages');
       }
@@ -40,7 +50,12 @@ class EmailService {
   async sendSessionReport(sessionId, recipientEmail, reportData) {
     try {
       if (!this.transporter) {
-        throw new Error('Email service not initialized');
+        console.warn('⚠️  Email service not available - skipping email send');
+        return {
+          success: false,
+          message: 'Email service not configured',
+          recipient: recipientEmail
+        };
       }
 
       if (!recipientEmail || !reportData) {

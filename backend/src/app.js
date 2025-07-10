@@ -39,15 +39,15 @@ const PORT = parsePort(process.env.PORT) || 3001;
 
 // CORS configuration (MUST come before rate limiting)
 const allowedOrigins = [
-  'https://otr-data.com', // New custom domain
-  'https://www.otr-data.com', // New custom domain with www
+  'https://otr-data.com', // Current custom domain
+  'https://www.otr-data.com', // Current custom domain with www
   'https://otr2025.onrender.com', // Render production domain
   'http://localhost:5173', // Local development
   'http://localhost:3000'  // Alternative local development
 ];
 
-// Add FRONTEND_URL from environment if it exists
-if (process.env.FRONTEND_URL) {
+// Add FRONTEND_URL from environment if it exists and isn't already in the list
+if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
   allowedOrigins.push(process.env.FRONTEND_URL);
   console.log('🔧 Added FRONTEND_URL to CORS origins:', process.env.FRONTEND_URL);
 }

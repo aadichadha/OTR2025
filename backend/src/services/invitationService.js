@@ -66,6 +66,13 @@ class InvitationService {
    */
   async sendInvitationEmail(user, invitationToken) {
     try {
+      // Check if email service is available
+      if (!this.emailService.transporter) {
+        console.warn('⚠️  Email service not available - invitation created but email not sent');
+        console.log('📧 User will need to be notified manually or email service needs to be configured');
+        return;
+      }
+
       const invitationLink = `${process.env.FRONTEND_URL || 'https://otr-data.com'}/complete-invitation?token=${invitationToken}`;
       
       // Generate a hidden one-time password (not visible in email)
