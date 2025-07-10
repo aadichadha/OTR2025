@@ -227,6 +227,33 @@ app.get('/api/health', (req, res) => {
   }
 });
 
+// Debug environment variables (only in development or for admins)
+app.get('/api/debug/env', (req, res) => {
+  try {
+    const isAdmin = req.headers.authorization && req.headers.authorization.includes('admin');
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (!isAdmin && !isDevelopment) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    res.status(200).json({ 
+      NODE_ENV: process.env.NODE_ENV,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+      JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+      EMAIL_USER: process.env.EMAIL_USER,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Debug env error:', error);
+    res.status(500).json({ 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Debug endpoint to check user data
 app.get('/api/debug/user/:email', async (req, res) => {
   try {

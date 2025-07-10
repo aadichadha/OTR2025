@@ -73,7 +73,13 @@ class InvitationService {
         return;
       }
 
-      const invitationLink = `${process.env.FRONTEND_URL || 'https://otr-data.com'}/complete-invitation?token=${invitationToken}`;
+      // Ensure we're using the correct frontend URL
+      const frontendUrl = process.env.FRONTEND_URL || 'https://otr-data.com';
+      console.log('🔗 [Invitation] Using FRONTEND_URL:', frontendUrl);
+      console.log('🔗 [Invitation] process.env.FRONTEND_URL:', process.env.FRONTEND_URL);
+      
+      const invitationLink = `${frontendUrl}/complete-invitation?token=${invitationToken}`;
+      console.log('🔗 [Invitation] Generated invitation link:', invitationLink);
       
       // Generate a hidden one-time password (not visible in email)
       const otp = this.generateOTP();
