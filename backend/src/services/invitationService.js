@@ -201,9 +201,9 @@ This invitation expires on ${new Date(user.invitation_expires_at).toLocaleDateSt
       console.log('⚠️ Email sending failed, but invitation was created successfully');
     }
     
-    // Always store OTP in database (hidden from email) - even if email fails
+    // Store the original token (without OTP) for verification
     await user.update({ 
-      invitation_token: invitationToken + '_' + this.generateOTP() // Store OTP with token
+      invitation_token: invitationToken
     });
   }
 
@@ -220,7 +220,7 @@ This invitation expires on ${new Date(user.invitation_expires_at).toLocaleDateSt
   async verifyInvitationToken(token) {
     const user = await User.findOne({ 
       where: { 
-        invitation_token: { [require('sequelize').Op.like]: `${token}_%` },
+        invitation_token: token,
         invitation_status: 'pending'
       }
     });

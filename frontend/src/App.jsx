@@ -20,6 +20,7 @@ import PlayerDashboard from './pages/PlayerDashboard';
 import Leaderboard from './pages/Leaderboard';
 import ProfileSettings from './pages/ProfileSettings';
 import SessionReport from './pages/SessionReport';
+import CompleteInvitation from './pages/CompleteInvitation';
 
 const UnauthorizedPage = () => (
   <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -75,6 +76,7 @@ function AppRoutes() {
           <Route path="/register" element={
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
           } />
+          <Route path="/complete-invitation" element={<CompleteInvitation />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           {/* Protected routes with role-based access */}
