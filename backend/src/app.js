@@ -39,8 +39,6 @@ const PORT = parsePort(process.env.PORT) || 3001;
 
 // CORS configuration (MUST come before rate limiting)
 const allowedOrigins = [
-  'https://otr-2025-frontend.vercel.app', // Your Vercel frontend domain (temporary)
-  'https://otr-2025-frontend-pd5mjq47m-aadis-projects-cfbb1119.vercel.app', // Current preview deployment
   'https://otr-data.com', // New custom domain
   'https://www.otr-data.com', // New custom domain with www
   'https://otr2025.onrender.com', // Render production domain
@@ -65,10 +63,6 @@ const corsOptions = {
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
       console.log('✅ CORS: Allowing origin:', origin);
-      callback(null, true);
-    } else if (origin.includes('otr-2025-frontend') && origin.includes('vercel.app')) {
-      // Allow any Vercel preview deployment for the otr-2025-frontend project
-      console.log('✅ CORS: Allowing Vercel preview deployment:', origin);
       callback(null, true);
     } else if (origin.includes('otr-data.com')) {
       // Allow any subdomain of otr-data.com

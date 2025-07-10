@@ -76,6 +76,9 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
   const [currentReport, setCurrentReport] = useState(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailValue, setEmailValue] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
   
   // Tag editing state
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -199,6 +202,8 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
           console.error('Error parsing user data:', e);
         }
       }
+      // Set initial email value
+      setEmailValue(player.email || '');
     }
   }, [open, player]);
 
@@ -436,6 +441,53 @@ One-time password: exwx bdjz xjid qhmh`);
     }
   };
 
+  const handleStartEditEmail = () => {
+    setEditingEmail(true);
+    setEmailValue(player.email || '');
+  };
+
+  const handleCancelEditEmail = () => {
+    setEditingEmail(false);
+    setEmailValue(player.email || '');
+  };
+
+  const handleSaveEmail = async () => {
+    if (!emailValue.trim()) {
+      setError('Email cannot be empty.');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailValue)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    setEmailLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API_URL}/players/${player.id}`, {
+        email: emailValue.trim()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Update the player object with new email
+      player.email = emailValue.trim();
+      setSuccess('Email updated successfully!');
+      setEditingEmail(false);
+    } catch (err) {
+      console.error('Error updating email:', err);
+      setError(err.response?.data?.error || 'Failed to update email.');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
   return (
     <>
       <Dialog 
@@ -537,33 +589,93 @@ One-time password: exwx bdjz xjid qhmh`);
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>Email</Typography>
-                  <Typography variant="body1" sx={{ color: '#1c2c4d' }}>
-                    {player.email ? (
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <span>{player.email}</span>
-                        {currentUser && ['admin', 'coach'].includes(currentUser.role) && (
-                          <Chip 
-                            label="Invite Available" 
-                            size="small" 
-                            color="success" 
+                  {editingEmail ? (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <TextField
+                        value={emailValue}
+                        onChange={(e) => setEmailValue(e.target.value)}
+                        size="small"
+                        placeholder="Enter email address"
+                        sx={{
+                          flex: 1,
+                          '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': { borderColor: '#1c2c4d' },
+                            '&:hover fieldset': { borderColor: '#3a7bd5' },
+                            '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                          },
+                          '& .MuiInputBase-input': { color: '#1c2c4d' }
+                        }}
+                      />
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleSaveEmail}
+                        disabled={emailLoading}
+                        sx={{
+                          bgcolor: '#4caf50',
+                          color: '#fff',
+                          '&:hover': { bgcolor: '#45a049' },
+                          '&:disabled': { bgcolor: '#ccc' }
+                        }}
+                      >
+                        {emailLoading ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleCancelEditEmail}
+                        disabled={emailLoading}
+                        sx={{
+                          color: '#1c2c4d',
+                          borderColor: '#1c2c4d',
+                          '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' }
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body1" sx={{ color: '#1c2c4d', flex: 1 }}>
+                        {player.email || <span style={{ color: '#999' }}>No email</span>}
+                      </Typography>
+                      {currentUser && ['admin', 'coach'].includes(currentUser.role) && (
+                        <>
+                          {player.email ? (
+                            <Chip 
+                              label="Invite Available" 
+                              size="small" 
+                              color="success" 
+                              variant="outlined"
+                            />
+                          ) : (
+                            <Chip 
+                              label="Add Email to Invite" 
+                              size="small" 
+                              color="warning" 
+                              variant="outlined"
+                            />
+                          )}
+                          <Button
                             variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    ) : (
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <span style={{ color: '#999' }}>No email</span>
-                        {currentUser && ['admin', 'coach'].includes(currentUser.role) && (
-                          <Chip 
-                            label="Add Email to Invite" 
-                            size="small" 
-                            color="warning" 
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    )}
-                  </Typography>
+                            size="small"
+                            onClick={handleStartEditEmail}
+                            sx={{
+                              color: '#1c2c4d',
+                              borderColor: '#1c2c4d',
+                              fontSize: '0.75rem',
+                              px: 1,
+                              py: 0.5,
+                              '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' }
+                            }}
+                          >
+                            {player.email ? 'Edit' : 'Add'}
+                          </Button>
+                        </>
+                      )}
+                    </Box>
+                  )}
                 </Grid>
               </Grid>
             </CardContent>
