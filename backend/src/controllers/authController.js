@@ -5,8 +5,6 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
-const { User } = require('../models');
-const AuthService = require('../services/authService');
 const InvitationService = require('../services/invitationService');
 
 class AuthController {
@@ -1127,6 +1125,13 @@ router.get('/debug/raw-admin-password', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Invitation routes
+router.post('/invite-player', authenticateToken, AuthController.createPlayerInvitation);
+router.get('/verify-invitation/:token', AuthController.verifyInvitation);
+router.post('/complete-invitation', AuthController.completeInvitation);
+router.get('/pending-invitations', authenticateToken, AuthController.getPendingInvitations);
+router.delete('/invitations/:invitationId', authenticateToken, AuthController.cancelInvitation);
 
 // Force restart
 module.exports = router; 

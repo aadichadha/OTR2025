@@ -7,7 +7,7 @@ const upload = require('./middleware/upload');
 const { authenticateToken, validateDomain } = require('./middleware/auth');
 const validateCsvParams = require('./middleware/validateCsvParams');
 const UploadController = require('./controllers/uploadController');
-const AuthController = require('./controllers/authController');
+const authRouter = require('./controllers/authController');
 const PlayerController = require('./controllers/playerController');
 const SessionController = require('./controllers/sessionController');
 const AnalyticsController = require('./controllers/analyticsController');
@@ -140,18 +140,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 try {
   console.log('🔧 Setting up API routes...');
   
-  // Authentication routes
+  // Authentication routes (includes invitation routes)
   const authRouter = require('./controllers/authController');
   app.use('/api/auth', authRouter);
   console.log('✅ Auth routes loaded');
-
-  // Invitation routes (protected)
-  app.post('/api/auth/invite-player', authenticateToken, AuthController.createPlayerInvitation);
-  app.get('/api/auth/verify-invitation/:token', AuthController.verifyInvitation);
-  app.post('/api/auth/complete-invitation', AuthController.completeInvitation);
-  app.get('/api/auth/pending-invitations', authenticateToken, AuthController.getPendingInvitations);
-  app.delete('/api/auth/invitations/:invitationId', authenticateToken, AuthController.cancelInvitation);
-  console.log('✅ Invitation routes loaded');
 
   // Protected routes
   // app.get('/api/auth/profile', authenticateToken, AuthController.getProfile);

@@ -9,68 +9,34 @@ class PlayerController {
    */
   static async createPlayer(req, res) {
     try {
-      console.log('🔍 [PlayerController] createPlayer called with body:', req.body);
-      console.log('🔍 [PlayerController] User object:', req.user);
-      console.log('🔍 [PlayerController] Request body keys:', Object.keys(req.body));
-      console.log('🔍 [PlayerController] Request body values:', Object.values(req.body));
-      
-      const { name, age, travel_team, high_school, little_league, college, position, graduation_year, team_name } = req.body;
+      const { 
+        name: playerName, 
+        age, 
+        travel_team, 
+        high_school, 
+        little_league, 
+        college, 
+        position, 
+        graduation_year,
+        email // Add email parameter
+      } = req.body;
       const userId = req.user.id;
 
-      console.log('🔍 [PlayerController] Extracted name:', name);
-      console.log('🔍 [PlayerController] Name type:', typeof name);
-      console.log('🔍 [PlayerController] Name length:', name ? name.length : 'undefined');
-      console.log('🔍 [PlayerController] User ID:', userId);
-      console.log('🔍 [PlayerController] User ID type:', typeof userId);
-
-      // Get the current user to check their role
-      const currentUser = await User.findByPk(userId);
-      if (!currentUser) {
-        return res.status(404).json({ 
-          error: 'User not found' 
-        });
-      }
-
-      // Use the name provided in the request, or fall back to authenticated user's name if not provided
-      const playerName = (name && name.trim() !== '') ? name.trim() : currentUser.name;
-      
-      console.log('🔍 [PlayerController] Using player name:', playerName);
-      console.log('🔍 [PlayerController] Name source:', (name && name.trim() !== '') ? 'request body' : 'authenticated user');
-
-      // Validate that we have a name (either from request or user)
-      if (!playerName || playerName.trim() === '') {
-        console.log('❌ [PlayerController] No name available from request or user');
+      // Validate required fields
+      if (!playerName) {
         return res.status(400).json({ 
           error: 'Player name is required' 
         });
       }
 
-      console.log('✅ [PlayerController] Name validation passed:', playerName);
-
-      // Check if a player with this name already exists
-      const existingPlayer = await Player.findOne({ where: { name: playerName } });
-      if (existingPlayer) {
-        return res.status(400).json({ 
-          error: 'A player with this name already exists' 
-        });
-      }
-
-      // Check if a user with this name already exists (excluding the current user)
-      const existingUser = await User.findOne({ where: { name: playerName, id: { [require('sequelize').Op.ne]: userId } } });
-      if (existingUser) {
-        return res.status(400).json({ 
-          error: 'A user with this name already exists' 
-        });
-      }
-
-      // Validate age if provided
+      // Validate age
       if (age && (age < 8 || age > 25)) {
         return res.status(400).json({ 
           error: 'Age must be between 8 and 25' 
         });
       }
 
-      // Validate graduation year if provided
+      // Validate graduation year
       if (graduation_year) {
         const currentYear = new Date().getFullYear();
         if (graduation_year < currentYear || graduation_year > currentYear + 6) {
@@ -80,7 +46,25 @@ class PlayerController {
         }
       }
 
-      // Generate unique 4-digit player code
+      // Validate email if provided
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          return res.status(400).json({ 
+            error: 'Invalid email format' 
+          });
+        }
+        
+        // Check if email already exists
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+          return res.status(400).json({ 
+            error: 'User with this email already exists' 
+          });
+        }
+      }
+
+      // Generate unique player code
       let playerCode;
       let attempts = 0;
       const maxAttempts = 10;
@@ -118,12 +102,12 @@ class PlayerController {
       const defaultPassword = 'password123'; // Default password for new players
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       
-      // Generate a unique email for the player
-      const email = `${playerName.toLowerCase().replace(/\s+/g, '.')}@otrbaseball.com`;
+      // Use provided email or generate a fallback email
+      const playerEmail = email || `${playerName.toLowerCase().replace(/\s+/g, '.')}@otrbaseball.com`;
 
       const playerUser = await User.create({
         name: playerName,
-        email,
+        email: playerEmail,
         password: hashedPassword,
         role: 'player',
         created_by: userId

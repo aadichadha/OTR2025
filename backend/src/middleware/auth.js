@@ -9,7 +9,8 @@ const validateDomain = (req, res, next) => {
     'www.otr-data.com',
     'otr-2025-frontend.vercel.app', // Temporary during migration
     'localhost:5173',
-    'localhost:3000'
+    'localhost:3000',
+    'localhost:3001'
   ];
   
   const host = req.get('host');
@@ -24,6 +25,9 @@ const validateDomain = (req, res, next) => {
   const isAllowed = allowedDomains.some(domain => {
     return (host && host.includes(domain)) || (origin && origin.includes(domain));
   });
+  
+  // Debug logging
+  console.log('🔍 Domain validation:', { host, origin, allowedDomains, isAllowed });
   
   if (isAllowed) {
     next();
