@@ -446,11 +446,10 @@ class PlayerController {
         }
       }
       
-      // Calculate barrels: top 10% EV with launch angle 8-30 degrees
+      // Calculate barrels: ≥90% of max EV with launch angle 8-25 degrees
       if (allExitVelocities.length > 0) {
-        const sortedEVs = allExitVelocities.sort((a, b) => b - a);
-        const top10PercentIndex = Math.floor(sortedEVs.length * 0.1);
-        const top10PercentThreshold = sortedEVs[top10PercentIndex] || 0;
+        const maxEV = Math.max(...allExitVelocities);
+        const barrelThreshold = maxEV * 0.90; // 90% of max EV
         
         // Count barrels across all sessions
         for (const session of sessions) {
@@ -460,9 +459,9 @@ class PlayerController {
               const exitVel = parseFloat(ev.exit_velocity);
               const launchAngle = parseFloat(ev.launch_angle);
               
-              if (exitVel >= top10PercentThreshold && 
+              if (exitVel >= barrelThreshold && 
                   launchAngle >= 8 && 
-                  launchAngle <= 30) {
+                  launchAngle <= 25) {
                 barrels++;
               }
             }
@@ -535,11 +534,10 @@ class PlayerController {
           }
         }
         
-        // Calculate barrels: top 10% EV with launch angle 8-30 degrees
+        // Calculate barrels: ≥90% of max EV with launch angle 8-25 degrees
         if (allExitVelocities.length > 0) {
-          const sortedEVs = allExitVelocities.sort((a, b) => b - a);
-          const top10PercentIndex = Math.floor(sortedEVs.length * 0.1);
-          const top10PercentThreshold = sortedEVs[top10PercentIndex] || 0;
+          const maxEV = Math.max(...allExitVelocities);
+          const barrelThreshold = maxEV * 0.90; // 90% of max EV
           
           // Count barrels across all sessions
           for (const session of sessions) {
@@ -549,9 +547,9 @@ class PlayerController {
                 const exitVel = parseFloat(ev.exit_velocity);
                 const launchAngle = parseFloat(ev.launch_angle);
                 
-                if (exitVel >= top10PercentThreshold && 
+                if (exitVel >= barrelThreshold && 
                     launchAngle >= 8 && 
-                    launchAngle <= 30) {
+                    launchAngle <= 25) {
                   barrels++;
                 }
               }

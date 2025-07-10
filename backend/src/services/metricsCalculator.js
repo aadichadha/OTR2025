@@ -135,7 +135,7 @@ class MetricsCalculator {
         launchAngleTop5 = top5LAs.length ? (top5LAs.reduce((a, b) => a + b, 0) / top5LAs.length) : null;
       }
 
-      // Calculate Barrels (top 10% EV with LA 8-30 degrees)
+      // Calculate Barrels (≥90% of max EV with LA 8-25 degrees)
       let barrels = 0;
       if (exitVelocities.length > 0 && launchAngles.length > 0) {
         const paired = evData
@@ -146,16 +146,15 @@ class MetricsCalculator {
           .filter(row => row.ev > 0 && !isNaN(row.la));
         
         if (paired.length > 0) {
-          // Sort by EV to find top 10%
-          const sortedByEV = paired.sort((a, b) => b.ev - a.ev);
-          const top10PercentCount = Math.ceil(paired.length * 0.10);
-          const top10PercentEV = sortedByEV[top10PercentCount - 1]?.ev || 0;
+          // Find max EV for this session
+          const maxEV = Math.max(...paired.map(swing => swing.ev));
+          const barrelThreshold = maxEV * 0.90; // 90% of max EV
           
-          // Count swings that meet both criteria: top 10% EV AND LA between 8-30 degrees
+          // Count swings that meet both criteria: ≥90% of max EV AND LA between 8-25 degrees
           barrels = paired.filter(swing => 
-            swing.ev >= top10PercentEV && 
+            swing.ev >= barrelThreshold && 
             swing.la >= 8 && 
-            swing.la <= 30
+            swing.la <= 25
           ).length;
         }
       }

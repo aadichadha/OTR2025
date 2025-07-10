@@ -11,23 +11,22 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
 
   useEffect(() => {
     if (swingData && swingData.length > 0) {
-      // Calculate top 10% exit velocity threshold
+      // Calculate max exit velocity and 90% threshold
       const exitVelocities = swingData
         .map(swing => parseFloat(swing.exit_velocity))
-        .filter(ev => !isNaN(ev) && ev > 0)
-        .sort((a, b) => b - a); // Sort descending
+        .filter(ev => !isNaN(ev) && ev > 0);
       
-      const top10PercentIndex = Math.floor(exitVelocities.length * 0.1);
-      const top10PercentThreshold = exitVelocities[top10PercentIndex] || 0;
+      const maxEV = Math.max(...exitVelocities);
+      const barrelThreshold = maxEV * 0.90; // 90% of max EV
       
-      // Count barrels: top 10% EV with launch angle 8-30 degrees
+      // Count barrels: ≥90% of max EV with launch angle 8-25 degrees
       const barrels = swingData.filter(swing => {
         const exitVel = parseFloat(swing.exit_velocity);
         const launchAngle = parseFloat(swing.launch_angle);
         
-        return exitVel >= top10PercentThreshold && 
+        return exitVel >= barrelThreshold && 
                launchAngle >= 8 && 
-               launchAngle <= 30;
+               launchAngle <= 25;
       });
       
       setBarrelsCount(barrels.length);
@@ -38,23 +37,22 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
   useEffect(() => {
     if (swingData && swingData.length > 0) {
       if (showBarrelsOnly) {
-        // Calculate top 10% exit velocity threshold
+        // Calculate max exit velocity and 90% threshold
         const exitVelocities = swingData
           .map(swing => parseFloat(swing.exit_velocity))
-          .filter(ev => !isNaN(ev) && ev > 0)
-          .sort((a, b) => b - a); // Sort descending
+          .filter(ev => !isNaN(ev) && ev > 0);
         
-        const top10PercentIndex = Math.floor(exitVelocities.length * 0.1);
-        const top10PercentThreshold = exitVelocities[top10PercentIndex] || 0;
+        const maxEV = Math.max(...exitVelocities);
+        const barrelThreshold = maxEV * 0.90; // 90% of max EV
         
-        // Filter barrels: top 10% EV with launch angle 8-30 degrees
+        // Filter barrels: ≥90% of max EV with launch angle 8-25 degrees
         const barrels = swingData.filter(swing => {
           const exitVel = parseFloat(swing.exit_velocity);
           const launchAngle = parseFloat(swing.launch_angle);
           
-          return exitVel >= top10PercentThreshold && 
+          return exitVel >= barrelThreshold && 
                  launchAngle >= 8 && 
-                 launchAngle <= 30;
+                 launchAngle <= 25;
         });
         
         onFilteredDataChange(barrels);
