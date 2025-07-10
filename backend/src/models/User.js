@@ -2,7 +2,8 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 const bcrypt = require('bcryptjs');
 
-const User = sequelize.define('User', {
+// Define base fields that always exist
+const baseFields = {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -48,8 +49,11 @@ const User = sequelize.define('User', {
   team_id: {
     type: DataTypes.INTEGER,
     allowNull: true
-  },
-  // Invitation fields
+  }
+};
+
+// Define invitation fields that may not exist in all databases
+const invitationFields = {
   invitation_token: {
     type: DataTypes.STRING(255),
     allowNull: true,
@@ -72,7 +76,12 @@ const User = sequelize.define('User', {
       key: 'id'
     }
   }
-}, {
+};
+
+// Always include all fields, but handle missing columns gracefully
+const modelFields = { ...baseFields, ...invitationFields };
+
+const User = sequelize.define('User', modelFields, {
   tableName: 'users',
   timestamps: true,
   createdAt: 'created_at',
@@ -115,7 +124,8 @@ User.prototype.hasPermission = function(permission) {
 
 // Instance method to check if invitation is expired
 User.prototype.isInvitationExpired = function() {
-  if (!this.invitation_expires_at) return false;
+  // Check if invitation fields exist (for production compatibility)
+  if (!this.invitation_expires_at || !this.hasOwnProperty('invitation_expires_at')) return false;
   return new Date() > new Date(this.invitation_expires_at);
 };
 

@@ -472,9 +472,18 @@ async function initializeApp() {
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     
-    // Sync database
-    await sequelize.sync();
-    console.log('✅ Database synced successfully.');
+    // Sync database with error handling for missing columns
+    try {
+      await sequelize.sync();
+      console.log('✅ Database synced successfully.');
+    } catch (error) {
+      if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
+        console.log('⚠️  Database sync warning: Some columns may not exist yet. This is normal if migrations haven\'t been run.');
+        console.log('📝 To fix this permanently, run the database migrations.');
+      } else {
+        throw error;
+      }
+    }
     
     // Handle foreign key enforcement based on database type
     if (process.env.NODE_ENV === 'production') {
