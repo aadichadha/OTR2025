@@ -78,7 +78,8 @@ function Players() {
     team_type: '',
     team_name: '',
     position: [], 
-    graduation_year: '' 
+    graduation_year: '',
+    email: '' // Add email field
   });
 
   const fetchPlayers = async () => {
@@ -166,7 +167,8 @@ function Players() {
         team_type: teamType,
         team_name: teamName,
         position: player.position ? (typeof player.position === 'string' ? player.position.split(',').map(p => p.trim()) : player.position) : [],
-        graduation_year: player.graduation_year || ''
+        graduation_year: player.graduation_year || '',
+        email: player.email || '' // Map email
       });
     } else {
       // For new player, start with empty form
@@ -177,7 +179,8 @@ function Players() {
         team_type: '',
         team_name: '',
         position: [], 
-        graduation_year: '' 
+        graduation_year: '',
+        email: '' // Initialize email for new player
       });
     }
     setOpen(true);
@@ -193,7 +196,8 @@ function Players() {
       team_type: '',
       team_name: '',
       position: [], 
-      graduation_year: '' 
+      graduation_year: '',
+      email: '' // Reset email for new player
     }); 
   };
 
@@ -236,7 +240,8 @@ function Players() {
         name: form.name, // Include the player name from the form
         age: form.age,
         position: Array.isArray(form.position) ? form.position.join(',') : form.position,
-        graduation_year: form.graduation_year
+        graduation_year: form.graduation_year,
+        email: form.email // Include email
       };
 
       // Map team data based on level and type
@@ -657,6 +662,27 @@ function Players() {
               </Grid>
               
               <Grid item xs={12}>
+                <TextField 
+                  label="Email (Optional)" 
+                  name="email" 
+                  value={form.email} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  type="email"
+                  placeholder="Enter player's email address"
+                  sx={{
+                    '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': { borderColor: '#1c2c4d' },
+                      '&:hover fieldset': { borderColor: '#3a7bd5' },
+                      '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                    },
+                    '& .MuiInputBase-input': { color: '#1c2c4d' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
                 <FormControl fullWidth sx={{ minWidth: 260 }}>
                   <InputLabel sx={{ color: '#1c2c4d', fontWeight: 600 }}>Player Level *</InputLabel>
                   <Select
@@ -904,7 +930,7 @@ function Players() {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
+                              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3, pt: 1 }}>
