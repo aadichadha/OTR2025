@@ -9,14 +9,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS invitation_token VARCHAR(255) UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS invitation_expires_at TIMESTAMP;
 
 -- Add invitation_status column with ENUM type
--- First create the ENUM type if it doesn't exist
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invitation_status_enum') THEN
-        CREATE TYPE invitation_status_enum AS ENUM ('pending', 'accepted', 'expired');
-    END IF;
-END
-$$;
+-- Create the ENUM type (will fail silently if it already exists)
+CREATE TYPE invitation_status_enum AS ENUM ('pending', 'accepted', 'expired');
 
 -- Add the column with default value
 ALTER TABLE users ADD COLUMN IF NOT EXISTS invitation_status invitation_status_enum DEFAULT 'pending' NOT NULL;

@@ -103,7 +103,20 @@ async function runPostgresMigrations() {
         
         for (const statement of statements) {
           if (statement.trim()) {
-            await client.query(statement);
+            try {
+              await client.query(statement);
+            } catch (stmtError) {
+              // Handle specific PostgreSQL errors gracefully
+              if (stmtError.code === '42710') { // duplicate_object - ENUM type already exists
+                console.log(`⚠️  ENUM type already exists, continuing...`);
+              } else if (stmtError.code === '42P07') { // relation already exists
+                console.log(`⚠️  Table/relation already exists, continuing...`);
+              } else if (stmtError.code === '42701') { // duplicate_column - column already exists
+                console.log(`⚠️  Column already exists, continuing...`);
+              } else {
+                throw stmtError; // Re-throw other errors
+              }
+            }
           }
         }
         
