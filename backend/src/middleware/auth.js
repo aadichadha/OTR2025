@@ -8,6 +8,7 @@ const validateDomain = (req, res, next) => {
     'otr-data.com',
     'www.otr-data.com',
     'otr-2025-frontend.vercel.app', // Temporary during migration
+    'otr2025.onrender.com', // Render production domain
     'localhost:5173',
     'localhost:3000',
     'localhost:3001'

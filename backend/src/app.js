@@ -43,6 +43,7 @@ const allowedOrigins = [
   'https://otr-2025-frontend-pd5mjq47m-aadis-projects-cfbb1119.vercel.app', // Current preview deployment
   'https://otr-data.com', // New custom domain
   'https://www.otr-data.com', // New custom domain with www
+  'https://otr2025.onrender.com', // Render production domain
   'http://localhost:5173', // Local development
   'http://localhost:3000'  // Alternative local development
 ];
