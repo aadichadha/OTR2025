@@ -97,36 +97,39 @@ class PlayerController {
         player_code: playerCode
       });
 
-      // Create a user account for the player
-      const bcrypt = require('bcryptjs');
-      const defaultPassword = 'password123'; // Default password for new players
-      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-      
-      // Use provided email or generate a fallback email
-      const playerEmail = email || `${playerName.toLowerCase().replace(/\s+/g, '.')}@otrbaseball.com`;
+      // Use invitation system if email is provided
+      if (email) {
+        const InvitationService = require('../services/invitationService');
+        const invitationService = new InvitationService();
+        
+        try {
+          const invitationResult = await invitationService.createPlayerInvitation(userId, {
+            name: playerName,
+            email: email,
+            position: position,
+            team: travel_team || high_school || little_league || college
+          });
 
-      const playerUser = await User.create({
-        name: playerName,
-        email: playerEmail,
-        password: hashedPassword,
-        role: 'player',
-        created_by: userId
-      });
-
-      res.status(201).json({
-        message: 'Player and user account created successfully',
-        player,
-        user: {
-          id: playerUser.id,
-          name: playerUser.name,
-          email: playerUser.email,
-          role: playerUser.role
-        },
-        loginCredentials: {
-          email: playerUser.email,
-          password: defaultPassword
+          res.status(201).json({
+            message: 'Player created and invitation sent successfully',
+            player,
+            invitation: invitationResult.user,
+            note: 'An invitation email has been sent to the player to complete their account setup.'
+          });
+        } catch (invitationError) {
+          console.error('Invitation creation error:', invitationError);
+          res.status(500).json({ 
+            error: `Player created but invitation failed: ${invitationError.message}` 
+          });
         }
-      });
+      } else {
+        // No email provided - just create the player without user account
+        res.status(201).json({
+          message: 'Player created successfully (no email provided for account setup)',
+          player,
+          note: 'To create a user account for this player, please provide an email address.'
+        });
+      }
 
     } catch (error) {
       console.error('Create player error:', error);
