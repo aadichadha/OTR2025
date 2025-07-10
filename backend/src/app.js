@@ -484,6 +484,7 @@ async function initializeApp() {
         throw error;
       }
     }
+    // Production deployment trigger - migration completed successfully
     
     // Handle foreign key enforcement based on database type
     if (process.env.NODE_ENV === 'production') {
