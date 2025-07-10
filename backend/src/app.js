@@ -47,9 +47,9 @@ const allowedOrigins = [
 ];
 
 // Add FRONTEND_URL from environment if it exists and isn't already in the list
-if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-  console.log('🔧 Added FRONTEND_URL to CORS origins:', process.env.FRONTEND_URL);
+if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL.trim())) {
+  allowedOrigins.push(process.env.FRONTEND_URL.trim());
+  console.log('🔧 Added FRONTEND_URL to CORS origins:', process.env.FRONTEND_URL.trim());
 }
 
 const corsOptions = {

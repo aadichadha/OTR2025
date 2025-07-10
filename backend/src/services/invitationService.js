@@ -74,7 +74,7 @@ class InvitationService {
       }
 
       // Ensure we're using the correct frontend URL
-      const frontendUrl = process.env.FRONTEND_URL || 'https://otr-data.com';
+      const frontendUrl = (process.env.FRONTEND_URL || 'https://otr-data.com').trim();
       console.log('🔗 [Invitation] Using FRONTEND_URL:', frontendUrl);
       console.log('🔗 [Invitation] process.env.FRONTEND_URL:', process.env.FRONTEND_URL);
       
