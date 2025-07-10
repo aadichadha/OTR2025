@@ -32,6 +32,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import Analytics from '@mui/icons-material/Analytics';
 import Edit from '@mui/icons-material/Edit';
 import LocalOffer from '@mui/icons-material/LocalOffer';
+import Email from '@mui/icons-material/Email';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../services/api';
@@ -73,6 +74,8 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
   const [success, setSuccess] = useState('');
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [currentReport, setCurrentReport] = useState(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   
   // Tag editing state
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -187,6 +190,15 @@ function PlayerDetails({ player, open, onClose, onSessionDeleted }) {
   useEffect(() => {
     if (open && player) {
       fetchSessions();
+      // Get current user info
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          setCurrentUser(JSON.parse(userStr));
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
+      }
     }
   }, [open, player]);
 
@@ -394,6 +406,36 @@ One-time password: exwx bdjz xjid qhmh`);
     }
   };
 
+  const handleResendInvite = async () => {
+    if (!player.email) {
+      setError('Player does not have an email address. Please add an email first.');
+      return;
+    }
+
+    setInviteLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/auth/invite-player`, {
+        name: player.name,
+        email: player.email,
+        position: player.position,
+        team: player.travel_team || player.high_school || player.college || player.indy || player.affiliate || player.little_league
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess('Invitation sent successfully!');
+    } catch (err) {
+      console.error('Error sending invitation:', err);
+      setError(err.response?.data?.error || 'Failed to send invitation.');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   return (
     <>
       <Dialog 
@@ -410,9 +452,37 @@ One-time password: exwx bdjz xjid qhmh`);
             <Typography variant="h5" sx={{ color: '#1c2c4d', fontWeight: 800 }}>
               {player.name} - Player Details
             </Typography>
-            <IconButton onClick={onClose}>
-              <Close />
-            </IconButton>
+            <Box display="flex" alignItems="center" gap={1}>
+              {/* Resend Invite Button - Only show for coaches/admins if player has email */}
+              {currentUser && ['admin', 'coach'].includes(currentUser.role) && player.email && (
+                <Button
+                  variant="contained"
+                  startIcon={<Email />}
+                  onClick={handleResendInvite}
+                  disabled={inviteLoading}
+                  sx={{
+                    bgcolor: '#1c2c4d',
+                    color: '#fff',
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    px: 2,
+                    py: 1,
+                    '&:hover': {
+                      bgcolor: '#3a7bd5'
+                    },
+                    '&:disabled': {
+                      bgcolor: '#ccc',
+                      color: '#666'
+                    }
+                  }}
+                >
+                  {inviteLoading ? 'Sending...' : 'Resend Invite'}
+                </Button>
+              )}
+              <IconButton onClick={onClose}>
+                <Close />
+              </IconButton>
+            </Box>
           </Box>
         </DialogTitle>
         
@@ -464,6 +534,36 @@ One-time password: exwx bdjz xjid qhmh`);
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>Graduation Year</Typography>
                   <Typography variant="body1" sx={{ color: '#1c2c4d' }}>{player.graduation_year || 'N/A'}</Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>Email</Typography>
+                  <Typography variant="body1" sx={{ color: '#1c2c4d' }}>
+                    {player.email ? (
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <span>{player.email}</span>
+                        {currentUser && ['admin', 'coach'].includes(currentUser.role) && (
+                          <Chip 
+                            label="Invite Available" 
+                            size="small" 
+                            color="success" 
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    ) : (
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <span style={{ color: '#999' }}>No email</span>
+                        {currentUser && ['admin', 'coach'].includes(currentUser.role) && (
+                          <Chip 
+                            label="Add Email to Invite" 
+                            size="small" 
+                            color="warning" 
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    )}
+                  </Typography>
                 </Grid>
               </Grid>
             </CardContent>
