@@ -93,7 +93,7 @@ const FILTERABLE_METRICS = {
     { key: 'exit_velocity', label: 'Exit Velocity (MPH)', min: 50, max: 120 },
     { key: 'launch_angle', label: 'Launch Angle (degrees)', min: -20, max: 50 },
     { key: 'distance', label: 'Distance (FT)', min: 0, max: 450 },
-    { key: 'horiz_angle', label: 'Horizontal Angle (degrees)', min: -45, max: 45 }
+    { key: 'pitch_speed', label: 'Pitch Speed (MPH)', min: 40, max: 100 }
   ],
   blast: [
     { key: 'bat_speed', label: 'Bat Speed (MPH)', min: 40, max: 90 },
@@ -958,7 +958,7 @@ const AnalyticsHome = () => {
                           fontWeight: 'bold', 
                           borderBottom: '2px solid #3a7bd5',
                           bgcolor: '#f8f9fa'
-                        }}>Horizontal Angle</TableCell>
+                        }}>Pitch Speed</TableCell>
                         <TableCell sx={{ 
                           color: '#1c2c4d', 
                           fontWeight: 'bold', 
@@ -974,7 +974,7 @@ const AnalyticsHome = () => {
                           <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.launch_angle, 1)}°</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.distance, 0)} FT</TableCell>
-                          <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.horiz_angle, 1)}°</TableCell>
+                          <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.pitch_speed, 1)} MPH</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{swing.strike_zone}</TableCell>
                         </TableRow>
                       ))}

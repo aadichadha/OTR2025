@@ -29,6 +29,7 @@ function SwingLogTable({ swings }) {
                 <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Launch Angle</TableCell>
                 <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Distance</TableCell>
                 <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Strike Zone</TableCell>
+                <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Pitch Speed</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -45,6 +46,7 @@ function SwingLogTable({ swings }) {
                   <TableCell sx={{ color: NAVY }}>{safeToFixed(swing.launch_angle, 1)}°</TableCell>
                   <TableCell sx={{ color: NAVY }}>{safeToFixed(swing.distance, 0)} FT</TableCell>
                   <TableCell sx={{ color: NAVY }}>{swing.strike_zone}</TableCell>
+                  <TableCell sx={{ color: NAVY }}>{safeToFixed(swing.pitch_speed, 1)} MPH</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -69,7 +71,7 @@ function SwingLogTable({ swings }) {
               <Typography variant="body2" sx={{ mb: 1, color: NAVY }}><b>Launch Angle:</b> {safeToFixed(selectedSwing.launch_angle, 1)}°</Typography>
               <Typography variant="body2" sx={{ mb: 1, color: NAVY }}><b>Distance:</b> {safeToFixed(selectedSwing.distance, 0)} FT</Typography>
               <Typography variant="body2" sx={{ mb: 1, color: NAVY }}><b>Strike Zone:</b> {selectedSwing.strike_zone}</Typography>
-              <Typography variant="body2" sx={{ mb: 1, color: NAVY }}><b>Horizontal Angle:</b> {selectedSwing.horiz_angle}</Typography>
+              <Typography variant="body2" sx={{ mb: 1, color: NAVY }}><b>Pitch Speed:</b> {safeToFixed(selectedSwing.pitch_speed, 1)} MPH</Typography>
               <Typography variant="body2" sx={{ mb: 1, color: NAVY }}><b>Time:</b> {selectedSwing.created_at}</Typography>
             </Box>
           )}
