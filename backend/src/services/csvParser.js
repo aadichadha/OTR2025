@@ -55,9 +55,9 @@ class CSVParser {
         
         const batSpeed = parseFloat(columns[7]);
         const attackAngle = parseFloat(columns[10]);
-        const timeToContact = parseFloat(columns[14]);
+        const timeToContact = parseFloat(columns[15]);
         
-        console.log(`Row ${i + 1}: BatSpeed=${columns[7]}, AttackAngle=${columns[10]}, TimeToContact=${columns[14]}`);
+        console.log(`Row ${i + 1}: BatSpeed=${columns[7]}, AttackAngle=${columns[10]}, TimeToContact=${columns[15]}`);
         
         if (!isNaN(batSpeed) && !isNaN(attackAngle) && !isNaN(timeToContact)) {
           const dataRow = {
