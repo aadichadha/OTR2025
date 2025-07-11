@@ -64,6 +64,9 @@ function ReportDisplay({ report }) {
     [12, null, 13],
   ];
 
+  // Add null check for hotZoneEVs
+  const hotZoneEVs = metrics?.hotZoneEVs || {};
+
   return (
     <Box sx={{ bgcolor: NAVY, minHeight: '100vh', p: 0, m: 0 }}>
       {/* Header */}
@@ -106,7 +109,7 @@ function ReportDisplay({ report }) {
           }}>
             {zoneGrid.flat().map((zone, idx) => (
               zone !== null ? (
-                <HotZoneCell key={idx} zone={zone} ev={metrics.hotZoneEVs?.[zone]} />
+                <HotZoneCell key={idx} zone={zone} ev={hotZoneEVs[zone]} />
               ) : (
                 <Box key={idx} sx={{ width: 60, height: 60, bgcolor: 'transparent' }} />
               )
