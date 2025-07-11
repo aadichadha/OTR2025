@@ -315,7 +315,9 @@ const AnalyticsHome = () => {
     try {
       const res = await api.get(`/analytics/players/${selectedPlayer}/trends`);
       if (res.data.success && res.data.data) {
-        setPlayerTrends(res.data.data);
+        // Ensure we have the correct data structure
+        const trendsData = res.data.data;
+        setPlayerTrends(trendsData);
       } else {
         console.warn('No player trends data received');
         setPlayerTrends(null);
@@ -429,16 +431,16 @@ const AnalyticsHome = () => {
   };
 
   const calculateDaysActive = () => {
-    if (sessionHistory.length === 0) return 0;
+    if (!sessionHistory || !Array.isArray(sessionHistory) || sessionHistory.length === 0) return 0;
     const firstSession = new Date(Math.min(...sessionHistory.map(s => new Date(s.session_date || s.created_at))));
     const lastSession = new Date(Math.max(...sessionHistory.map(s => new Date(s.session_date || s.created_at))));
     return Math.ceil((lastSession - firstSession) / (1000 * 60 * 60 * 24));
   };
 
   const getHardHitPercentage = () => {
-    if (!playerProfile || !swingData.length) return 0;
+    if (!playerProfile || !swingData || !Array.isArray(swingData) || !swingData.length) return 0;
     const hardHits = swingData.filter(swing => 
-      swing.exit_velocity && parseFloat(swing.exit_velocity) >= 95
+      swing && swing.exit_velocity && parseFloat(swing.exit_velocity) >= 95
     ).length;
     return safeToFixed(((hardHits / swingData.length) * 100), 1);
   };
@@ -451,9 +453,9 @@ const AnalyticsHome = () => {
   };
 
   const generateTrendChartData = () => {
-    if (!playerTrends?.trends) return [];
+    if (!playerTrends?.trends || !Array.isArray(playerTrends.trends)) return [];
     return playerTrends.trends
-      .filter(trend => trend.count > 0)
+      .filter(trend => trend && trend.count > 0)
       .map(trend => ({
         date: new Date(trend.session_date).toLocaleDateString(),
         avgEV: parseFloat(trend.average),
@@ -463,7 +465,7 @@ const AnalyticsHome = () => {
   };
 
   const generateLaunchAngleDistribution = () => {
-    if (!swingData.length) return [];
+    if (!swingData || !Array.isArray(swingData) || !swingData.length) return [];
     const angleRanges = [
       { range: '0-10°', min: 0, max: 10, color: '#ff6b6b' },
       { range: '10-20°', min: 10, max: 20, color: '#4ecdc4' },
@@ -475,7 +477,7 @@ const AnalyticsHome = () => {
     return angleRanges.map(range => {
       const count = swingData.filter(swing => {
         const angle = parseFloat(swing.launch_angle);
-        return angle >= range.min && angle < range.max;
+        return !isNaN(angle) && angle >= range.min && angle < range.max;
       }).length;
       return {
         name: range.range,
@@ -486,7 +488,7 @@ const AnalyticsHome = () => {
   };
 
   const generateSessionComparisonData = () => {
-    if (!sessionHistory.length) return [];
+    if (!sessionHistory || !Array.isArray(sessionHistory) || !sessionHistory.length) return [];
     return sessionHistory.slice(-5).map(session => ({
       session: `Session ${session.id}`,
       avgEV: parseFloat(session.analytics?.average_exit_velocity || 0),

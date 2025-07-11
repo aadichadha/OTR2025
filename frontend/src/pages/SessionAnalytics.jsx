@@ -133,7 +133,9 @@ const SessionAnalytics = () => {
 
       setSessions(sessionsRes.data.data || []);
       setSwings(swingsRes.data.data || []);
-      setTrends(trendsRes.data.data?.trends || []);
+      // Handle both nested and direct trends data structure
+      const trendsData = trendsRes.data.data?.trends || trendsRes.data.data || [];
+      setTrends(Array.isArray(trendsData) ? trendsData : []);
       setBenchmarks(benchmarksRes.data.data);
       setProgress(progressRes.data.data);
       setFilterOptions(filterOptionsRes.data.data || {});
