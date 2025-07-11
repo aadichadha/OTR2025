@@ -51,6 +51,12 @@ const Player = sequelize.define('Player', {
     type: DataTypes.CHAR(4),
     allowNull: false,
     unique: true
+  },
+  player_level: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    defaultValue: 'High School',
+    comment: 'Player level: Little League, High School, College, etc.'
   }
 }, {
   tableName: 'players',

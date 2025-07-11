@@ -11,6 +11,7 @@ import SessionVisualization from './pages/SessionVisualization';
 import Landing from './pages/Landing';
 import AnalyticsHome from './pages/AnalyticsHome';
 import AdminDashboard from './pages/AdminDashboard';
+import CoachDashboard from './pages/CoachDashboard';
 import Topbar from './components/Topbar';
 import ErrorBoundary from './components/ErrorBoundary';
 import { validateEnvironment } from './utils/environmentCheck';
@@ -95,10 +96,10 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
 
-          {/* Coach routes - just use Home page */}
+          {/* Coach routes */}
           <Route path="/coach/dashboard" element={
             <ProtectedRoute allowedRoles={['coach']}>
-              <Home />
+              <CoachDashboard />
             </ProtectedRoute>
           } />
 

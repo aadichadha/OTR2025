@@ -62,6 +62,11 @@ const Topbar = () => {
       baseItems.push({ label: 'User Management', icon: <AdminPanelSettings />, to: '/admin/dashboard' });
     }
 
+    // Add coach-specific items
+    if (user?.role === 'coach') {
+      baseItems.push({ label: 'Player Analytics', icon: <Assessment />, to: '/coach/dashboard' });
+    }
+
     return baseItems;
   };
 

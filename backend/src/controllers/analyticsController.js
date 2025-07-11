@@ -1,4 +1,4 @@
-const { Session, ExitVelocityData, Player } = require('../models');
+const { Session, ExitVelocityData, Player, BatSpeedData } = require('../models');
 const { Op } = require('sequelize');
 
 // Get all swings for a specific session
@@ -688,6 +688,155 @@ const getFilterOptions = async (req, res) => {
   }
 };
 
+// Get aggregated player stats for Fangraphs-style dashboard
+const getPlayerStats = async (req, res) => {
+    try {
+      const { 
+        startDate, 
+        endDate, 
+        playerLevel, 
+        playerIds,
+        timeRange = 'all' // 'all', 'recent', 'career'
+      } = req.query;
+
+      console.log('[FANGRAPHS] Getting player stats with filters:', { startDate, endDate, playerLevel, playerIds, timeRange });
+
+      // Build date filter
+      let dateFilter = {};
+      if (timeRange === 'recent') {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        dateFilter = {
+          session_date: {
+            [Op.gte]: thirtyDaysAgo.toISOString().split('T')[0]
+          }
+        };
+      } else if (startDate && endDate) {
+        dateFilter = {
+          session_date: {
+            [Op.between]: [startDate, endDate]
+          }
+        };
+      }
+
+      // Build player filter
+      let playerFilter = {};
+      if (playerIds) {
+        const playerIdArray = playerIds.split(',').map(id => parseInt(id.trim()));
+        playerFilter = { id: { [Op.in]: playerIdArray } };
+      }
+      if (playerLevel) {
+        playerFilter.player_level = playerLevel;
+      }
+
+      // Get all players with their aggregated stats
+      const players = await Player.findAll({
+        where: playerFilter,
+        include: [{
+          model: Session,
+          as: 'sessions',
+          where: dateFilter,
+          required: false,
+          include: [
+            {
+              model: ExitVelocityData,
+              as: 'exitVelocityData',
+              required: false
+            },
+            {
+              model: BatSpeedData,
+              as: 'batSpeedData',
+              required: false
+            }
+          ]
+        }],
+        order: [['name', 'ASC']]
+      });
+
+      const playerStats = [];
+
+      for (const player of players) {
+        // Aggregate all exit velocity data
+        const allExitVelocityData = [];
+        const allBatSpeedData = [];
+
+        for (const session of player.sessions) {
+          if (session.exitVelocityData) {
+            allExitVelocityData.push(...session.exitVelocityData);
+          }
+          if (session.batSpeedData) {
+            allBatSpeedData.push(...session.batSpeedData);
+          }
+        }
+
+        // Calculate aggregated metrics
+        let stats = {
+          player_id: player.id,
+          player_name: player.name,
+          player_level: player.player_level || 'High School',
+          position: player.position,
+          total_sessions: player.sessions.length,
+          total_swings: allExitVelocityData.length + allBatSpeedData.length
+        };
+
+        // Calculate exit velocity metrics
+        if (allExitVelocityData.length > 0) {
+          const exitVelocities = allExitVelocityData.map(row => row.exit_velocity).filter(val => val !== null);
+          const launchAngles = allExitVelocityData.map(row => row.launch_angle).filter(val => val !== null);
+          const pitchSpeeds = allExitVelocityData.map(row => row.pitch_speed).filter(val => val !== null);
+          const barrelSwings = allExitVelocityData.filter(row => row.is_barrel === 1).length;
+
+          stats.avg_exit_velocity = exitVelocities.length > 0 ? 
+            Math.round((exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length) * 10) / 10 : null;
+          stats.max_exit_velocity = exitVelocities.length > 0 ? Math.max(...exitVelocities) : null;
+          stats.avg_launch_angle = launchAngles.length > 0 ? 
+            Math.round((launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length) * 10) / 10 : null;
+          stats.avg_pitch_speed = pitchSpeeds.length > 0 ? 
+            Math.round((pitchSpeeds.reduce((a, b) => a + b, 0) / pitchSpeeds.length) * 10) / 10 : null;
+          stats.barrel_percentage = allExitVelocityData.length > 0 ? 
+            Math.round((barrelSwings / allExitVelocityData.length) * 1000) / 10 : null;
+        }
+
+        // Calculate bat speed metrics
+        if (allBatSpeedData.length > 0) {
+          const batSpeeds = allBatSpeedData.map(row => row.bat_speed).filter(val => val !== null);
+          const attackAngles = allBatSpeedData.map(row => row.attack_angle).filter(val => val !== null);
+          const timeToContacts = allBatSpeedData.map(row => row.time_to_contact).filter(val => val !== null);
+
+          stats.avg_bat_speed = batSpeeds.length > 0 ? 
+            Math.round((batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length) * 10) / 10 : null;
+          stats.max_bat_speed = batSpeeds.length > 0 ? Math.max(...batSpeeds) : null;
+          stats.avg_attack_angle = attackAngles.length > 0 ? 
+            Math.round((attackAngles.reduce((a, b) => a + b, 0) / attackAngles.length) * 10) / 10 : null;
+          stats.avg_time_to_contact = timeToContacts.length > 0 ? 
+            Math.round((timeToContacts.reduce((a, b) => a + b, 0) / timeToContacts.length) * 1000) / 1000 : null;
+        }
+
+        playerStats.push(stats);
+      }
+
+      // Filter out players with no data if requested
+      const filteredStats = playerStats.filter(player => player.total_swings > 0);
+
+      console.log(`[FANGRAPHS] Returning stats for ${filteredStats.length} players`);
+
+      res.json({
+        success: true,
+        players: filteredStats,
+        total: filteredStats.length,
+        filters: { startDate, endDate, playerLevel, playerIds, timeRange }
+      });
+
+    } catch (error) {
+      console.error('[FANGRAPHS] Error getting player stats:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get player stats',
+        details: error.message 
+      });
+    }
+  }
+
 module.exports = {
   getSessionSwings,
   updateSessionCategory,
@@ -698,5 +847,6 @@ module.exports = {
   getPlayerTrends,
   getPlayerBenchmarks,
   getPlayerProgress,
-  getFilterOptions
+  getFilterOptions,
+  getPlayerStats
 }; 

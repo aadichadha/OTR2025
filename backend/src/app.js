@@ -202,6 +202,7 @@ try {
   app.get('/api/analytics/players/:playerId/swings', AnalyticsController.getPlayerSwings);
   app.get('/api/analytics/players/:playerId/analytics', AnalyticsController.getPlayerAnalytics);
   app.post('/api/analytics/compare-sessions', AnalyticsController.compareSessions);
+  app.get('/api/analytics/player-stats', authenticateToken, AnalyticsController.getPlayerStats);
   console.log('✅ All routes loaded successfully');
 
 } catch (error) {
