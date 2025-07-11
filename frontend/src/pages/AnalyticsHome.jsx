@@ -34,7 +34,10 @@ import {
   Avatar,
   LinearProgress,
   Tooltip,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -78,6 +81,8 @@ import safeToFixed from '../utils/safeToFixed';
 import { useAuth } from '../context/AuthContext';
 import Refresh from '@mui/icons-material/Refresh';
 import PictureAsPdf from '@mui/icons-material/PictureAsPdf';
+import Close from '@mui/icons-material/Close';
+import ReportDisplay from '../components/ReportDisplay';
 
 // Session type tags for filtering
 const SESSION_TYPES = [
@@ -133,6 +138,8 @@ const AnalyticsHome = () => {
   // Report states
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState('');
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [currentReport, setCurrentReport] = useState(null);
 
   // Player Profile states
   const [playerProfile, setPlayerProfile] = useState(null);
@@ -519,12 +526,11 @@ const AnalyticsHome = () => {
       });
 
       if (response.data.success) {
-        // Open the report in a new tab or download it
         const reportData = response.data.data;
         console.log('Generated multi-session report:', reportData);
         
-        // For now, just show success message - you could open a modal with the report data
-        alert(`Report generated successfully for ${reportData.sessionCount} sessions with ${reportData.totalSwings} total swings!`);
+        setCurrentReport(reportData);
+        setReportModalOpen(true);
       }
     } catch (error) {
       console.error('Error generating report:', error);
@@ -1022,7 +1028,7 @@ const AnalyticsHome = () => {
                     <Button
                       variant="contained"
                       startIcon={reportLoading ? <CircularProgress size={20} color="inherit" /> : <PictureAsPdf />}
-                      onClick={handleDownloadReport}
+                      onClick={handleViewReport}
                       disabled={reportLoading}
                       sx={{ 
                         bgcolor: '#e74c3c',
@@ -1250,6 +1256,67 @@ const AnalyticsHome = () => {
             Choose a player from the dropdown above to view their sessions and analyze swing data.
           </Typography>
         </Paper>
+      )}
+
+      {/* Report Modal */}
+      {currentReport && (
+        <Dialog 
+          open={reportModalOpen} 
+          onClose={() => setReportModalOpen(false)} 
+          maxWidth="lg" 
+          fullWidth
+          PaperProps={{
+            sx: { 
+              minHeight: '90vh',
+              bgcolor: '#fff',
+              border: '2px solid #1c2c4d',
+              borderRadius: 3,
+              boxShadow: '0 4px 32px rgba(28,44,77,0.10)'
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            color: '#1c2c4d', 
+            fontWeight: 800, 
+            fontSize: '1.5rem',
+            borderBottom: '2px solid #1c2c4d',
+            bgcolor: '#fff'
+          }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h5" sx={{ color: '#1c2c4d', fontWeight: 800 }}>
+                Multi-Session Report - {currentReport.player?.name} - {currentReport.sessionCount} Sessions
+              </Typography>
+              <Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleDownloadReport}
+                  sx={{ 
+                    mr: 1,
+                    color: '#1c2c4d',
+                    borderColor: '#1c2c4d',
+                    fontWeight: 700,
+                    '&:hover': {
+                      borderColor: '#3a7bd5',
+                      backgroundColor: '#eaf1fb'
+                    }
+                  }}
+                >
+                  Download PDF
+                </Button>
+                <IconButton 
+                  onClick={() => setReportModalOpen(false)}
+                  sx={{ color: '#1c2c4d' }}
+                >
+                  <Close />
+                </IconButton>
+              </Box>
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ bgcolor: '#fff', color: '#1c2c4d' }}>
+            <ReportDisplay report={currentReport} />
+          </DialogContent>
+        </Dialog>
       )}
     </Container>
   );
