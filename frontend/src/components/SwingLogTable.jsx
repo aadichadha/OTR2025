@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Card, Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert, IconButton, Tooltip } from '@mui/material';
-import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import safeToFixed from '../utils/safeToFixed';
 
 const NAVY = '#1c2c4d';
@@ -44,7 +45,7 @@ function SwingLogTable({ swings }) {
     if (sortConfig.key !== key) {
       return null;
     }
-    return sortConfig.direction === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />;
+    return sortConfig.direction === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />;
   };
 
   if (!swings || swings.length === 0) {
@@ -67,7 +68,15 @@ function SwingLogTable({ swings }) {
                 <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>#</TableCell>
                 <Tooltip title="Click to sort">
                   <TableCell 
-                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    sx={{ 
+                      color: NAVY, 
+                      fontWeight: 'bold', 
+                      borderBottom: '2px solid #3a7bd5', 
+                      bgcolor: sortConfig.key === 'exit_velocity' ? '#e3f2fd' : '#f8f9fa',
+                      cursor: 'pointer', 
+                      '&:hover': { bgcolor: '#e3f2fd' },
+                      transition: 'background-color 0.2s'
+                    }}
                     onClick={() => handleSort('exit_velocity')}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -78,7 +87,15 @@ function SwingLogTable({ swings }) {
                 </Tooltip>
                 <Tooltip title="Click to sort">
                   <TableCell 
-                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    sx={{ 
+                      color: NAVY, 
+                      fontWeight: 'bold', 
+                      borderBottom: '2px solid #3a7bd5', 
+                      bgcolor: sortConfig.key === 'launch_angle' ? '#e3f2fd' : '#f8f9fa',
+                      cursor: 'pointer', 
+                      '&:hover': { bgcolor: '#e3f2fd' },
+                      transition: 'background-color 0.2s'
+                    }}
                     onClick={() => handleSort('launch_angle')}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -89,7 +106,15 @@ function SwingLogTable({ swings }) {
                 </Tooltip>
                 <Tooltip title="Click to sort">
                   <TableCell 
-                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    sx={{ 
+                      color: NAVY, 
+                      fontWeight: 'bold', 
+                      borderBottom: '2px solid #3a7bd5', 
+                      bgcolor: sortConfig.key === 'distance' ? '#e3f2fd' : '#f8f9fa',
+                      cursor: 'pointer', 
+                      '&:hover': { bgcolor: '#e3f2fd' },
+                      transition: 'background-color 0.2s'
+                    }}
                     onClick={() => handleSort('distance')}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -100,7 +125,15 @@ function SwingLogTable({ swings }) {
                 </Tooltip>
                 <Tooltip title="Click to sort">
                   <TableCell 
-                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    sx={{ 
+                      color: NAVY, 
+                      fontWeight: 'bold', 
+                      borderBottom: '2px solid #3a7bd5', 
+                      bgcolor: sortConfig.key === 'strike_zone' ? '#e3f2fd' : '#f8f9fa',
+                      cursor: 'pointer', 
+                      '&:hover': { bgcolor: '#e3f2fd' },
+                      transition: 'background-color 0.2s'
+                    }}
                     onClick={() => handleSort('strike_zone')}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -111,7 +144,15 @@ function SwingLogTable({ swings }) {
                 </Tooltip>
                 <Tooltip title="Click to sort">
                   <TableCell 
-                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    sx={{ 
+                      color: NAVY, 
+                      fontWeight: 'bold', 
+                      borderBottom: '2px solid #3a7bd5', 
+                      bgcolor: sortConfig.key === 'pitch_speed' ? '#e3f2fd' : '#f8f9fa',
+                      cursor: 'pointer', 
+                      '&:hover': { bgcolor: '#e3f2fd' },
+                      transition: 'background-color 0.2s'
+                    }}
                     onClick={() => handleSort('pitch_speed')}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

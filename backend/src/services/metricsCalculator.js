@@ -158,8 +158,8 @@ class MetricsCalculator {
             swing.la <= 25
           ).length;
           
-          // Calculate barrel percentage
-          barrelPercentage = paired.length > 0 ? (barrels / paired.length) * 100 : 0;
+          // Calculate barrel percentage based on TOTAL swings (not just paired data)
+          barrelPercentage = exitVelocities.length > 0 ? (barrels / exitVelocities.length) * 100 : 0;
         }
       }
 
