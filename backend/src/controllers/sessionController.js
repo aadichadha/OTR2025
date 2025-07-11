@@ -378,6 +378,298 @@ class SessionController {
       });
     }
   }
+
+  /**
+   * Generate report for multiple sessions
+   */
+  static async generateMultiSessionReport(req, res) {
+    try {
+      const { sessionIds } = req.body;
+
+      if (!sessionIds || !Array.isArray(sessionIds) || sessionIds.length === 0) {
+        return res.status(400).json({ error: 'Session IDs array is required' });
+      }
+
+      console.log(`[MULTI-REPORT] Generating report for ${sessionIds.length} sessions:`, sessionIds);
+
+      // Verify all sessions exist and belong to the same player
+      const sessions = await Session.findAll({
+        where: { id: sessionIds },
+        include: [{ model: Player, as: 'player' }],
+        order: [['session_date', 'ASC']]
+      });
+
+      if (sessions.length !== sessionIds.length) {
+        return res.status(404).json({ error: 'One or more sessions not found' });
+      }
+
+      // Check if all sessions belong to the same player
+      const playerIds = [...new Set(sessions.map(s => s.player_id))];
+      if (playerIds.length > 1) {
+        return res.status(400).json({ error: 'All sessions must belong to the same player' });
+      }
+
+      const player = sessions[0].player;
+      const playerLevel = sessions[0].player_level || 'High School';
+
+      // Aggregate data from all sessions
+      let allBatSpeedData = [];
+      let allExitVelocityData = [];
+      let sessionTypes = new Set();
+
+      for (const session of sessions) {
+        sessionTypes.add(session.session_type);
+        
+        if (session.session_type === 'blast') {
+          const batSpeedData = await BatSpeedData.findAll({
+            where: { session_id: session.id }
+          });
+          allBatSpeedData.push(...batSpeedData);
+        } else if (session.session_type === 'hittrax') {
+          const exitVelocityData = await ExitVelocityData.findAll({
+            where: { session_id: session.id }
+          });
+          allExitVelocityData.push(...exitVelocityData);
+        }
+      }
+
+      // Calculate aggregated metrics
+      const MetricsCalculator = require('../services/metricsCalculator');
+      let batSpeedMetrics = null;
+      let exitVelocityMetrics = null;
+      let summaryText = '';
+
+      try {
+        if (allBatSpeedData.length > 0) {
+          console.log('[MULTI-REPORT] Calculating aggregated bat speed metrics');
+          batSpeedMetrics = await MetricsCalculator.calculateAggregatedBatSpeedMetrics(
+            allBatSpeedData, 
+            playerLevel
+          );
+          summaryText += `### Bat Speed Metrics (${allBatSpeedData.length} swings)\n`;
+          summaryText += `Max Bat Speed: ${batSpeedMetrics.maxBatSpeed ?? 'N/A'} mph\n`;
+          summaryText += `Average Bat Speed: ${batSpeedMetrics.avgBatSpeed ?? 'N/A'} mph\n`;
+          summaryText += `Average Attack Angle: ${batSpeedMetrics.avgAttackAngle ?? 'N/A'}°\n`;
+          summaryText += `Average Time to Contact: ${batSpeedMetrics.avgTimeToContact ?? 'N/A'} sec\n\n`;
+        }
+
+        if (allExitVelocityData.length > 0) {
+          console.log('[MULTI-REPORT] Calculating aggregated exit velocity metrics');
+          exitVelocityMetrics = await MetricsCalculator.calculateAggregatedExitVelocityMetrics(
+            allExitVelocityData, 
+            playerLevel
+          );
+          summaryText += `### Exit Velocity Metrics (${allExitVelocityData.length} swings)\n`;
+          summaryText += `Max Exit Velocity: ${exitVelocityMetrics.maxExitVelocity ?? 'N/A'} mph\n`;
+          summaryText += `Average Exit Velocity: ${exitVelocityMetrics.avgExitVelocity ?? 'N/A'} mph\n`;
+          summaryText += `Average Launch Angle: ${exitVelocityMetrics.avgLaunchAngle ?? 'N/A'}°\n`;
+          summaryText += `Barrel Percentage: ${exitVelocityMetrics.barrelPercentage ?? 'N/A'}%\n`;
+        }
+      } catch (err) {
+        console.error('[MULTI-REPORT] Metrics calculation failed:', err);
+        summaryText = 'Metrics calculation failed for one or more sessions.';
+      }
+
+      // Create aggregated report data
+      const reportData = {
+        session: {
+          id: `multi-${sessionIds.join('-')}`,
+          date: new Date(),
+          type: Array.from(sessionTypes).join('+'),
+          sessionIds: sessionIds
+        },
+        player: {
+          id: player.id,
+          name: player.name,
+          level: playerLevel
+        },
+        metrics: {
+          batSpeed: batSpeedMetrics,
+          exitVelocity: exitVelocityMetrics
+        },
+        summaryText,
+        sessionCount: sessions.length,
+        totalSwings: allBatSpeedData.length + allExitVelocityData.length,
+        sessions: sessions.map(s => ({
+          id: s.id,
+          date: s.session_date,
+          type: s.session_type,
+          swingCount: s.session_type === 'blast' ? 
+            allBatSpeedData.filter(d => d.session_id === s.id).length :
+            allExitVelocityData.filter(d => d.session_id === s.id).length
+        }))
+      };
+
+      res.status(200).json({
+        success: true,
+        data: reportData,
+        message: `Generated report for ${sessions.length} sessions`
+      });
+
+    } catch (error) {
+      console.error('Generate multi-session report error:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate multi-session report',
+        details: error.message
+      });
+    }
+  }
+
+  /**
+   * Download multi-session report as PDF
+   */
+  static async downloadMultiSessionReport(req, res) {
+    try {
+      const { sessionIds } = req.body;
+
+      if (!sessionIds || !Array.isArray(sessionIds) || sessionIds.length === 0) {
+        return res.status(400).json({ error: 'Session IDs array is required' });
+      }
+
+      // First generate the report data
+      const reportData = await this.generateMultiSessionReportData(sessionIds);
+
+      // Create reports directory if it doesn't exist
+      const reportsDir = path.join(__dirname, '../reports');
+      if (!fs.existsSync(reportsDir)) {
+        fs.mkdirSync(reportsDir, { recursive: true });
+      }
+
+      // Generate PDF
+      const fileName = `multi_session_report_${sessionIds.join('_')}.pdf`;
+      const filePath = path.join(reportsDir, fileName);
+      await generateReportPDF(reportData, filePath);
+
+      // Send file
+      res.download(filePath, fileName, (err) => {
+        if (err) {
+          console.error('Download error:', err);
+        }
+        // Clean up file after download
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+
+    } catch (error) {
+      console.error('Download multi-session report error:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate multi-session report PDF',
+        details: error.message
+      });
+    }
+  }
+
+  /**
+   * Helper method to generate multi-session report data
+   */
+  static async generateMultiSessionReportData(sessionIds) {
+    // Verify all sessions exist and belong to the same player
+    const sessions = await Session.findAll({
+      where: { id: sessionIds },
+      include: [{ model: Player, as: 'player' }],
+      order: [['session_date', 'ASC']]
+    });
+
+    if (sessions.length !== sessionIds.length) {
+      throw new Error('One or more sessions not found');
+    }
+
+    // Check if all sessions belong to the same player
+    const playerIds = [...new Set(sessions.map(s => s.player_id))];
+    if (playerIds.length > 1) {
+      throw new Error('All sessions must belong to the same player');
+    }
+
+    const player = sessions[0].player;
+    const playerLevel = sessions[0].player_level || 'High School';
+
+    // Aggregate data from all sessions
+    let allBatSpeedData = [];
+    let allExitVelocityData = [];
+    let sessionTypes = new Set();
+
+    for (const session of sessions) {
+      sessionTypes.add(session.session_type);
+      
+      if (session.session_type === 'blast') {
+        const batSpeedData = await BatSpeedData.findAll({
+          where: { session_id: session.id }
+        });
+        allBatSpeedData.push(...batSpeedData);
+      } else if (session.session_type === 'hittrax') {
+        const exitVelocityData = await ExitVelocityData.findAll({
+          where: { session_id: session.id }
+        });
+        allExitVelocityData.push(...exitVelocityData);
+      }
+    }
+
+    // Calculate aggregated metrics
+    const MetricsCalculator = require('../services/metricsCalculator');
+    let batSpeedMetrics = null;
+    let exitVelocityMetrics = null;
+    let summaryText = '';
+
+    try {
+      if (allBatSpeedData.length > 0) {
+        batSpeedMetrics = await MetricsCalculator.calculateAggregatedBatSpeedMetrics(
+          allBatSpeedData, 
+          playerLevel
+        );
+        summaryText += `### Bat Speed Metrics (${allBatSpeedData.length} swings)\n`;
+        summaryText += `Max Bat Speed: ${batSpeedMetrics.maxBatSpeed ?? 'N/A'} mph\n`;
+        summaryText += `Average Bat Speed: ${batSpeedMetrics.avgBatSpeed ?? 'N/A'} mph\n`;
+        summaryText += `Average Attack Angle: ${batSpeedMetrics.avgAttackAngle ?? 'N/A'}°\n`;
+        summaryText += `Average Time to Contact: ${batSpeedMetrics.avgTimeToContact ?? 'N/A'} sec\n\n`;
+      }
+
+      if (allExitVelocityData.length > 0) {
+        exitVelocityMetrics = await MetricsCalculator.calculateAggregatedExitVelocityMetrics(
+          allExitVelocityData, 
+          playerLevel
+        );
+        summaryText += `### Exit Velocity Metrics (${allExitVelocityData.length} swings)\n`;
+        summaryText += `Max Exit Velocity: ${exitVelocityMetrics.maxExitVelocity ?? 'N/A'} mph\n`;
+        summaryText += `Average Exit Velocity: ${exitVelocityMetrics.avgExitVelocity ?? 'N/A'} mph\n`;
+        summaryText += `Average Launch Angle: ${exitVelocityMetrics.avgLaunchAngle ?? 'N/A'}°\n`;
+        summaryText += `Barrel Percentage: ${exitVelocityMetrics.barrelPercentage ?? 'N/A'}%\n`;
+      }
+    } catch (err) {
+      console.error('[MULTI-REPORT] Metrics calculation failed:', err);
+      summaryText = 'Metrics calculation failed for one or more sessions.';
+    }
+
+    // Create aggregated report data
+    return {
+      session: {
+        id: `multi-${sessionIds.join('-')}`,
+        date: new Date(),
+        type: Array.from(sessionTypes).join('+'),
+        sessionIds: sessionIds
+      },
+      player: {
+        id: player.id,
+        name: player.name,
+        level: playerLevel
+      },
+      metrics: {
+        batSpeed: batSpeedMetrics,
+        exitVelocity: exitVelocityMetrics
+      },
+      summaryText,
+      sessionCount: sessions.length,
+      totalSwings: allBatSpeedData.length + allExitVelocityData.length,
+      sessions: sessions.map(s => ({
+        id: s.id,
+        date: s.session_date,
+        type: s.session_type,
+        swingCount: s.session_type === 'blast' ? 
+          allBatSpeedData.filter(d => d.session_id === s.id).length :
+          allExitVelocityData.filter(d => d.session_id === s.id).length
+      }))
+    };
+  }
 }
 
 module.exports = SessionController; 

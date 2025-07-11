@@ -77,6 +77,7 @@ import BarrelsFilter from '../components/BarrelsFilter';
 import safeToFixed from '../utils/safeToFixed';
 import { useAuth } from '../context/AuthContext';
 import Refresh from '@mui/icons-material/Refresh';
+import PictureAsPdf from '@mui/icons-material/PictureAsPdf';
 
 // Session type tags for filtering
 const SESSION_TYPES = [
@@ -128,6 +129,10 @@ const AnalyticsHome = () => {
 
   // Sort states
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  // Report states
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState('');
 
   // Player Profile states
   const [playerProfile, setPlayerProfile] = useState(null);
@@ -497,6 +502,69 @@ const AnalyticsHome = () => {
       return null;
     }
     return sortConfig.direction === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />;
+  };
+
+  const handleViewReport = async () => {
+    if (selectedSessions.length === 0) {
+      setReportError('Please select at least one session to generate a report.');
+      return;
+    }
+
+    setReportLoading(true);
+    setReportError('');
+
+    try {
+      const response = await api.post('/sessions/multi-report', {
+        sessionIds: selectedSessions
+      });
+
+      if (response.data.success) {
+        // Open the report in a new tab or download it
+        const reportData = response.data.data;
+        console.log('Generated multi-session report:', reportData);
+        
+        // For now, just show success message - you could open a modal with the report data
+        alert(`Report generated successfully for ${reportData.sessionCount} sessions with ${reportData.totalSwings} total swings!`);
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      setReportError(error.response?.data?.error || 'Failed to generate report');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (selectedSessions.length === 0) {
+      setReportError('Please select at least one session to download a report.');
+      return;
+    }
+
+    setReportLoading(true);
+    setReportError('');
+
+    try {
+      const response = await api.post('/sessions/multi-report/download', {
+        sessionIds: selectedSessions
+      }, {
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `multi_session_report_${selectedSessions.join('_')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      setReportError('Failed to download report');
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   const sortedSwingData = useMemo(() => {
@@ -894,8 +962,10 @@ const AnalyticsHome = () => {
               boxShadow: '0 4px 16px rgba(28,44,77,0.08)'
             }}>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h6" fontWeight="bold" color="#1c2c4d">
-                  {viewMode === 'profile' ? 'Player Profile' : `Swing Data (${filteredSwingData.length} swings)`}
+                <Typography variant="h5" fontWeight="bold" color="#1c2c4d">
+                  {viewMode === 'table' ? 'Swing Data Table' : 
+                   viewMode === 'chart' ? 'Spray Chart Visualization' : 
+                   'Player Profile'}
                 </Typography>
                 <Box display="flex" gap={1}>
                   <Button
@@ -948,8 +1018,37 @@ const AnalyticsHome = () => {
                       Player Profile
                     </Button>
                   )}
+                  {selectedSessions.length > 0 && (
+                    <Button
+                      variant="contained"
+                      startIcon={reportLoading ? <CircularProgress size={20} color="inherit" /> : <PictureAsPdf />}
+                      onClick={handleDownloadReport}
+                      disabled={reportLoading}
+                      sx={{ 
+                        bgcolor: '#e74c3c',
+                        color: '#fff',
+                        fontWeight: 600,
+                        '&:hover': {
+                          bgcolor: '#c0392b',
+                        },
+                        '&:disabled': {
+                          bgcolor: '#bdc3c7',
+                          color: '#7f8c8d'
+                        }
+                      }}
+                    >
+                      {reportLoading ? 'Generating...' : 'View Report'}
+                    </Button>
+                  )}
                 </Box>
               </Box>
+
+              {/* Report Error Alert */}
+              {reportError && (
+                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setReportError('')}>
+                  {reportError}
+                </Alert>
+              )}
 
               {/* Barrels Filter */}
               {swingData.length > 0 && viewMode !== 'profile' && (

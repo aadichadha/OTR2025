@@ -79,13 +79,17 @@ function generateReportPDF(reportData, outputFilePath) {
       .fill(NAVY)
       .font(hasInter ? 'Inter-Bold' : 'Helvetica-Bold')
       .text('Performance Report', panelX, panelY + 16, { align: 'center', width: panelWidth });
+    
+    // Handle multi-session reports
+    const isMultiSession = reportData.session.sessionIds && reportData.session.sessionIds.length > 1;
+    const sessionText = isMultiSession ? 
+      `${reportData.player.name} • ${reportData.sessionCount} Sessions • ${reportData.totalSwings} Total Swings` :
+      `${reportData.player.name} • ${new Date(reportData.session.date).toLocaleDateString()} • ${reportData.session.type.toUpperCase()}`;
+    
     doc.fontSize(13)
       .fill(METRIC_UNIT)
       .font(hasInter ? 'Inter-Medium' : 'Helvetica')
-      .text(
-        `${reportData.player.name} • ${new Date(reportData.session.date).toLocaleDateString()} • ${reportData.session.type.toUpperCase()}`,
-        panelX, panelY + 46, { align: 'center', width: panelWidth }
-      );
+      .text(sessionText, panelX, panelY + 46, { align: 'center', width: panelWidth });
 
     // --- Layout calculations ---
     let y = panelY + 60; // Header: 60px

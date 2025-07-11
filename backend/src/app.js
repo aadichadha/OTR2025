@@ -168,6 +168,11 @@ try {
   app.post('/api/sessions/:sessionId/email', authenticateToken, SessionController.emailSessionReport);
   app.get('/api/sessions/:sessionId/report-data', authenticateToken, SessionController.getSessionReportData);
   app.get('/api/sessions/:sessionId/swings', authenticateToken, SessionController.getSessionSwings);
+  
+  // Multi-session report routes
+  app.post('/api/sessions/multi-report', authenticateToken, SessionController.generateMultiSessionReport);
+  app.post('/api/sessions/multi-report/download', authenticateToken, SessionController.downloadMultiSessionReport);
+  
   console.log('✅ Session routes loaded');
 
   // Analytics routes (protected)
