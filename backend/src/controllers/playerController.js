@@ -432,9 +432,10 @@ class PlayerController {
       if (!player) return res.status(404).json({ error: 'Player not found for user' });
       // Aggregate stats (example: max/avg exit velo, bat speed, session count)
       const sessions = await Session.findAll({ where: { player_id: player.id } });
-      let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0;
+      let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0, barrelPercentage = 0;
       let exitVelocities = [], batSpeeds = [];
       let allExitVelocities = []; // For calculating top 10% threshold
+      let totalSwings = 0;
       
       for (const session of sessions) {
         if (session.session_type === 'hittrax') {
@@ -442,6 +443,7 @@ class PlayerController {
           const evValues = evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite);
           exitVelocities.push(...evValues);
           allExitVelocities.push(...evValues);
+          totalSwings += evs.length;
         }
         if (session.session_type === 'blast') {
           const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
@@ -472,6 +474,9 @@ class PlayerController {
         }
       }
       
+      // Calculate barrel percentage
+      barrelPercentage = totalSwings > 0 ? (barrels / totalSwings) * 100 : 0;
+      
       if (exitVelocities.length) {
         maxExitVelocity = Math.max(...exitVelocities);
         avgExitVelocity = exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length;
@@ -486,6 +491,7 @@ class PlayerController {
         maxBatSpeed,
         avgBatSpeed,
         barrels,
+        barrelPercentage,
         sessionCount: sessions.length
       });
     } catch (error) {
@@ -520,9 +526,10 @@ class PlayerController {
       const leaderboard = [];
       for (const player of players) {
         const sessions = await Session.findAll({ where: { player_id: player.id } });
-        let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0;
+        let maxExitVelocity = null, avgExitVelocity = null, maxBatSpeed = null, avgBatSpeed = null, barrels = 0, barrelPercentage = 0;
         let exitVelocities = [], batSpeeds = [];
         let allExitVelocities = []; // For calculating top 10% threshold
+        let totalSwings = 0;
         
         for (const session of sessions) {
           if (session.session_type === 'hittrax') {
@@ -530,6 +537,7 @@ class PlayerController {
             const evValues = evs.map(e => parseFloat(e.exit_velocity)).filter(Number.isFinite);
             exitVelocities.push(...evValues);
             allExitVelocities.push(...evValues);
+            totalSwings += evs.length;
           }
           if (session.session_type === 'blast') {
             const bss = await BatSpeedData.findAll({ where: { session_id: session.id } });
@@ -560,6 +568,9 @@ class PlayerController {
           }
         }
         
+        // Calculate barrel percentage
+        barrelPercentage = totalSwings > 0 ? (barrels / totalSwings) * 100 : 0;
+        
         if (exitVelocities.length) {
           maxExitVelocity = Math.max(...exitVelocities);
           avgExitVelocity = exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length;
@@ -577,6 +588,7 @@ class PlayerController {
           maxBatSpeed: maxBatSpeed ? Math.round(maxBatSpeed * 10) / 10 : null,
           avgBatSpeed: avgBatSpeed ? Math.round(avgBatSpeed * 10) / 10 : null,
           barrels,
+          barrelPercentage: Math.round(barrelPercentage * 10) / 10,
           sessionCount: sessions.length
         });
       }

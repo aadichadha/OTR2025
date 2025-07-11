@@ -86,7 +86,7 @@ function ReportDisplay({ report }) {
               <MetricCard label="AVG EXIT VELOCITY" value={metrics.avgExitVelocity} unit="MPH" grade={metrics.grades?.avgExitVelocity} />
               <MetricCard label="AVG LA (TOP 5% EV)" value={metrics.launchAngleTop5} unit="°" grade={metrics.grades?.launchAngleTop5} />
               <MetricCard label="AVG LAUNCH ANGLE" value={metrics.avgLaunchAngle} unit="°" grade={metrics.grades?.avgLaunchAngle} />
-              <MetricCard label="BARRELS" value={metrics.barrels} unit="" grade="Quality" />
+              <MetricCard label="BARREL %" value={metrics.barrelPercentage} unit="%" grade="Quality" />
               <MetricCard label="TOTAL SWINGS" value={metrics.dataPoints} unit="" grade="Complete" />
             </>
           )}

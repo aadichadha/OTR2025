@@ -137,6 +137,7 @@ class MetricsCalculator {
 
       // Calculate Barrels (≥90% of max EV with LA 8-25 degrees)
       let barrels = 0;
+      let barrelPercentage = 0;
       if (exitVelocities.length > 0 && launchAngles.length > 0) {
         const paired = evData
           .map(row => ({
@@ -156,6 +157,9 @@ class MetricsCalculator {
             swing.la >= 8 && 
             swing.la <= 25
           ).length;
+          
+          // Calculate barrel percentage
+          barrelPercentage = paired.length > 0 ? (barrels / paired.length) * 100 : 0;
         }
       }
 
@@ -193,6 +197,7 @@ class MetricsCalculator {
         avgLaunchAngle,
         avgDistance: avgDistance !== undefined ? avgDistance : null,
         barrels: barrels,
+        barrelPercentage: barrelPercentage,
         hotZoneEVs: hotZoneEVs || {},
         benchmark: {
           maxEV: benchmark['Top 8th EV'],

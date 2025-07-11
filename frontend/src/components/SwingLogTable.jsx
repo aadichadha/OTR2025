@@ -1,11 +1,51 @@
-import React, { useState } from 'react';
-import { Box, Card, Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import React, { useState, useMemo } from 'react';
+import { Box, Card, Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert, IconButton, Tooltip } from '@mui/material';
+import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import safeToFixed from '../utils/safeToFixed';
 
 const NAVY = '#1c2c4d';
 
 function SwingLogTable({ swings }) {
   const [selectedSwing, setSelectedSwing] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedSwings = useMemo(() => {
+    if (!sortConfig.key) return swings;
+
+    return [...swings].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      // Handle numeric values
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      // Handle string values
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [swings, sortConfig]);
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return null;
+    }
+    return sortConfig.direction === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />;
+  };
 
   if (!swings || swings.length === 0) {
     return <Alert severity="info">No swings found for this session.</Alert>;
@@ -25,15 +65,65 @@ function SwingLogTable({ swings }) {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>#</TableCell>
-                <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Exit Velocity</TableCell>
-                <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Launch Angle</TableCell>
-                <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Distance</TableCell>
-                <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Strike Zone</TableCell>
-                <TableCell sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa' }}>Pitch Speed</TableCell>
+                <Tooltip title="Click to sort">
+                  <TableCell 
+                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    onClick={() => handleSort('exit_velocity')}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      Exit Velocity
+                      {getSortIcon('exit_velocity')}
+                    </Box>
+                  </TableCell>
+                </Tooltip>
+                <Tooltip title="Click to sort">
+                  <TableCell 
+                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    onClick={() => handleSort('launch_angle')}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      Launch Angle
+                      {getSortIcon('launch_angle')}
+                    </Box>
+                  </TableCell>
+                </Tooltip>
+                <Tooltip title="Click to sort">
+                  <TableCell 
+                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    onClick={() => handleSort('distance')}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      Distance
+                      {getSortIcon('distance')}
+                    </Box>
+                  </TableCell>
+                </Tooltip>
+                <Tooltip title="Click to sort">
+                  <TableCell 
+                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    onClick={() => handleSort('strike_zone')}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      Strike Zone
+                      {getSortIcon('strike_zone')}
+                    </Box>
+                  </TableCell>
+                </Tooltip>
+                <Tooltip title="Click to sort">
+                  <TableCell 
+                    sx={{ color: NAVY, fontWeight: 'bold', borderBottom: '2px solid #3a7bd5', bgcolor: '#f8f9fa', cursor: 'pointer', '&:hover': { bgcolor: '#e3f2fd' } }}
+                    onClick={() => handleSort('pitch_speed')}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      Pitch Speed
+                      {getSortIcon('pitch_speed')}
+                    </Box>
+                  </TableCell>
+                </Tooltip>
               </TableRow>
             </TableHead>
             <TableBody>
-              {swings.map((swing, idx) => (
+              {sortedSwings.map((swing, idx) => (
                 <TableRow
                   key={swing.id || idx}
                   hover

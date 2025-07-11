@@ -31,7 +31,7 @@ const columns = [
   { id: 'rank', label: 'Rank', minWidth: 60 },
   { id: 'name', label: 'Player', minWidth: 120 },
   { id: 'level', label: 'Level', minWidth: 100 },
-  { id: 'barrels', label: 'Barrels', minWidth: 80 },
+  { id: 'barrelPercentage', label: 'Barrel %', minWidth: 80 },
   { id: 'maxExitVelocity', label: 'Max EV', minWidth: 90 },
   { id: 'avgExitVelocity', label: 'Avg EV', minWidth: 90 },
   { id: 'maxBatSpeed', label: 'Max BS', minWidth: 90 },
@@ -41,7 +41,7 @@ const columns = [
 
 const levels = ['All', 'High School', 'College', 'Youth', 'Other'];
 const sortOptions = [
-  { value: 'barrels', label: 'Barrels' },
+  { value: 'barrelPercentage', label: 'Barrel Percentage' },
   { value: 'maxExitVelocity', label: 'Max Exit Velocity' },
   { value: 'avgExitVelocity', label: 'Average Exit Velocity' },
   { value: 'maxBatSpeed', label: 'Max Bat Speed' },
@@ -91,8 +91,8 @@ const Leaderboard = () => {
 
       if (sortBy === 'overall') {
         // Calculate overall score based on all metrics
-        aValue = (a.barrels || 0) * 10 + (a.maxExitVelocity || 0) + (a.avgExitVelocity || 0) + (a.maxBatSpeed || 0) + (a.avgBatSpeed || 0);
-        bValue = (b.barrels || 0) * 10 + (b.maxExitVelocity || 0) + (b.avgExitVelocity || 0) + (b.maxBatSpeed || 0) + (b.avgBatSpeed || 0);
+        aValue = (a.barrelPercentage || 0) * 10 + (a.maxExitVelocity || 0) + (a.avgExitVelocity || 0) + (a.maxBatSpeed || 0) + (a.avgBatSpeed || 0);
+        bValue = (b.barrelPercentage || 0) * 10 + (b.maxExitVelocity || 0) + (b.avgExitVelocity || 0) + (b.maxBatSpeed || 0) + (b.avgBatSpeed || 0);
       } else {
         aValue = a[sortBy] || 0;
         bValue = b[sortBy] || 0;
@@ -304,7 +304,7 @@ const Leaderboard = () => {
                       />
                     </TableCell>
                     <TableCell sx={{ color: NAVY, fontWeight: 600 }}>
-                      {formatValue(player.barrels)}
+                      {formatValue(player.barrelPercentage)}%
                     </TableCell>
                     <TableCell sx={{ color: NAVY }}>
                       {formatValue(player.maxExitVelocity)}

@@ -151,7 +151,7 @@ function generateReportPDF(reportData, outputFilePath) {
         ];
         row2Metrics = [
           { value: metrics.avgLaunchAngle, label: 'AVG LAUNCH ANGLE', unit: '°', grade: metrics.grades?.avgLaunchAngle },
-          { value: metrics.barrels || 0, label: 'BARRELS', unit: '', grade: 'Quality' },
+          { value: metrics.barrelPercentage || 0, label: 'BARREL %', unit: '%', grade: 'Quality' },
           { value: metrics.dataPoints || 0, label: 'TOTAL SWINGS', unit: '', grade: 'Complete' }
         ];
       } else {

@@ -99,7 +99,7 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
               sx={{ fontWeight: 600 }}
             />
             <Typography variant="body2" sx={{ color: NAVY, fontWeight: 500 }}>
-              of {totalSwings} total swings
+              ({((barrelsCount / totalSwings) * 100).toFixed(1)}%) of {totalSwings} total swings
             </Typography>
           </Box>
         )}
