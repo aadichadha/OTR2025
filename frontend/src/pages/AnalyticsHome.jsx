@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Box, 
   Container, 
@@ -36,6 +36,8 @@ import {
   Tooltip,
   IconButton
 } from '@mui/material';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import Assessment from '@mui/icons-material/Assessment';
 import FilterList from '@mui/icons-material/FilterList';
 import Visibility from '@mui/icons-material/Visibility';
@@ -123,6 +125,9 @@ const AnalyticsHome = () => {
   
   // UI states
   const [activeTab, setActiveTab] = useState(0);
+
+  // Sort states
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   // Player Profile states
   const [playerProfile, setPlayerProfile] = useState(null);
@@ -477,6 +482,45 @@ const AnalyticsHome = () => {
       date: new Date(session.session_date || session.created_at).toLocaleDateString()
     }));
   };
+
+  // Sort functions
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return null;
+    }
+    return sortConfig.direction === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />;
+  };
+
+  const sortedSwingData = useMemo(() => {
+    if (!sortConfig.key) return filteredSwingData;
+
+    return [...filteredSwingData].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      // Handle numeric values
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      // Handle string values
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredSwingData, sortConfig]);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 6 }}>
@@ -935,40 +979,105 @@ const AnalyticsHome = () => {
                           borderBottom: '2px solid #3a7bd5',
                           bgcolor: '#f8f9fa'
                         }}>Session</TableCell>
-                        <TableCell sx={{ 
-                          color: '#1c2c4d', 
-                          fontWeight: 'bold', 
-                          borderBottom: '2px solid #3a7bd5',
-                          bgcolor: '#f8f9fa'
-                        }}>Exit Velocity</TableCell>
-                        <TableCell sx={{ 
-                          color: '#1c2c4d', 
-                          fontWeight: 'bold', 
-                          borderBottom: '2px solid #3a7bd5',
-                          bgcolor: '#f8f9fa'
-                        }}>Launch Angle</TableCell>
-                        <TableCell sx={{ 
-                          color: '#1c2c4d', 
-                          fontWeight: 'bold', 
-                          borderBottom: '2px solid #3a7bd5',
-                          bgcolor: '#f8f9fa'
-                        }}>Distance</TableCell>
-                        <TableCell sx={{ 
-                          color: '#1c2c4d', 
-                          fontWeight: 'bold', 
-                          borderBottom: '2px solid #3a7bd5',
-                          bgcolor: '#f8f9fa'
-                        }}>Pitch Speed</TableCell>
-                        <TableCell sx={{ 
-                          color: '#1c2c4d', 
-                          fontWeight: 'bold', 
-                          borderBottom: '2px solid #3a7bd5',
-                          bgcolor: '#f8f9fa'
-                        }}>Strike Zone</TableCell>
+                        <Tooltip title="Click to sort">
+                          <TableCell 
+                            sx={{ 
+                              color: '#1c2c4d', 
+                              fontWeight: 'bold', 
+                              borderBottom: '2px solid #3a7bd5',
+                              bgcolor: sortConfig.key === 'exit_velocity' ? '#e3f2fd' : '#f8f9fa',
+                              cursor: 'pointer',
+                              '&:hover': { bgcolor: '#e3f2fd' },
+                              transition: 'background-color 0.2s'
+                            }}
+                            onClick={() => handleSort('exit_velocity')}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              Exit Velocity
+                              {getSortIcon('exit_velocity')}
+                            </Box>
+                          </TableCell>
+                        </Tooltip>
+                        <Tooltip title="Click to sort">
+                          <TableCell 
+                            sx={{ 
+                              color: '#1c2c4d', 
+                              fontWeight: 'bold', 
+                              borderBottom: '2px solid #3a7bd5',
+                              bgcolor: sortConfig.key === 'launch_angle' ? '#e3f2fd' : '#f8f9fa',
+                              cursor: 'pointer',
+                              '&:hover': { bgcolor: '#e3f2fd' },
+                              transition: 'background-color 0.2s'
+                            }}
+                            onClick={() => handleSort('launch_angle')}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              Launch Angle
+                              {getSortIcon('launch_angle')}
+                            </Box>
+                          </TableCell>
+                        </Tooltip>
+                        <Tooltip title="Click to sort">
+                          <TableCell 
+                            sx={{ 
+                              color: '#1c2c4d', 
+                              fontWeight: 'bold', 
+                              borderBottom: '2px solid #3a7bd5',
+                              bgcolor: sortConfig.key === 'distance' ? '#e3f2fd' : '#f8f9fa',
+                              cursor: 'pointer',
+                              '&:hover': { bgcolor: '#e3f2fd' },
+                              transition: 'background-color 0.2s'
+                            }}
+                            onClick={() => handleSort('distance')}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              Distance
+                              {getSortIcon('distance')}
+                            </Box>
+                          </TableCell>
+                        </Tooltip>
+                        <Tooltip title="Click to sort">
+                          <TableCell 
+                            sx={{ 
+                              color: '#1c2c4d', 
+                              fontWeight: 'bold', 
+                              borderBottom: '2px solid #3a7bd5',
+                              bgcolor: sortConfig.key === 'pitch_speed' ? '#e3f2fd' : '#f8f9fa',
+                              cursor: 'pointer',
+                              '&:hover': { bgcolor: '#e3f2fd' },
+                              transition: 'background-color 0.2s'
+                            }}
+                            onClick={() => handleSort('pitch_speed')}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              Pitch Speed
+                              {getSortIcon('pitch_speed')}
+                            </Box>
+                          </TableCell>
+                        </Tooltip>
+                        <Tooltip title="Click to sort">
+                          <TableCell 
+                            sx={{ 
+                              color: '#1c2c4d', 
+                              fontWeight: 'bold', 
+                              borderBottom: '2px solid #3a7bd5',
+                              bgcolor: sortConfig.key === 'strike_zone' ? '#e3f2fd' : '#f8f9fa',
+                              cursor: 'pointer',
+                              '&:hover': { bgcolor: '#e3f2fd' },
+                              transition: 'background-color 0.2s'
+                            }}
+                            onClick={() => handleSort('strike_zone')}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              Strike Zone
+                              {getSortIcon('strike_zone')}
+                            </Box>
+                          </TableCell>
+                        </Tooltip>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {filteredSwingData.map((swing, index) => (
+                      {sortedSwingData.map((swing, index) => (
                         <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f8f9fa' } }}>
                           <TableCell sx={{ color: '#1c2c4d' }}>{swing.sessionId}</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
