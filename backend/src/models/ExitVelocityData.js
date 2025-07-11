@@ -46,10 +46,10 @@ const ExitVelocityData = sequelize.define('ExitVelocityData', {
     allowNull: true,
     comment: 'Spray chart Z coordinate from Hittrax CSV'
   },
-  horiz_angle: {
-    type: DataTypes.DECIMAL(6, 2),
+  pitch_speed: {
+    type: DataTypes.DECIMAL(5, 2),
     allowNull: true,
-    comment: 'Horizontal angle from Hittrax CSV'
+    comment: 'Column E from Hittrax CSV - Pitch speed in mph'
   },
   swing_tags: {
     type: DataTypes.TEXT,

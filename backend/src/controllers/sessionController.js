@@ -272,7 +272,7 @@ class SessionController {
           'distance',
           'spray_chart_x',
           'spray_chart_z',
-          'horiz_angle',
+          'pitch_speed',
           'strike_zone'
         ],
         order: [['id', 'ASC']]

@@ -22,6 +22,9 @@ function parseHittraxCSV(csvBuffer) {
     const validRows = [];
     
     records.forEach(row => {
+      // Column 4: pitchSpeed_mph (Column E)
+      const pitchSpeed = parseFloat(row[4]);
+      
       // Column 5: strikeZone (int 1-13 or blank)
       const strikeZone = parseInt(row[5]);
       
@@ -37,6 +40,7 @@ function parseHittraxCSV(csvBuffer) {
       // Keep rows where exitVelocity > 0 (drop warm-ups / fouls)
       if (!isNaN(exitVelocity) && exitVelocity > 0) {
         validRows.push({
+          pitchSpeed: isNaN(pitchSpeed) ? null : pitchSpeed,
           strikeZone: isNaN(strikeZone) ? null : strikeZone,
           exitVelocity,
           launchAngle: isNaN(launchAngle) ? null : launchAngle,
@@ -102,16 +106,28 @@ function parseHittraxCSV(csvBuffer) {
       }
     });
 
+    // Calculate pitch speed metrics
+    const pitchSpeeds = validRows.map(row => row.pitchSpeed).filter(speed => speed !== null);
+    const avgPitchSpeed = calculateMean(pitchSpeeds);
+    
     return {
       exitVelocityAvg,
       top8pctEV,
       avgLaunchAngleTop8,
       avgDistanceTop8,
       totalAvgLaunchAngle,
+      avgPitchSpeed,
       countTop8ByZone: filteredCountTop8ByZone,
       rawRows: records.length,
       validRows: validRows.length,
-      top8Count: maskTop8.filter(Boolean).length
+      top8Count: maskTop8.filter(Boolean).length,
+      pitchSpeedData: validRows.map(row => ({
+        pitchSpeed: row.pitchSpeed,
+        exitVelocity: row.exitVelocity,
+        launchAngle: row.launchAngle,
+        distance: row.distance,
+        strikeZone: row.strikeZone
+      }))
     };
 
   } catch (error) {

@@ -179,6 +179,8 @@ const getPlayerSwings = async (req, res) => {
       max_exit_velocity, 
       min_launch_angle, 
       max_launch_angle,
+      min_pitch_speed,
+      max_pitch_speed,
       strike_zone,
       session_category,
       limit = 100,
@@ -199,6 +201,12 @@ const getPlayerSwings = async (req, res) => {
       whereClause.launch_angle = {};
       if (min_launch_angle) whereClause.launch_angle[Op.gte] = parseFloat(min_launch_angle);
       if (max_launch_angle) whereClause.launch_angle[Op.lte] = parseFloat(max_launch_angle);
+    }
+
+    if (min_pitch_speed || max_pitch_speed) {
+      whereClause.pitch_speed = {};
+      if (min_pitch_speed) whereClause.pitch_speed[Op.gte] = parseFloat(min_pitch_speed);
+      if (max_pitch_speed) whereClause.pitch_speed[Op.lte] = parseFloat(max_pitch_speed);
     }
 
     if (strike_zone) {
@@ -643,6 +651,7 @@ const getFilterOptions = async (req, res) => {
     const allSwings = sessions.flatMap(s => s.exitVelocityData || []);
     const exitVelocities = allSwings.map(s => parseFloat(s.exit_velocity)).filter(v => !isNaN(v));
     const launchAngles = allSwings.map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
+    const pitchSpeeds = allSwings.map(s => parseFloat(s.pitch_speed)).filter(v => !isNaN(v));
 
     res.json({
       success: true,
@@ -660,6 +669,11 @@ const getFilterOptions = async (req, res) => {
             min: launchAngles.length > 0 ? Math.min(...launchAngles).toFixed(1) : 0,
             max: launchAngles.length > 0 ? Math.max(...launchAngles).toFixed(1) : 0,
             avg: launchAngles.length > 0 ? (launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length).toFixed(1) : 0
+          },
+          pitch_speed: {
+            min: pitchSpeeds.length > 0 ? Math.min(...pitchSpeeds).toFixed(1) : 0,
+            max: pitchSpeeds.length > 0 ? Math.max(...pitchSpeeds).toFixed(1) : 0,
+            avg: pitchSpeeds.length > 0 ? (pitchSpeeds.reduce((a, b) => a + b, 0) / pitchSpeeds.length).toFixed(1) : 0
           }
         }
       }

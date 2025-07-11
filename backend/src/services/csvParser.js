@@ -135,15 +135,15 @@ class CSVParser {
           continue;
         }
         
+        const pitchSpeed = parseFloat(columns[4]);  // Column E - Pitch Speed
         const velo = parseFloat(columns[7]);    // Column H
         const la = parseFloat(columns[8]);      // Column I
         const dist = parseFloat(columns[9]);    // Column J
         const strikeZone = parseInt(columns[5]); // Column F
-        const horizAngle = parseFloat(columns[12]); // Column M - Horizontal Angle
         const sprayChartX = parseFloat(columns[22]); // Column W - Spray Chart X
         const sprayChartZ = parseFloat(columns[23]); // Column X - Spray Chart Z
         
-        console.log(`Row ${i + 1}: Velo=${columns[7]}, LA=${columns[8]}, Dist=${columns[9]}, HorizAngle=${columns[12]}, SprayX=${columns[22]}, SprayZ=${columns[23]}`);
+        console.log(`Row ${i + 1}: PitchSpeed=${columns[4]}, Velo=${columns[7]}, LA=${columns[8]}, Dist=${columns[9]}, SprayX=${columns[22]}, SprayZ=${columns[23]}`);
         
         if (!isNaN(velo) && !isNaN(la) && !isNaN(dist) && velo > 0) {
           const dataRow = {
@@ -151,7 +151,7 @@ class CSVParser {
             exit_velocity: velo,
             launch_angle: la,
             distance: dist,
-            horiz_angle: isNaN(horizAngle) ? null : horizAngle,
+            pitch_speed: isNaN(pitchSpeed) ? null : pitchSpeed,
             spray_chart_x: isNaN(sprayChartX) ? null : sprayChartX,
             spray_chart_z: isNaN(sprayChartZ) ? null : sprayChartZ
           };

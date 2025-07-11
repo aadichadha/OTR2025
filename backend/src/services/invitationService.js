@@ -55,6 +55,7 @@ class InvitationService {
         id: invitedUser.id,
         name: invitedUser.name,
         email: invitedUser.email,
+        invitation_token: invitationToken,
         invitation_status: invitedUser.invitation_status,
         invitation_expires_at: invitedUser.invitation_expires_at
       }
