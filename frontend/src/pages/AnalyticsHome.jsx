@@ -734,7 +734,7 @@ const AnalyticsHome = () => {
                 color: '#1c2c4d',
               },
             }}
-            disabled={isPlayerLocked}
+            disabled={false}
           >
             <MenuItem value="">
               <em>All Players</em>
@@ -1514,6 +1514,18 @@ const PlayerProfileView = ({
                 <Typography variant="body2" color="#1c2c4d">Avg Launch Angle:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
                   {playerProfile.average_launch_angle ? `${playerProfile.average_launch_angle}°` : '0°'}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between" mb={1}>
+                <Typography variant="body2" color="#1c2c4d">Avg Distance:</Typography>
+                <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
+                  {playerProfile.average_distance ? `${playerProfile.average_distance} ft` : '0 ft'}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between" mb={1}>
+                <Typography variant="body2" color="#1c2c4d">Sweet Spot Swings:</Typography>
+                <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
+                  {playerProfile.sweet_spot_swings || 0}
                 </Typography>
               </Box>
             </Box>
