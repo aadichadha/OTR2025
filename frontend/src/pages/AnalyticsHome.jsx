@@ -208,9 +208,12 @@ const AnalyticsHome = () => {
     setLoading(true);
     try {
       const res = await api.get('/players');
-      setPlayers(res.data.players || []);
+      // Ensure we always have an array
+      const playersData = res.data.players || res.data || [];
+      setPlayers(Array.isArray(playersData) ? playersData : []);
     } catch (err) {
       console.error('Error fetching players:', err);
+      setPlayers([]);
     } finally {
       setLoading(false);
     }
@@ -674,7 +677,7 @@ const AnalyticsHome = () => {
             disabled={isPlayerLocked}
           >
             <MenuItem value="">All Players</MenuItem>
-            {players.map(player => (
+            {(players || []).map(player => (
               <MenuItem key={player.id} value={player.id}>
                 {player.name} - {player.position}
               </MenuItem>
@@ -698,7 +701,7 @@ const AnalyticsHome = () => {
               Session Type Filter
             </Typography>
             <Box display="flex" flexWrap="wrap" gap={1}>
-              {SESSION_TYPES.map(type => (
+              {(SESSION_TYPES || []).map(type => (
                 <Chip
                   key={type}
                   label={type}
@@ -745,7 +748,7 @@ const AnalyticsHome = () => {
               </Box>
             ) : (
               <Grid container spacing={2}>
-                {getFilteredSessions().map((session, idx) => (
+                {(getFilteredSessions() || []).map((session, idx) => (
                   <Grid item xs={12} sm={6} md={4} key={session.id}>
                     <Card 
                       sx={{ 
@@ -787,7 +790,7 @@ const AnalyticsHome = () => {
                         })()}
                         {session.session_tags && (
                           <Box display="flex" flexWrap="wrap" gap={0.5} mt={1}>
-                            {session.session_tags.split(',').map((tag, index) => (
+                            {(session.session_tags || '').split(',').map((tag, index) => (
                               <Chip
                                 key={index}
                                 label={tag.trim()}
@@ -859,7 +862,7 @@ const AnalyticsHome = () => {
                   <Tab label="Blast Metrics" />
                 </Tabs>
                 <Grid container spacing={3}>
-                  {(activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast).map(metric => (
+                  {((activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast) || []).map(metric => (
                     <Grid item xs={12} sm={6} md={4} key={metric.key}>
                       <Card sx={{ 
                         p: 2, 
