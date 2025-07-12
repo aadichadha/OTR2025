@@ -74,11 +74,16 @@ import safeToFixed from '../utils/safeToFixed';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const SessionAnalytics = () => {
-  const { playerId } = useParams();
+  const { playerId: urlPlayerId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Player selection state
+  const [players, setPlayers] = useState([]);
+  const [selectedPlayerId, setSelectedPlayerId] = useState(urlPlayerId || '');
+  const [playersLoading, setPlayersLoading] = useState(true);
   
   // Data states
   const [sessions, setSessions] = useState([]);
@@ -101,16 +106,53 @@ const SessionAnalytics = () => {
   
   const [showFilters, setShowFilters] = useState(false);
 
+  // Load players on component mount
   useEffect(() => {
-    loadAllData();
-  }, [playerId]);
+    fetchPlayers();
+  }, []);
+
+  // Load data when player is selected
+  useEffect(() => {
+    if (selectedPlayerId) {
+      loadAllData();
+    } else {
+      // Clear data when no player is selected
+      setSessions([]);
+      setSwings([]);
+      setTrends([]);
+      setBenchmarks(null);
+      setProgress(null);
+      setFilterOptions({});
+    }
+  }, [selectedPlayerId]);
 
   // Update filtered swings when swings change
   useEffect(() => {
     setBarrelsFilteredSwings(swings);
   }, [swings]);
 
+  const fetchPlayers = async () => {
+    try {
+      setPlayersLoading(true);
+      const response = await api.get('/players');
+      const playersData = response.data.players || response.data || [];
+      setPlayers(Array.isArray(playersData) ? playersData : []);
+    } catch (err) {
+      console.error('Error fetching players:', err);
+      setError('Failed to load players');
+    } finally {
+      setPlayersLoading(false);
+    }
+  };
+
+  const handlePlayerChange = (playerId) => {
+    console.log('[DEBUG] Progression - Player selection changed to:', playerId);
+    setSelectedPlayerId(playerId);
+  };
+
   const loadAllData = async () => {
+    if (!selectedPlayerId) return;
+    
     setLoading(true);
     setError(null);
     
@@ -123,12 +165,12 @@ const SessionAnalytics = () => {
         progressRes,
         filterOptionsRes
       ] = await Promise.all([
-        api.get(`/players/${playerId}/sessions`),
-        api.get(`/players/${playerId}/swings`),
-        api.get(`/analytics/players/${playerId}/trends`),
-        api.get(`/analytics/players/${playerId}/benchmarks`),
-        api.get(`/analytics/players/${playerId}/progress`),
-        api.get(`/analytics/players/${playerId}/filter-options`)
+        api.get(`/players/${selectedPlayerId}/sessions`),
+        api.get(`/players/${selectedPlayerId}/swings`),
+        api.get(`/analytics/players/${selectedPlayerId}/trends`),
+        api.get(`/analytics/players/${selectedPlayerId}/benchmarks`),
+        api.get(`/analytics/players/${selectedPlayerId}/progress`),
+        api.get(`/analytics/players/${selectedPlayerId}/filter-options`)
       ]);
 
       // Ensure all data is properly handled as arrays
@@ -227,7 +269,7 @@ const SessionAnalytics = () => {
       <Box sx={{ mb: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h4" component="h1" fontWeight="bold">
-            Player Analytics Dashboard
+            Player Progression Analytics
           </Typography>
           <Box>
             <Button
@@ -242,31 +284,72 @@ const SessionAnalytics = () => {
               variant="contained"
               startIcon={<Refresh />}
               onClick={loadAllData}
+              disabled={!selectedPlayerId}
             >
               Refresh
             </Button>
           </Box>
         </Box>
+
+        {/* Player Selection */}
+        <Paper sx={{ p: 3, mb: 3, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+          <Typography variant="h6" fontWeight="bold" mb={2} color="#1c2c4d">
+            Select Player
+          </Typography>
+          <FormControl fullWidth>
+            <InputLabel sx={{ color: '#1c2c4d' }}>Choose Player</InputLabel>
+            <Select
+              value={selectedPlayerId}
+              onChange={(e) => handlePlayerChange(e.target.value)}
+              label="Choose Player"
+              disabled={playersLoading}
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#3a7bd5',
+                },
+                '& .MuiSelect-select': {
+                  color: '#1c2c4d',
+                },
+              }}
+            >
+              <MenuItem value="">
+                <em>Select a player to view progression</em>
+              </MenuItem>
+              {Array.isArray(players) && players.map(player => (
+                <MenuItem key={player.id} value={player.id.toString()}>
+                  {player.name} - {player.position}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Paper>
         
-        {/* Quick Stats */}
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <Speed color="primary" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Total Swings
-                    </Typography>
-                    <Typography variant="h5" component="div">
-                      {swings.length}
-                    </Typography>
+        {/* Quick Stats - Only show when player is selected */}
+        {selectedPlayerId ? (
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card>
+                <CardContent>
+                  <Box display="flex" alignItems="center">
+                    <Speed color="primary" sx={{ mr: 2 }} />
+                    <Box>
+                      <Typography color="textSecondary" gutterBottom>
+                        Total Swings
+                      </Typography>
+                      <Typography variant="h5" component="div">
+                        {swings.length}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
@@ -323,102 +406,112 @@ const SessionAnalytics = () => {
             </Card>
           </Grid>
         </Grid>
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" color="textSecondary">
+              Select a player above to view their progression analytics
+            </Typography>
+          </Box>
+        )}
       </Box>
 
-      {/* Filters */}
-      {showFilters && (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Advanced Filters
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Session Categories</InputLabel>
-                <Select
-                  multiple
-                  value={filters.categories}
-                  onChange={(e) => handleFilterChange('categories', e.target.value)}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {(Array.isArray(selected) ? selected : []).map((value) => (
-                        <Chip key={value} label={value} size="small" />
+      {/* Filters and Main Content - Only show when player is selected */}
+      {selectedPlayerId && (
+        <>
+          {/* Filters */}
+          {showFilters && (
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Advanced Filters
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Session Categories</InputLabel>
+                    <Select
+                      multiple
+                      value={filters.categories}
+                      onChange={(e) => handleFilterChange('categories', e.target.value)}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {(Array.isArray(selected) ? selected : []).map((value) => (
+                            <Chip key={value} label={value} size="small" />
+                          ))}
+                        </Box>
+                      )}
+                    >
+                      {(filterOptions.categories || []).map((category) => (
+                        <MenuItem key={category} value={category}>
+                          {category}
+                        </MenuItem>
                       ))}
-                    </Box>
-                  )}
-                >
-                  {(filterOptions.categories || []).map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography gutterBottom>Exit Velocity Range (mph)</Typography>
-              <Slider
-                value={filters.exitVelocityRange}
-                onChange={(e, newValue) => handleFilterChange('exitVelocityRange', newValue)}
-                valueLabelDisplay="auto"
-                min={0}
-                max={120}
-              />
-              <Box display="flex" justifyContent="space-between">
-                <Typography variant="caption">{filters.exitVelocityRange[0]} mph</Typography>
-                <Typography variant="caption">{filters.exitVelocityRange[1]} mph</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography gutterBottom>Launch Angle Range (°)</Typography>
-              <Slider
-                value={filters.launchAngleRange}
-                onChange={(e, newValue) => handleFilterChange('launchAngleRange', newValue)}
-                valueLabelDisplay="auto"
-                min={0}
-                max={45}
-              />
-              <Box display="flex" justifyContent="space-between">
-                <Typography variant="caption">{filters.launchAngleRange[0]}°</Typography>
-                <Typography variant="caption">{filters.launchAngleRange[1]}°</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Strike Zones</InputLabel>
-                <Select
-                  multiple
-                  value={filters.strikeZones}
-                  onChange={(e) => handleFilterChange('strikeZones', e.target.value)}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {(Array.isArray(selected) ? selected : []).map((value) => (
-                        <Chip key={value} label={value} size="small" />
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography gutterBottom>Exit Velocity Range (mph)</Typography>
+                  <Slider
+                    value={filters.exitVelocityRange}
+                    onChange={(e, newValue) => handleFilterChange('exitVelocityRange', newValue)}
+                    valueLabelDisplay="auto"
+                    min={0}
+                    max={120}
+                  />
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography variant="caption">{filters.exitVelocityRange[0]} mph</Typography>
+                    <Typography variant="caption">{filters.exitVelocityRange[1]} mph</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography gutterBottom>Launch Angle Range (°)</Typography>
+                  <Slider
+                    value={filters.launchAngleRange}
+                    onChange={(e, newValue) => handleFilterChange('launchAngleRange', newValue)}
+                    valueLabelDisplay="auto"
+                    min={0}
+                    max={45}
+                  />
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography variant="caption">{filters.launchAngleRange[0]}°</Typography>
+                    <Typography variant="caption">{filters.launchAngleRange[1]}°</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Strike Zones</InputLabel>
+                    <Select
+                      multiple
+                      value={filters.strikeZones}
+                      onChange={(e) => handleFilterChange('strikeZones', e.target.value)}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {(Array.isArray(selected) ? selected : []).map((value) => (
+                            <Chip key={value} label={value} size="small" />
+                          ))}
+                        </Box>
+                      )}
+                    >
+                      {(filterOptions.strike_zones || []).map((zone) => (
+                        <MenuItem key={zone} value={zone}>
+                          Zone {zone}
+                        </MenuItem>
                       ))}
-                    </Box>
-                  )}
-                >
-                  {(filterOptions.strike_zones || []).map((zone) => (
-                    <MenuItem key={zone} value={zone}>
-                      Zone {zone}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Paper>
-      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Paper>
+          )}
 
-      {/* Main Content Tabs */}
-      <Paper sx={{ width: '100%' }}>
-        <Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tab label="Overview" icon={<Assessment />} />
-          <Tab label="Trends" icon={<Timeline />} />
-          <Tab label="Benchmarks" icon={<EmojiEvents />} />
-          <Tab label="Progress" icon={<TrendingUp />} />
-          <Tab label="Swing Analysis" icon={<Speed />} />
-        </Tabs>
+          {/* Main Content Tabs */}
+          <Paper sx={{ width: '100%' }}>
+            <Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tab label="Overview" icon={<Assessment />} />
+              <Tab label="Trends" icon={<Timeline />} />
+              <Tab label="Benchmarks" icon={<EmojiEvents />} />
+              <Tab label="Progress" icon={<TrendingUp />} />
+              <Tab label="Swing Analysis" icon={<Speed />} />
+            </Tabs>
 
         {/* Tab Content */}
         <Box sx={{ p: 3 }}>
@@ -701,6 +794,8 @@ const SessionAnalytics = () => {
           )}
         </Box>
       </Paper>
+        </>
+      )}
     </Container>
   );
 };
