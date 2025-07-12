@@ -547,7 +547,10 @@ const SprayChart3D = ({ swings = [], selectedIdx, onSelect, width = 800, height 
   
   // Memoize the display swings to prevent unnecessary re-renders
   const displaySwings = useMemo(() => {
-    return swings.length > 0 ? swings : [
+    // Ensure swings is always an array
+    const safeSwings = Array.isArray(swings) ? swings : [];
+    
+    return safeSwings.length > 0 ? safeSwings : [
       { id: 'test1', exit_velocity: 105, launch_angle: 25, spray_chart_x: -50, spray_chart_z: 300, distance: 350, horiz_angle: -15 },
       { id: 'test2', exit_velocity: 95, launch_angle: 18, spray_chart_x: 30, spray_chart_z: 280, distance: 320, horiz_angle: 10 },
       { id: 'test3', exit_velocity: 110, launch_angle: 30, spray_chart_x: 0, spray_chart_z: 400, distance: 420, horiz_angle: 0 }
@@ -591,7 +594,7 @@ const SprayChart3D = ({ swings = [], selectedIdx, onSelect, width = 800, height 
         <directionalLight position={[0, 200, 200]} intensity={0.9} />
         <directionalLight position={[-100, 100, -100]} intensity={0.5} />
         <StatcastField />
-        {displaySwings.map((swing, idx) => {
+        {(Array.isArray(displaySwings) ? displaySwings : []).map((swing, idx) => {
           const end = [Number(swing.spray_chart_x || 0), 0, -Number(swing.spray_chart_z || 0)];
           return (
             <group key={swing.id || idx}>

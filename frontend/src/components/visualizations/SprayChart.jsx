@@ -19,17 +19,19 @@ const SprayChart = ({ swings = [], width = 660, height = 420 }) => {
   const [hovered, setHovered] = useState(null);
 
   // Memoize points for performance
-  const points = useMemo(() =>
-    swings.map((swing, i) => ({
+  const points = useMemo(() => {
+    // Ensure swings is always an array
+    const safeSwings = Array.isArray(swings) ? swings : [];
+    
+    return safeSwings.map((swing, i) => ({
       x: scaleX(Number(swing.spray_chart_x || 0)),
       y: scaleY(Number(swing.spray_chart_z || 0)),
       ev: swing.exit_velocity,
       la: swing.launch_angle,
       idx: i,
       ...swing
-    })),
-    [swings]
-  );
+    }));
+  }, [swings]);
 
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4, p: 2, boxShadow: '0 4px 16px rgba(28,44,77,0.08)' }}>
@@ -54,7 +56,7 @@ const SprayChart = ({ swings = [], width = 660, height = 420 }) => {
           {/* Home plate */}
           <circle cx={scaleX(0)} cy={scaleY(0)} r={7} fill="#1c2c4d" />
           {/* Plot swings */}
-          {points.map((pt) => (
+          {(Array.isArray(points) ? points : []).map((pt) => (
             <Tooltip
               key={pt.idx}
               title={`EV: ${pt.ev} MPH\nLA: ${pt.la}°`}

@@ -19,9 +19,12 @@ function SwingLogTable({ swings }) {
   };
 
   const sortedSwings = useMemo(() => {
-    if (!sortConfig.key) return swings;
+    // Ensure swings is always an array
+    const safeSwings = Array.isArray(swings) ? swings : [];
+    
+    if (!sortConfig.key) return safeSwings;
 
-    return [...swings].sort((a, b) => {
+    return [...safeSwings].sort((a, b) => {
       let aValue = a[sortConfig.key];
       let bValue = b[sortConfig.key];
 
@@ -164,7 +167,7 @@ function SwingLogTable({ swings }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedSwings.map((swing, idx) => (
+              {(Array.isArray(sortedSwings) ? sortedSwings : []).map((swing, idx) => (
                 <TableRow
                   key={swing.id || idx}
                   hover

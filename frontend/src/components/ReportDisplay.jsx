@@ -107,7 +107,7 @@ function ReportDisplay({ report }) {
             bgcolor: NAVY,
             borderRadius: 2
           }}>
-            {zoneGrid.flat().map((zone, idx) => (
+            {(Array.isArray(zoneGrid.flat()) ? zoneGrid.flat() : []).map((zone, idx) => (
               zone !== null ? (
                 <HotZoneCell key={idx} zone={zone} ev={hotZoneEVs[zone]} />
               ) : (

@@ -10,9 +10,12 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
   const [totalSwings, setTotalSwings] = useState(0);
 
   useEffect(() => {
-    if (swingData && swingData.length > 0) {
+    // Ensure swingData is always an array
+    const safeSwingData = Array.isArray(swingData) ? swingData : [];
+    
+    if (safeSwingData.length > 0) {
       // Calculate max exit velocity and 90% threshold
-      const exitVelocities = swingData
+      const exitVelocities = safeSwingData
         .map(swing => parseFloat(swing.exit_velocity))
         .filter(ev => !isNaN(ev) && ev > 0);
       
@@ -20,7 +23,7 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
       const barrelThreshold = maxEV * 0.90; // 90% of max EV
       
       // Count barrels: ≥90% of max EV with launch angle 8-25 degrees
-      const barrels = swingData.filter(swing => {
+      const barrels = safeSwingData.filter(swing => {
         const exitVel = parseFloat(swing.exit_velocity);
         const launchAngle = parseFloat(swing.launch_angle);
         
@@ -30,15 +33,18 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
       });
       
       setBarrelsCount(barrels.length);
-      setTotalSwings(swingData.length);
+      setTotalSwings(safeSwingData.length);
     }
   }, [swingData]);
 
   useEffect(() => {
-    if (swingData && swingData.length > 0) {
+    // Ensure swingData is always an array
+    const safeSwingData = Array.isArray(swingData) ? swingData : [];
+    
+    if (safeSwingData.length > 0) {
       if (showBarrelsOnly) {
         // Calculate max exit velocity and 90% threshold
-        const exitVelocities = swingData
+        const exitVelocities = safeSwingData
           .map(swing => parseFloat(swing.exit_velocity))
           .filter(ev => !isNaN(ev) && ev > 0);
         
@@ -46,7 +52,7 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
         const barrelThreshold = maxEV * 0.90; // 90% of max EV
         
         // Filter barrels: ≥90% of max EV with launch angle 8-25 degrees
-        const barrels = swingData.filter(swing => {
+        const barrels = safeSwingData.filter(swing => {
           const exitVel = parseFloat(swing.exit_velocity);
           const launchAngle = parseFloat(swing.launch_angle);
           
@@ -57,7 +63,7 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
         
         onFilteredDataChange(barrels);
       } else {
-        onFilteredDataChange(swingData);
+        onFilteredDataChange(safeSwingData);
       }
     }
   }, [showBarrelsOnly, swingData, onFilteredDataChange]);
@@ -66,7 +72,10 @@ const BarrelsFilter = ({ swingData, onFilteredDataChange, showStats = true }) =>
     setShowBarrelsOnly(!showBarrelsOnly);
   };
 
-  if (!swingData || swingData.length === 0) {
+  // Ensure swingData is always an array for the null check
+  const safeSwingData = Array.isArray(swingData) ? swingData : [];
+  
+  if (!safeSwingData || safeSwingData.length === 0) {
     return null;
   }
 

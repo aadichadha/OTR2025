@@ -133,7 +133,7 @@ const Topbar = () => {
 
         {/* Navigation Items */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
-          {navItems.map((item) => {
+          {(Array.isArray(navItems) ? navItems : []).map((item) => {
             const selected = location.pathname === item.to;
             return (
               <Button

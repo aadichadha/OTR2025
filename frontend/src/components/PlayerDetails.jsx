@@ -707,7 +707,7 @@ One-time password: exwx bdjz xjid qhmh`);
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {sessions.map((session) => (
+                    {(Array.isArray(sessions) ? sessions : []).map((session) => (
                       <TableRow key={session.id} sx={{ '& td': { color: '#1c2c4d', fontWeight: 500, fontSize: '0.98rem', bgcolor: '#fff', borderBottom: '1.5px solid #1c2c4d' } }}>
                         <TableCell>{formatDate(session.session_date)}</TableCell>
                         <TableCell>
