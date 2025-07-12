@@ -208,8 +208,10 @@ const AnalyticsHome = () => {
     setLoading(true);
     try {
       const res = await api.get('/players');
-      // Ensure we always have an array
+      console.log('[DEBUG] AnalyticsHome fetchPlayers response:', res.data);
+      // Handle the backend response format: { players, pagination }
       const playersData = res.data.players || res.data || [];
+      console.log('[DEBUG] AnalyticsHome processed players data:', playersData);
       setPlayers(Array.isArray(playersData) ? playersData : []);
     } catch (err) {
       console.error('Error fetching players:', err);
@@ -310,7 +312,9 @@ const AnalyticsHome = () => {
     setProfileLoading(true);
     try {
       const res = await api.get(`/players/${selectedPlayer}/analytics`);
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response:', res.data);
       if (res.data.success && res.data.data) {
+        console.log('[DEBUG] AnalyticsHome player profile data:', res.data.data);
         setPlayerProfile(res.data.data);
       } else {
         console.warn('No player profile data received');
@@ -714,6 +718,12 @@ const AnalyticsHome = () => {
             ))}
           </Select>
         </FormControl>
+        {/* Debug info */}
+        <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: '0.8rem' }}>
+          <Typography variant="caption" color="textSecondary">
+            Debug: {players.length} players loaded | Selected: {selectedPlayer || 'none'}
+          </Typography>
+        </Box>
       </Paper>
 
       {selectedPlayer && (
@@ -1396,6 +1406,11 @@ const PlayerProfileView = ({
       </Alert>
     );
   }
+
+  // Debug info
+  console.log('[DEBUG] PlayerProfileView - playerProfile:', playerProfile);
+  console.log('[DEBUG] PlayerProfileView - average_exit_velocity:', playerProfile.average_exit_velocity);
+  console.log('[DEBUG] PlayerProfileView - average_launch_angle:', playerProfile.average_launch_angle);
 
   return (
     <Box>
