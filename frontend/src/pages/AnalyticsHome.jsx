@@ -249,6 +249,12 @@ const AnalyticsHome = () => {
   const fetchSwingData = async () => {
     setDataLoading(true);
     try {
+      // Ensure selectedSessions is an array
+      if (!Array.isArray(selectedSessions) || selectedSessions.length === 0) {
+        setSwingData([]);
+        return;
+      }
+
       // Fetch swing data for selected sessions
       const swingDataPromises = selectedSessions.map(sessionId => 
         api.get(`/sessions/${sessionId}/swings`)
@@ -263,10 +269,14 @@ const AnalyticsHome = () => {
         const sessionSwings = Array.isArray(res.data)
           ? res.data
           : (res.data.swings || []);
-        allSwings.push(...sessionSwings.map(swing => ({
-          ...swing,
-          sessionId: selectedSessions[index]
-        })));
+        
+        // Ensure sessionSwings is an array before mapping
+        if (Array.isArray(sessionSwings)) {
+          allSwings.push(...sessionSwings.map(swing => ({
+            ...swing,
+            sessionId: selectedSessions[index]
+          })));
+        }
       });
 
       // Apply filters
@@ -405,13 +415,16 @@ const AnalyticsHome = () => {
     // Ensure sessions is always an array
     const safeSessions = Array.isArray(sessions) ? sessions : [];
     
-    if (selectedSessionTypes.length === 0) {
+    // Ensure selectedSessionTypes is always an array
+    const safeSelectedSessionTypes = Array.isArray(selectedSessionTypes) ? selectedSessionTypes : [];
+    
+    if (safeSelectedSessionTypes.length === 0) {
       console.log('[DEBUG] getFilteredSessions - returning all sessions:', safeSessions);
       return safeSessions;
     }
     
     const filtered = safeSessions.filter(session => 
-      selectedSessionTypes.some(type => 
+      safeSelectedSessionTypes.some(type => 
         session.session_type?.toLowerCase().includes(type.toLowerCase()) ||
         session.notes?.toLowerCase().includes(type.toLowerCase())
       )
@@ -520,7 +533,7 @@ const AnalyticsHome = () => {
   };
 
   const handleViewReport = async () => {
-    if (selectedSessions.length === 0) {
+    if (!Array.isArray(selectedSessions) || selectedSessions.length === 0) {
       setReportError('Please select at least one session to generate a report.');
       return;
     }
@@ -549,7 +562,7 @@ const AnalyticsHome = () => {
   };
 
   const handleDownloadReport = async () => {
-    if (selectedSessions.length === 0) {
+    if (!Array.isArray(selectedSessions) || selectedSessions.length === 0) {
       setReportError('Please select at least one session to download a report.');
       return;
     }
@@ -614,7 +627,9 @@ const AnalyticsHome = () => {
     if (!Array.isArray(swingData)) setSwingData([]);
     if (!Array.isArray(filteredSwingData)) setFilteredSwingData([]);
     if (!Array.isArray(sessionHistory)) setSessionHistory([]);
-  }, [players, sessions, swingData, filteredSwingData, sessionHistory]);
+    if (!Array.isArray(selectedSessionTypes)) setSelectedSessionTypes([]);
+    if (!Array.isArray(selectedSessions)) setSelectedSessions([]);
+  }, [players, sessions, swingData, filteredSwingData, sessionHistory, selectedSessionTypes, selectedSessions]);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 6 }}>
@@ -721,8 +736,8 @@ const AnalyticsHome = () => {
                   key={type}
                   label={type}
                   onClick={() => handleSessionTypeToggle(type)}
-                  color={selectedSessionTypes.includes(type) ? 'primary' : 'default'}
-                  variant={selectedSessionTypes.includes(type) ? 'filled' : 'outlined'}
+                  color={(Array.isArray(selectedSessionTypes) && selectedSessionTypes.includes(type)) ? 'primary' : 'default'}
+                  variant={(Array.isArray(selectedSessionTypes) && selectedSessionTypes.includes(type)) ? 'filled' : 'outlined'}
                   sx={{ 
                     fontWeight: 600,
                     '&.MuiChip-filled': {
@@ -768,10 +783,10 @@ const AnalyticsHome = () => {
                     <Card 
                       sx={{ 
                         cursor: 'pointer',
-                        border: selectedSessions.includes(session.id) ? '2px solid #3a7bd5' : '1px solid #e0e3e8',
-                        bgcolor: selectedSessions.includes(session.id) ? '#f0f8ff' : '#fff',
+                        border: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '2px solid #3a7bd5' : '1px solid #e0e3e8',
+                        bgcolor: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '#f0f8ff' : '#fff',
                         borderRadius: 3,
-                        boxShadow: selectedSessions.includes(session.id) ? '0 4px 12px rgba(58,123,213,0.15)' : '0 2px 8px rgba(28,44,77,0.08)',
+                        boxShadow: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '0 4px 12px rgba(58,123,213,0.15)' : '0 2px 8px rgba(28,44,77,0.08)',
                         transition: 'all 0.2s ease',
                         '&:hover': {
                           boxShadow: '0 4px 16px rgba(28,44,77,0.12)',
@@ -979,7 +994,7 @@ const AnalyticsHome = () => {
           </Paper>
 
           {/* Data Display */}
-          {(selectedSessions.length > 0 || viewMode === 'profile') && (
+          {((Array.isArray(selectedSessions) && selectedSessions.length > 0) || viewMode === 'profile') && (
             <Paper sx={{ 
               p: 3, 
               bgcolor: '#fff', 
@@ -1044,7 +1059,7 @@ const AnalyticsHome = () => {
                       Player Profile
                     </Button>
                   )}
-                  {selectedSessions.length > 0 && (
+                  {(Array.isArray(selectedSessions) && selectedSessions.length > 0) && (
                     <Button
                       variant="contained"
                       startIcon={reportLoading ? <CircularProgress size={20} color="inherit" /> : <PictureAsPdf />}
@@ -1077,7 +1092,7 @@ const AnalyticsHome = () => {
               )}
 
               {/* Barrels Filter */}
-              {swingData.length > 0 && viewMode !== 'profile' && (
+              {(Array.isArray(swingData) && swingData.length > 0) && viewMode !== 'profile' && (
                 <BarrelsFilter
                   swingData={swingData}
                   onFilteredDataChange={setFilteredSwingData}
@@ -1713,7 +1728,7 @@ const PlayerProfileView = ({
                   sx={{ 
                     '&:hover': { bgcolor: '#f8f9fa' },
                     cursor: 'pointer',
-                    bgcolor: selectedSessions.includes(session.id) ? '#e3f2fd' : 'transparent'
+                    bgcolor: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '#e3f2fd' : 'transparent'
                   }}
                   onClick={() => handleSessionToggle(session.id)}
                 >
