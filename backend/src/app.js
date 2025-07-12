@@ -458,7 +458,11 @@ app.use((error, req, res, next) => {
   console.error('  URL:', req.url);
   console.error('  Method:', req.method);
   console.error('  Headers:', req.headers);
+  console.error('  User Agent:', req.headers['user-agent']);
+  console.error('  Origin:', req.headers.origin);
+  console.error('  Timestamp:', new Date().toISOString());
   
+  // Handle specific error types
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'File too large' });
@@ -466,6 +470,47 @@ app.use((error, req, res, next) => {
     if (error.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({ error: 'Too many files' });
     }
+  }
+  
+  // Handle database errors
+  if (error.name === 'SequelizeValidationError') {
+    return res.status(400).json({ 
+      error: 'Validation error',
+      details: error.errors.map(e => ({ field: e.path, message: e.message }))
+    });
+  }
+  
+  if (error.name === 'SequelizeUniqueConstraintError') {
+    return res.status(400).json({ 
+      error: 'Duplicate entry',
+      details: error.errors.map(e => ({ field: e.path, message: e.message }))
+    });
+  }
+  
+  if (error.name === 'SequelizeForeignKeyConstraintError') {
+    return res.status(400).json({ 
+      error: 'Referenced record not found',
+      details: error.message
+    });
+  }
+  
+  // Handle JWT errors
+  if (error.name === 'JsonWebTokenError') {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  
+  if (error.name === 'TokenExpiredError') {
+    return res.status(401).json({ error: 'Token expired' });
+  }
+  
+  // Handle CORS errors
+  if (error.message === 'Not allowed by CORS') {
+    console.error('🚫 CORS: Blocking origin:', req.headers.origin);
+    console.error('📋 Allowed origins:', allowedOrigins);
+    return res.status(403).json({ 
+      error: 'CORS policy violation',
+      details: 'Origin not allowed'
+    });
   }
   
   // Return detailed error in development, generic in production
@@ -477,7 +522,8 @@ app.use((error, req, res, next) => {
       method: req.method,
       sql: error.parent?.sql,
       code: error.code,
-      detail: error.detail
+      detail: error.detail,
+      name: error.name
     });
   }
   
@@ -488,7 +534,9 @@ app.use((error, req, res, next) => {
     detail: error.detail,
     hint: error.hint,
     url: req.url,
-    method: req.method
+    method: req.method,
+    name: error.name,
+    timestamp: new Date().toISOString()
   });
   
   res.status(500).json({ 
