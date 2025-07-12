@@ -402,12 +402,15 @@ const AnalyticsHome = () => {
     console.log('[DEBUG] getFilteredSessions - sessions:', sessions);
     console.log('[DEBUG] getFilteredSessions - selectedSessionTypes:', selectedSessionTypes);
     
+    // Ensure sessions is always an array
+    const safeSessions = Array.isArray(sessions) ? sessions : [];
+    
     if (selectedSessionTypes.length === 0) {
-      console.log('[DEBUG] getFilteredSessions - returning all sessions:', sessions);
-      return sessions;
+      console.log('[DEBUG] getFilteredSessions - returning all sessions:', safeSessions);
+      return safeSessions;
     }
     
-    const filtered = sessions.filter(session => 
+    const filtered = safeSessions.filter(session => 
       selectedSessionTypes.some(type => 
         session.session_type?.toLowerCase().includes(type.toLowerCase()) ||
         session.notes?.toLowerCase().includes(type.toLowerCase())
@@ -579,9 +582,12 @@ const AnalyticsHome = () => {
   };
 
   const sortedSwingData = useMemo(() => {
-    if (!sortConfig.key) return filteredSwingData;
+    // Ensure filteredSwingData is always an array
+    const safeFilteredData = Array.isArray(filteredSwingData) ? filteredSwingData : [];
+    
+    if (!sortConfig.key) return safeFilteredData;
 
-    return [...filteredSwingData].sort((a, b) => {
+    return [...safeFilteredData].sort((a, b) => {
       let aValue = a[sortConfig.key];
       let bValue = b[sortConfig.key];
 
@@ -600,6 +606,15 @@ const AnalyticsHome = () => {
       return 0;
     });
   }, [filteredSwingData, sortConfig]);
+
+  // Ensure all array states are properly initialized
+  useEffect(() => {
+    if (!Array.isArray(players)) setPlayers([]);
+    if (!Array.isArray(sessions)) setSessions([]);
+    if (!Array.isArray(swingData)) setSwingData([]);
+    if (!Array.isArray(filteredSwingData)) setFilteredSwingData([]);
+    if (!Array.isArray(sessionHistory)) setSessionHistory([]);
+  }, [players, sessions, swingData, filteredSwingData, sessionHistory]);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 6 }}>
@@ -677,7 +692,7 @@ const AnalyticsHome = () => {
             disabled={isPlayerLocked}
           >
             <MenuItem value="">All Players</MenuItem>
-            {(players || []).map(player => (
+            {(Array.isArray(players) ? players : []).map(player => (
               <MenuItem key={player.id} value={player.id}>
                 {player.name} - {player.position}
               </MenuItem>
@@ -701,7 +716,7 @@ const AnalyticsHome = () => {
               Session Type Filter
             </Typography>
             <Box display="flex" flexWrap="wrap" gap={1}>
-              {(SESSION_TYPES || []).map(type => (
+              {(Array.isArray(SESSION_TYPES) ? SESSION_TYPES : []).map(type => (
                 <Chip
                   key={type}
                   label={type}
@@ -748,7 +763,7 @@ const AnalyticsHome = () => {
               </Box>
             ) : (
               <Grid container spacing={2}>
-                {(getFilteredSessions() || []).map((session, idx) => (
+                {(Array.isArray(getFilteredSessions()) ? getFilteredSessions() : []).map((session, idx) => (
                   <Grid item xs={12} sm={6} md={4} key={session.id}>
                     <Card 
                       sx={{ 
@@ -790,7 +805,7 @@ const AnalyticsHome = () => {
                         })()}
                         {session.session_tags && (
                           <Box display="flex" flexWrap="wrap" gap={0.5} mt={1}>
-                            {(session.session_tags || '').split(',').map((tag, index) => (
+                            {(session.session_tags ? session.session_tags.split(',') : []).map((tag, index) => (
                               <Chip
                                 key={index}
                                 label={tag.trim()}
@@ -862,7 +877,7 @@ const AnalyticsHome = () => {
                   <Tab label="Blast Metrics" />
                 </Tabs>
                 <Grid container spacing={3}>
-                  {((activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast) || []).map(metric => (
+                  {(Array.isArray(activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast) ? (activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast) : []).map(metric => (
                     <Grid item xs={12} sm={6} md={4} key={metric.key}>
                       <Card sx={{ 
                         p: 2, 
@@ -1187,7 +1202,7 @@ const AnalyticsHome = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {sortedSwingData.map((swing, index) => (
+                      {(Array.isArray(sortedSwingData) ? sortedSwingData : []).map((swing, index) => (
                         <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f8f9fa' } }}>
                           <TableCell sx={{ color: '#1c2c4d' }}>{swing.sessionId}</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
@@ -1202,9 +1217,9 @@ const AnalyticsHome = () => {
                 </TableContainer>
               ) : viewMode === 'chart' ? (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-                  {filteredSwingData.length > 0 ? (
+                  {(Array.isArray(filteredSwingData) && filteredSwingData.length > 0) ? (
                     <SprayChart3D
-                      swings={filteredSwingData}
+                      swings={Array.isArray(filteredSwingData) ? filteredSwingData : []}
                       width={800}
                       height={500}
                     />
@@ -1215,7 +1230,7 @@ const AnalyticsHome = () => {
                       border: '1px solid #3a7bd5',
                       borderRadius: 3
                     }}>
-                      No swing data available for visualization.
+                      {Array.isArray(filteredSwingData) ? 'No swing data available for visualization.' : 'Loading swing data...'}
                     </Alert>
                   )}
                 </Box>
@@ -1583,7 +1598,7 @@ const PlayerProfileView = ({
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${safeToFixed((percent * 100), 0)}%`}
                 >
-                  {generateLaunchAngleDistribution().map((entry, index) => (
+                  {(Array.isArray(generateLaunchAngleDistribution()) ? generateLaunchAngleDistribution() : []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </RechartsPie>
@@ -1692,7 +1707,7 @@ const PlayerProfileView = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {sessionHistory.map((session) => (
+              {(Array.isArray(sessionHistory) ? sessionHistory : []).map((session) => (
                 <TableRow 
                   key={session.id} 
                   sx={{ 
