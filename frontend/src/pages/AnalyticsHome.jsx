@@ -1523,9 +1523,12 @@ const PlayerProfileView = ({
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2" color="#1c2c4d">Sweet Spot Swings:</Typography>
+                <Typography variant="body2" color="#1c2c4d">Barrel %:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.sweet_spot_swings || 0}
+                  {playerProfile.sweet_spot_swings && playerProfile.total_swings ? 
+                    `${((playerProfile.sweet_spot_swings / playerProfile.total_swings) * 100).toFixed(1)}%` : 
+                    '0%'
+                  }
                 </Typography>
               </Box>
             </Box>
@@ -1561,9 +1564,12 @@ const PlayerProfileView = ({
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2" color="#1c2c4d">Hard Hit %:</Typography>
+                <Typography variant="body2" color="#1c2c4d">Barrel %:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {getHardHitPercentage()}%
+                  {playerProfile.sweet_spot_swings && playerProfile.total_swings ? 
+                    `${((playerProfile.sweet_spot_swings / playerProfile.total_swings) * 100).toFixed(1)}%` : 
+                    '0%'
+                  }
                 </Typography>
               </Box>
             </Box>
