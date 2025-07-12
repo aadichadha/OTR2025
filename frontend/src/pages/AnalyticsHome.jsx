@@ -120,8 +120,12 @@ const AnalyticsHome = () => {
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
   
-  // Selection states
-  const [selectedPlayer, setSelectedPlayer] = useState(searchParams.get('player') || '');
+  // Selection states - Initialize with URL parameter immediately
+  const [selectedPlayer, setSelectedPlayer] = useState(() => {
+    const urlPlayer = searchParams.get('player');
+    console.log('[DEBUG] AnalyticsHome - Initial URL player parameter:', urlPlayer);
+    return urlPlayer || '';
+  });
   const [selectedSessionTypes, setSelectedSessionTypes] = useState([]);
   const [selectedSessions] = useState([]);
   
@@ -160,15 +164,20 @@ const AnalyticsHome = () => {
     }
   }, [user]);
 
-  // Handle URL parameter changes
+  // Handle URL parameter changes - improved logic
   useEffect(() => {
     const urlPlayer = searchParams.get('player');
     console.log('[DEBUG] AnalyticsHome - URL parameter changed to:', urlPlayer);
+    console.log('[DEBUG] AnalyticsHome - Current selectedPlayer:', selectedPlayer);
+    
     if (urlPlayer && urlPlayer !== selectedPlayer) {
       console.log('[DEBUG] AnalyticsHome - Setting selectedPlayer from URL:', urlPlayer);
       setSelectedPlayer(urlPlayer);
+    } else if (!urlPlayer && selectedPlayer) {
+      console.log('[DEBUG] AnalyticsHome - URL parameter cleared, keeping selectedPlayer:', selectedPlayer);
+      // Don't clear selectedPlayer if URL parameter is removed but we have a selected player
     }
-  }, [searchParams, selectedPlayer]);
+  }, [searchParams]);
 
   // Prevent player from changing player selector
   const isPlayerLocked = user && user.role === 'player';
@@ -687,11 +696,11 @@ const AnalyticsHome = () => {
         <Box display="flex" alignItems="center" mb={2}>
           <AnalyticsIcon sx={{ fontSize: 40, mr: 2, color: '#1c2c4d' }} />
           <Typography variant="h4" fontWeight="bold" color="#1c2c4d">
-            Advanced Analytics Hub
+            Player Progression Analytics
           </Typography>
         </Box>
         <Typography variant="body1" color="#1c2c4d" sx={{ opacity: 0.8 }}>
-          Select a player, filter sessions, and analyze individual swing data with advanced filtering capabilities.
+          Track individual player development, analyze performance trends, and monitor progression over time.
         </Typography>
       </Paper>
 
@@ -731,6 +740,7 @@ const AnalyticsHome = () => {
             value={selectedPlayer}
             onChange={(e) => {
               console.log('[DEBUG] Player selection changed to:', e.target.value);
+              console.log('[DEBUG] Player selection event:', e);
               handlePlayerChange(e.target.value);
             }}
             label="Select Player"
@@ -770,10 +780,16 @@ const AnalyticsHome = () => {
             Selected Player Name: {getSelectedPlayer()?.name || 'none'}
           </Typography>
           <Typography variant="caption" color="textSecondary" display="block">
+            URL Parameter: {searchParams.get('player') || 'none'}
+          </Typography>
+          <Typography variant="caption" color="textSecondary" display="block">
             Profile Loading: {profileLoading ? 'true' : 'false'}
           </Typography>
           <Typography variant="caption" color="textSecondary" display="block">
             Player Profile: {playerProfile ? 'loaded' : 'not loaded'}
+          </Typography>
+          <Typography variant="caption" color="textSecondary" display="block">
+            Players Array: {Array.isArray(players) ? `${players.length} items` : 'not array'}
           </Typography>
         </Box>
       </Paper>

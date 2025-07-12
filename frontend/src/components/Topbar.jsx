@@ -64,7 +64,7 @@ const Topbar = () => {
 
     // Add coach-specific items
     if (user?.role === 'coach') {
-      baseItems.push({ label: 'Player Analytics', icon: <Assessment />, to: '/coach/dashboard' });
+      baseItems.push({ label: 'Progression', icon: <Assessment />, to: '/analytics' });
     }
 
     return baseItems;
@@ -219,7 +219,7 @@ const Topbar = () => {
                 },
               }}
             >
-              Analytics
+              Progression
             </Button>
             <Button
               component={Link}
