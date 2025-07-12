@@ -281,7 +281,7 @@ const Leaderboard = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                {(Array.isArray(filteredPlayers) ? filteredPlayers : []).map((player, idx) => (
+                (Array.isArray(filteredPlayers) ? filteredPlayers : []).map((player, idx) => (
                   <TableRow key={player.id} hover sx={{ bgcolor: '#fff', color: NAVY }}>
                     <TableCell align="center" sx={{ fontWeight: 700, color: NAVY }}>
                       {idx + 1}
