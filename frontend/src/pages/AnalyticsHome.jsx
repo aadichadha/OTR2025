@@ -207,17 +207,21 @@ const AnalyticsHome = () => {
   const fetchPlayers = async () => {
     setLoading(true);
     try {
+      console.log('[DEBUG] AnalyticsHome fetchPlayers - starting...');
       const res = await api.get('/players');
       console.log('[DEBUG] AnalyticsHome fetchPlayers response:', res.data);
       // Handle the backend response format: { players, pagination }
       const playersData = res.data.players || res.data || [];
       console.log('[DEBUG] AnalyticsHome processed players data:', playersData);
+      console.log('[DEBUG] AnalyticsHome players array length:', playersData.length);
       setPlayers(Array.isArray(playersData) ? playersData : []);
+      console.log('[DEBUG] AnalyticsHome setPlayers called with:', Array.isArray(playersData) ? playersData : []);
     } catch (err) {
       console.error('Error fetching players:', err);
       setPlayers([]);
     } finally {
       setLoading(false);
+      console.log('[DEBUG] AnalyticsHome fetchPlayers - loading set to false');
     }
   };
 
@@ -311,10 +315,14 @@ const AnalyticsHome = () => {
   const fetchPlayerProfile = async () => {
     setProfileLoading(true);
     try {
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile - starting for player:', selectedPlayer);
       const res = await api.get(`/players/${selectedPlayer}/analytics`);
       console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response:', res.data);
       if (res.data.success && res.data.data) {
         console.log('[DEBUG] AnalyticsHome player profile data:', res.data.data);
+        console.log('[DEBUG] AnalyticsHome average_exit_velocity:', res.data.data.average_exit_velocity);
+        console.log('[DEBUG] AnalyticsHome average_launch_angle:', res.data.data.average_launch_angle);
+        console.log('[DEBUG] AnalyticsHome best_exit_velocity:', res.data.data.best_exit_velocity);
         setPlayerProfile(res.data.data);
       } else {
         console.warn('No player profile data received');
@@ -325,6 +333,7 @@ const AnalyticsHome = () => {
       setPlayerProfile(null);
     } finally {
       setProfileLoading(false);
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile - loading set to false');
     }
   };
 
@@ -692,7 +701,10 @@ const AnalyticsHome = () => {
           <InputLabel sx={{ color: '#1c2c4d' }}>Select Player</InputLabel>
           <Select
             value={selectedPlayer}
-            onChange={(e) => handlePlayerChange(e.target.value)}
+            onChange={(e) => {
+              console.log('[DEBUG] Player selection changed to:', e.target.value);
+              handlePlayerChange(e.target.value);
+            }}
             label="Select Player"
             sx={{
               '& .MuiOutlinedInput-notchedOutline': {
@@ -711,11 +723,18 @@ const AnalyticsHome = () => {
             disabled={isPlayerLocked}
           >
             <MenuItem value="">All Players</MenuItem>
-            {(Array.isArray(players) ? players : []).map(player => (
-              <MenuItem key={player.id} value={player.id}>
-                {player.name} - {player.position}
-              </MenuItem>
-            ))}
+            {(() => {
+              const playersArray = Array.isArray(players) ? players : [];
+              console.log('[DEBUG] Rendering players dropdown with:', playersArray.length, 'players');
+              return playersArray.map(player => {
+                console.log('[DEBUG] Rendering player option:', player.id, player.name);
+                return (
+                  <MenuItem key={player.id} value={player.id}>
+                    {player.name} - {player.position}
+                  </MenuItem>
+                );
+              });
+            })()}
           </Select>
         </FormControl>
         {/* Debug info */}
