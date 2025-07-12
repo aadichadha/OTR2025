@@ -114,10 +114,10 @@ export default function Home() {
                 <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Recent Sessions</Typography>
                 {loading ? <CircularProgress /> : (
                   <Box>
-                    {stats.recentSessions.length === 0 ? (
+                    {(Array.isArray(stats.recentSessions) && stats.recentSessions.length === 0) ? (
                       <Typography color="error">No recent sessions found.</Typography>
                     ) : (
-                      stats.recentSessions.map((session, idx) => (
+                      (Array.isArray(stats.recentSessions) ? stats.recentSessions : []).map((session, idx) => (
                         <Box key={idx} sx={{ mb: 2, p: 2, borderRadius: 2, bgcolor: '#fff', border: '1px solid #e0e3e8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Box>
                             <Typography variant="body1" sx={{ color: NAVY, fontWeight: 600, mb: 0.5 }}>{formatDate(session.session_date)}</Typography>

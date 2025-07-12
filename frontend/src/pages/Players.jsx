@@ -476,7 +476,7 @@ function Players() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {players.map(player => (
+                {(Array.isArray(players) ? players : []).map(player => (
                   <TableRow
                     key={player.id}
                     hover

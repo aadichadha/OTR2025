@@ -290,8 +290,8 @@ One-time password: exwx bdjz xjid qhmh`);
                     }
                   }}
                 >
-                  {players.length === 0 && <MenuItem value="" sx={{ color: '#1c2c4d' }}>No players found</MenuItem>}
-                  {players.map(player => (
+                  {(Array.isArray(players) && players.length === 0) && <MenuItem value="" sx={{ color: '#1c2c4d' }}>No players found</MenuItem>}
+                  {(Array.isArray(players) ? players : []).map(player => (
                     <MenuItem key={player.id} value={player.id} sx={{ color: '#1c2c4d' }}>
                       {player.name} ({player.player_code})
                     </MenuItem>

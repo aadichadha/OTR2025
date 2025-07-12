@@ -27,7 +27,7 @@ const Sidebar = ({ onLogout }) => {
     <Box sx={{ width: 240, bgcolor: '#fff', height: '100%', pt: 2 }}>
       {/* No logo/text above menu, menu is at the top */}
       <List sx={{ color: NAVY }}>
-        {navItems.map((item) => {
+        {(Array.isArray(navItems) ? navItems : []).map((item) => {
           const selected = location.pathname === item.to;
           return (
             <ListItem

@@ -175,7 +175,7 @@ const Leaderboard = () => {
                       }
                     }}
                   >
-                    {levels.map((level) => (
+                    {(Array.isArray(levels) ? levels : []).map((level) => (
                       <MenuItem key={level} value={level} sx={{ color: NAVY }}>
                         {level}
                       </MenuItem>
@@ -214,7 +214,7 @@ const Leaderboard = () => {
                       }
                     }}
                   >
-                    {sortOptions.map((option) => (
+                    {(Array.isArray(sortOptions) ? sortOptions : []).map((option) => (
                       <MenuItem key={option.value} value={option.value} sx={{ color: NAVY }}>
                         {option.label}
                       </MenuItem>
@@ -244,7 +244,7 @@ const Leaderboard = () => {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                {columns.map((col) => (
+                {(Array.isArray(columns) ? columns : []).map((col) => (
                   <TableCell
                     key={col.id}
                     sx={{ backgroundColor: '#fff', color: NAVY, fontWeight: 700, borderBottom: '2px solid #1c2c4d' }}
@@ -281,7 +281,7 @@ const Leaderboard = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPlayers.map((player, idx) => (
+                {(Array.isArray(filteredPlayers) ? filteredPlayers : []).map((player, idx) => (
                   <TableRow key={player.id} hover sx={{ bgcolor: '#fff', color: NAVY }}>
                     <TableCell align="center" sx={{ fontWeight: 700, color: NAVY }}>
                       {idx + 1}

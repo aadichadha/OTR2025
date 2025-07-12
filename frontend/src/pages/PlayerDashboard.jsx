@@ -234,9 +234,9 @@ const PlayerDashboard = () => {
                     View All Analytics
                   </Button>
                 </Box>
-                {loading ? <CircularProgress /> : sessions.length > 0 ? (
+                {loading ? <CircularProgress /> : (Array.isArray(sessions) && sessions.length > 0) ? (
                   <Box>
-                    {sessions.slice(0, 5).map((session) => (
+                    {(Array.isArray(sessions) ? sessions.slice(0, 5) : []).map((session) => (
                       <Box key={session.id} sx={{ 
                         mb: 2, 
                         p: 2, 
