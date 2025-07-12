@@ -161,9 +161,9 @@ const SessionComparison = () => {
   };
 
   const getSessionStats = (session) => {
-    const swings = session.exitVelocityData || [];
-    const exitVelocities = swings.map(s => parseFloat(s.exit_velocity)).filter(v => !isNaN(v));
-    const launchAngles = swings.map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
+    const swings = Array.isArray(session.exitVelocityData) ? session.exitVelocityData : [];
+    const exitVelocities = (Array.isArray(swings) ? swings : []).map(s => parseFloat(s.exit_velocity)).filter(v => !isNaN(v));
+    const launchAngles = (Array.isArray(swings) ? swings : []).map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
     
     return {
       swingCount: swings.length,
@@ -274,8 +274,8 @@ const SessionComparison = () => {
                     </Typography>
                     <Typography variant="h5" component="div">
                       {(() => {
-                        const allSwings = sessions.flatMap(s => s.exitVelocityData || []);
-                        const angles = allSwings.map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
+                        const allSwings = (Array.isArray(sessions) ? sessions : []).flatMap(s => Array.isArray(s.exitVelocityData) ? s.exitVelocityData : []);
+                        const angles = (Array.isArray(allSwings) ? allSwings : []).map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
                         return angles.length > 0 ? safeToFixed((angles.reduce((a, b) => a + b, 0) / angles.length), 1) : '0.0';
                       })()}°
                     </Typography>
@@ -303,13 +303,13 @@ const SessionComparison = () => {
                   onChange={(e) => setFilters(prev => ({ ...prev, categories: e.target.value }))}
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
+                      {(Array.isArray(selected) ? selected : []).map((value) => (
                         <Chip key={value} label={value} size="small" />
                       ))}
                     </Box>
                   )}
                 >
-                  {filterOptions.categories?.map((category) => (
+                  {(Array.isArray(filterOptions.categories) ? filterOptions.categories : []).map((category) => (
                     <MenuItem key={category} value={category}>
                       {category}
                     </MenuItem>
@@ -374,7 +374,7 @@ const SessionComparison = () => {
                   </Box>
                   
                   <List sx={{ maxHeight: 600, overflow: 'auto' }}>
-                    {filteredSessions.map((session) => {
+                    {(Array.isArray(filteredSessions) ? filteredSessions : []).map((session) => {
                       const stats = getSessionStats(session);
                       const isSelected = selectedSessions.includes(session.id);
                       
@@ -474,7 +474,7 @@ const SessionComparison = () => {
                   <CardHeader title="Session Summary" />
                   <CardContent>
                     <List>
-                      {comparisonData.sessions.map((session, index) => (
+                      {(Array.isArray(comparisonData.sessions) ? comparisonData.sessions : []).map((session, index) => (
                         <ListItem key={session.id}>
                           <ListItemText
                             primary={
@@ -517,7 +517,7 @@ const SessionComparison = () => {
                   <CardHeader title="Performance Metrics" />
                   <CardContent>
                     <Grid container spacing={2}>
-                      {comparisonData.sessions.map((session, index) => (
+                      {(Array.isArray(comparisonData.sessions) ? comparisonData.sessions : []).map((session, index) => (
                         <Grid item xs={12} sm={6} md={4} key={session.id}>
                           <Paper sx={{ p: 2, border: 1, borderColor: 'divider' }}>
                             <Typography variant="h6" gutterBottom>

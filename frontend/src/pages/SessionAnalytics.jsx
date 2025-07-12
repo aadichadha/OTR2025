@@ -341,7 +341,7 @@ const SessionAnalytics = () => {
                   onChange={(e) => handleFilterChange('categories', e.target.value)}
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
+                      {(Array.isArray(selected) ? selected : []).map((value) => (
                         <Chip key={value} label={value} size="small" />
                       ))}
                     </Box>
@@ -392,7 +392,7 @@ const SessionAnalytics = () => {
                   onChange={(e) => handleFilterChange('strikeZones', e.target.value)}
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
+                      {(Array.isArray(selected) ? selected : []).map((value) => (
                         <Chip key={value} label={value} size="small" />
                       ))}
                     </Box>
@@ -446,7 +446,7 @@ const SessionAnalytics = () => {
                 <Card>
                   <CardHeader title="Recent Sessions" />
                   <CardContent>
-                    {sessions.slice(0, 5).map((session) => (
+                    {(Array.isArray(sessions) ? sessions.slice(0, 5) : []).map((session) => (
                       <Box key={session.id} sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="subtitle2">
                           {new Date(session.session_date).toLocaleDateString()}
@@ -685,7 +685,7 @@ const SessionAnalytics = () => {
                       Showing {barrelsFilteredSwings.length} of {swings.length} swings
                     </Typography>
                     <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
-                      {barrelsFilteredSwings.slice(0, 50).map((swing) => (
+                      {(Array.isArray(barrelsFilteredSwings) ? barrelsFilteredSwings.slice(0, 50) : []).map((swing) => (
                         <Box key={swing.id} sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
                           <Typography variant="body2">
                             Swing {swing.id}: {swing.exit_velocity} mph, {swing.launch_angle}° 

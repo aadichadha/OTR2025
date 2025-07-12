@@ -405,7 +405,7 @@ const AdminDashboard = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
+                  (Array.isArray(users) ? users : []).map((user) => (
                     <TableRow key={user.id} hover>
                       <TableCell>{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>

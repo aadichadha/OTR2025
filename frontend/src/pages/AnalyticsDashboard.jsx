@@ -61,7 +61,7 @@ const AnalyticsDashboard = () => {
 
   const columns = [
     { field: 'name', headerName: 'Player', flex: 1, minWidth: 120 },
-    ...selectedStats.map(stat => ({
+    ...(Array.isArray(selectedStats) ? selectedStats : []).map(stat => ({
       field: stat,
       headerName: STAT_OPTIONS.find(s => s.key === stat)?.label || stat,
       flex: 1,
@@ -111,7 +111,7 @@ const AnalyticsDashboard = () => {
           </ToggleButtonGroup>
           <Divider orientation="vertical" flexItem />
           <Box>
-            {STAT_OPTIONS.map(stat => (
+            {(Array.isArray(STAT_OPTIONS) ? STAT_OPTIONS : []).map(stat => (
               <Chip
                 key={stat.key}
                 label={stat.label}
@@ -158,7 +158,7 @@ const AnalyticsDashboard = () => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <RechartsTooltip />
-                {selectedStats.map((stat, idx) => (
+                {(Array.isArray(selectedStats) ? selectedStats : []).map((stat, idx) => (
                   <Line key={stat} type="monotone" dataKey={stat} stroke={['#3a7bd5', '#1c2c4d', '#8884d8', '#43a047', '#e53935', '#ffa726'][idx % 6]} strokeWidth={2} />
                 ))}
               </LineChart>
@@ -168,7 +168,7 @@ const AnalyticsDashboard = () => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <RechartsTooltip />
-                {selectedStats.map((stat, idx) => (
+                {(Array.isArray(selectedStats) ? selectedStats : []).map((stat, idx) => (
                   <Bar key={stat} dataKey={stat} fill={['#3a7bd5', '#1c2c4d', '#8884d8', '#43a047', '#e53935', '#ffa726'][idx % 6]} />
                 ))}
               </BarChart>

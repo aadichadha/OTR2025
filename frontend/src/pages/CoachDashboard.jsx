@@ -428,7 +428,7 @@ const CoachDashboard = () => {
                 <Typography variant="h6" color="textSecondary">Avg Barrel %</Typography>
                 <Typography variant="h4" sx={{ color: NAVY, fontWeight: 700 }}>
                   {(() => {
-                    const barrelPercentages = filteredPlayers
+                    const barrelPercentages = (Array.isArray(filteredPlayers) ? filteredPlayers : [])
                       .map(p => p.barrel_percentage)
                       .filter(p => p !== null && p !== undefined);
                     return barrelPercentages.length > 0 
@@ -446,7 +446,7 @@ const CoachDashboard = () => {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                {columns.map((column) => (
+                {(Array.isArray(columns) ? columns : []).map((column) => (
                   <TableCell
                     key={column.key}
                     onClick={() => column.sortable && handleSort(column.key)}
@@ -481,7 +481,7 @@ const CoachDashboard = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPlayers
+                (Array.isArray(filteredPlayers) ? filteredPlayers : [])
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((player) => (
                     <TableRow key={player.player_id} hover>
@@ -543,7 +543,7 @@ const CoachDashboard = () => {
           </DialogTitle>
           <DialogContent sx={{ mt: 2 }}>
             <Grid container spacing={2}>
-              {allPlayers.map((player) => (
+              {(Array.isArray(allPlayers) ? allPlayers : []).map((player) => (
                 <Grid item xs={12} sm={6} md={4} key={player.id}>
                   <Card sx={{ 
                     p: 1, 
