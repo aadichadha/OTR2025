@@ -43,7 +43,8 @@ const allowedOrigins = [
   'https://www.otr-data.com', // Current custom domain with www
   'https://otr2025.onrender.com', // Render production domain
   'http://localhost:5173', // Local development
-  'http://localhost:3000'  // Alternative local development
+  'http://localhost:3000',  // Alternative local development
+  'https://otr-2025-frontend-po650w5k9-aadis-projects-cfbb1119.vercel.app' // Vercel deployment
 ];
 
 // Add FRONTEND_URL from environment if it exists and isn't already in the list
@@ -67,6 +68,10 @@ const corsOptions = {
     } else if (origin.includes('otr-data.com')) {
       // Allow any subdomain of otr-data.com
       console.log('✅ CORS: Allowing otr-data.com subdomain:', origin);
+      callback(null, true);
+    } else if (origin.includes('vercel.app')) {
+      // Allow any Vercel deployment
+      console.log('✅ CORS: Allowing Vercel deployment:', origin);
       callback(null, true);
     } else {
       console.log('🚫 CORS: Blocking origin:', origin);
