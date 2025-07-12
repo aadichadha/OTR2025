@@ -191,12 +191,15 @@ const AnalyticsHome = () => {
 
   // New effect for player profile data
   useEffect(() => {
+    console.log('[DEBUG] AnalyticsHome useEffect - selectedPlayer changed to:', selectedPlayer);
     if (selectedPlayer) {
+      console.log('[DEBUG] AnalyticsHome useEffect - calling fetchPlayerProfile for player:', selectedPlayer);
       fetchPlayerProfile();
       fetchPlayerTrends();
       fetchPlayerBenchmarks();
       fetchSessionHistory();
     } else {
+      console.log('[DEBUG] AnalyticsHome useEffect - no selectedPlayer, clearing profile data');
       setPlayerProfile(null);
       setPlayerTrends(null);
       setPlayerBenchmarks(null);
@@ -316,8 +319,14 @@ const AnalyticsHome = () => {
     setProfileLoading(true);
     try {
       console.log('[DEBUG] AnalyticsHome fetchPlayerProfile - starting for player:', selectedPlayer);
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile - API URL:', `/players/${selectedPlayer}/analytics`);
+      
       const res = await api.get(`/players/${selectedPlayer}/analytics`);
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response:', res.data);
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response status:', res.status);
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response data:', res.data);
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response data type:', typeof res.data);
+      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response data keys:', Object.keys(res.data || {}));
+      
       if (res.data.success && res.data.data) {
         console.log('[DEBUG] AnalyticsHome player profile data:', res.data.data);
         console.log('[DEBUG] AnalyticsHome average_exit_velocity:', res.data.data.average_exit_velocity);
@@ -325,11 +334,13 @@ const AnalyticsHome = () => {
         console.log('[DEBUG] AnalyticsHome best_exit_velocity:', res.data.data.best_exit_velocity);
         setPlayerProfile(res.data.data);
       } else {
-        console.warn('No player profile data received');
+        console.warn('[DEBUG] No player profile data received - res.data:', res.data);
         setPlayerProfile(null);
       }
     } catch (err) {
-      console.error('Error fetching player profile:', err);
+      console.error('[DEBUG] Error fetching player profile:', err);
+      console.error('[DEBUG] Error response:', err.response);
+      console.error('[DEBUG] Error message:', err.message);
       setPlayerProfile(null);
     } finally {
       setProfileLoading(false);
@@ -739,6 +750,15 @@ const AnalyticsHome = () => {
         <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: '0.8rem' }}>
           <Typography variant="caption" color="textSecondary">
             Debug: {players.length} players loaded | Selected: {selectedPlayer || 'none'}
+          </Typography>
+          <Typography variant="caption" color="textSecondary" display="block">
+            Selected Player Name: {getSelectedPlayer()?.name || 'none'}
+          </Typography>
+          <Typography variant="caption" color="textSecondary" display="block">
+            Profile Loading: {profileLoading ? 'true' : 'false'}
+          </Typography>
+          <Typography variant="caption" color="textSecondary" display="block">
+            Player Profile: {playerProfile ? 'loaded' : 'not loaded'}
           </Typography>
         </Box>
       </Paper>
