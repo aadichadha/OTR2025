@@ -131,14 +131,20 @@ const SessionAnalytics = () => {
         api.get(`/analytics/players/${playerId}/filter-options`)
       ]);
 
-      setSessions(sessionsRes.data.data || []);
-      setSwings(swingsRes.data.data || []);
-      // Handle both nested and direct trends data structure
+      // Ensure all data is properly handled as arrays
+      const sessionsData = sessionsRes.data.data || [];
+      const swingsData = swingsRes.data.data || [];
       const trendsData = trendsRes.data.data?.trends || trendsRes.data.data || [];
+      const benchmarksData = benchmarksRes.data.data || {};
+      const progressData = progressRes.data.data || {};
+      const filterOptionsData = filterOptionsRes.data.data || {};
+
+      setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+      setSwings(Array.isArray(swingsData) ? swingsData : []);
       setTrends(Array.isArray(trendsData) ? trendsData : []);
-      setBenchmarks(benchmarksRes.data.data);
-      setProgress(progressRes.data.data);
-      setFilterOptions(filterOptionsRes.data.data || {});
+      setBenchmarks(benchmarksData);
+      setProgress(progressData);
+      setFilterOptions(filterOptionsData);
     } catch (err) {
       console.error('Error loading analytics data:', err);
       setError('Failed to load analytics data');
@@ -159,7 +165,11 @@ const SessionAnalytics = () => {
   };
 
   const getFilteredSwings = () => {
+    if (!Array.isArray(swings)) return [];
+    
     return swings.filter(swing => {
+      if (!swing) return false;
+      
       // Category filter
       if (filters.categories.length > 0 && !filters.categories.includes(swing.session_category)) {
         return false;
@@ -337,7 +347,7 @@ const SessionAnalytics = () => {
                     </Box>
                   )}
                 >
-                  {filterOptions.categories?.map((category) => (
+                  {(filterOptions.categories || []).map((category) => (
                     <MenuItem key={category} value={category}>
                       {category}
                     </MenuItem>
@@ -388,7 +398,7 @@ const SessionAnalytics = () => {
                     </Box>
                   )}
                 >
-                  {filterOptions.strike_zones?.map((zone) => (
+                  {(filterOptions.strike_zones || []).map((zone) => (
                     <MenuItem key={zone} value={zone}>
                       Zone {zone}
                     </MenuItem>
