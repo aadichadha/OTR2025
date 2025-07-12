@@ -739,13 +739,50 @@ const AnalyticsHome = () => {
             <MenuItem value="">
               <em>All Players</em>
             </MenuItem>
-            {Array.isArray(players) && players.map(player => (
-              <MenuItem key={player.id} value={player.id.toString()}>
-                {player.name} - {player.position}
-              </MenuItem>
-            ))}
+            {(() => {
+              console.log('[DEBUG] Rendering dropdown with players:', players);
+              console.log('[DEBUG] Players array length:', players.length);
+              console.log('[DEBUG] Players is array:', Array.isArray(players));
+              return Array.isArray(players) && players.map(player => {
+                console.log('[DEBUG] Rendering player option:', player.id, player.name);
+                return (
+                  <MenuItem key={player.id} value={player.id.toString()}>
+                    {player.name} - {player.position}
+                  </MenuItem>
+                );
+              });
+            })()}
           </Select>
         </FormControl>
+        
+        {/* Test button to manually select a player */}
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption" color="textSecondary" display="block" mb={1}>
+            Test Player Selection:
+          </Typography>
+          <Box display="flex" gap={1} flexWrap="wrap">
+            {Array.isArray(players) && players.slice(0, 3).map(player => (
+              <Button
+                key={player.id}
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  console.log('[DEBUG] Test button clicked for player:', player.id);
+                  handlePlayerChange(player.id.toString());
+                }}
+                sx={{
+                  borderColor: '#1c2c4d',
+                  color: '#1c2c4d',
+                  fontSize: '0.7rem',
+                  py: 0.5,
+                  px: 1
+                }}
+              >
+                {player.name}
+              </Button>
+            ))}
+          </Box>
+        </Box>
         {/* Debug info */}
         <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: '0.8rem' }}>
           <Typography variant="caption" color="textSecondary">
