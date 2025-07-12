@@ -123,7 +123,11 @@ const AnalyticsHome = () => {
   // Selection states
   const [selectedPlayer, setSelectedPlayer] = useState(searchParams.get('player') || '');
   const [selectedSessionTypes, setSelectedSessionTypes] = useState([]);
-  const [selectedSessions, setSelectedSessions] = useState([]);
+  const [selectedSessions] = useState([]);
+  
+  // Debug URL parameter
+  console.log('[DEBUG] AnalyticsHome - URL player parameter:', searchParams.get('player'));
+  console.log('[DEBUG] AnalyticsHome - selectedPlayer initialized as:', selectedPlayer);
   
   // Filter states
   const [filters, setFilters] = useState({});
@@ -155,6 +159,16 @@ const AnalyticsHome = () => {
       setSearchParams({ player: user.id });
     }
   }, [user]);
+
+  // Handle URL parameter changes
+  useEffect(() => {
+    const urlPlayer = searchParams.get('player');
+    console.log('[DEBUG] AnalyticsHome - URL parameter changed to:', urlPlayer);
+    if (urlPlayer && urlPlayer !== selectedPlayer) {
+      console.log('[DEBUG] AnalyticsHome - Setting selectedPlayer from URL:', urlPlayer);
+      setSelectedPlayer(urlPlayer);
+    }
+  }, [searchParams, selectedPlayer]);
 
   // Prevent player from changing player selector
   const isPlayerLocked = user && user.role === 'player';
