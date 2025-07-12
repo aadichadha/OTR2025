@@ -256,6 +256,7 @@ const getPlayerSwings = async (req, res) => {
 const getPlayerAnalytics = async (req, res) => {
   try {
     const { playerId } = req.params;
+    console.log('[DEBUG] getPlayerAnalytics called for playerId:', playerId);
 
     // Get all swings for the player
     const swings = await ExitVelocityData.findAll({
@@ -266,7 +267,17 @@ const getPlayerAnalytics = async (req, res) => {
       }]
     });
 
+    console.log('[DEBUG] getPlayerAnalytics - found swings:', swings.length);
+    console.log('[DEBUG] getPlayerAnalytics - sample swing data:', swings.slice(0, 3).map(s => ({
+      id: s.id,
+      exit_velocity: s.exit_velocity,
+      launch_angle: s.launch_angle,
+      distance: s.distance,
+      session_id: s.session_id
+    })));
+
     if (swings.length === 0) {
+      console.log('[DEBUG] getPlayerAnalytics - no swings found, returning empty data');
       return res.json({
         success: true,
         data: {
@@ -285,6 +296,11 @@ const getPlayerAnalytics = async (req, res) => {
     const exitVelocities = swings.map(s => parseFloat(s.exit_velocity)).filter(v => !isNaN(v));
     const launchAngles = swings.map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
     const distances = swings.map(s => parseFloat(s.distance)).filter(v => !isNaN(v));
+
+    console.log('[DEBUG] getPlayerAnalytics - exitVelocities count:', exitVelocities.length);
+    console.log('[DEBUG] getPlayerAnalytics - launchAngles count:', launchAngles.length);
+    console.log('[DEBUG] getPlayerAnalytics - distances count:', distances.length);
+    console.log('[DEBUG] getPlayerAnalytics - sample exit velocities:', exitVelocities.slice(0, 5));
 
     const sweetSpotSwings = swings.filter(s => {
       const angle = parseFloat(s.launch_angle);
@@ -306,6 +322,8 @@ const getPlayerAnalytics = async (req, res) => {
       sweet_spot_swings: sweetSpotSwings,
       sessions_count: uniqueSessions
     };
+
+    console.log('[DEBUG] getPlayerAnalytics - calculated analytics:', analytics);
 
     res.json({
       success: true,
