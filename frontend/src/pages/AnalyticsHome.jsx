@@ -381,6 +381,8 @@ const AnalyticsHome = () => {
   };
 
   const handlePlayerChange = (playerId) => {
+    console.log('[DEBUG] handlePlayerChange called with playerId:', playerId);
+    console.log('[DEBUG] handlePlayerChange - current selectedPlayer:', selectedPlayer);
     setSelectedPlayer(playerId);
     setSelectedSessionTypes([]);
     setSelectedSessions([]);
@@ -393,6 +395,7 @@ const AnalyticsHome = () => {
     } else {
       setSearchParams({});
     }
+    console.log('[DEBUG] handlePlayerChange - new selectedPlayer will be:', playerId);
   };
 
   const handleSessionTypeToggle = (sessionType) => {
@@ -722,19 +725,14 @@ const AnalyticsHome = () => {
             }}
             disabled={isPlayerLocked}
           >
-            <MenuItem value="">All Players</MenuItem>
-            {(() => {
-              const playersArray = Array.isArray(players) ? players : [];
-              console.log('[DEBUG] Rendering players dropdown with:', playersArray.length, 'players');
-              return playersArray.map(player => {
-                console.log('[DEBUG] Rendering player option:', player.id, player.name);
-                return (
-                  <MenuItem key={player.id} value={player.id}>
-                    {player.name} - {player.position}
-                  </MenuItem>
-                );
-              });
-            })()}
+            <MenuItem value="">
+              <em>All Players</em>
+            </MenuItem>
+            {Array.isArray(players) && players.map(player => (
+              <MenuItem key={player.id} value={player.id.toString()}>
+                {player.name} - {player.position}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         {/* Debug info */}
@@ -1491,7 +1489,7 @@ const PlayerProfileView = ({
               <Box display="flex" justifyContent="space-between" mb={1}>
                 <Typography variant="body2" color="#1c2c4d">Avg Launch Angle:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.average_launch_angle || 0}°
+                  {playerProfile.average_launch_angle ? `${playerProfile.average_launch_angle}°` : '0°'}
                 </Typography>
               </Box>
             </Box>
@@ -1517,13 +1515,13 @@ const PlayerProfileView = ({
               <Box display="flex" justifyContent="space-between" mb={1}>
                 <Typography variant="body2" color="#1c2c4d">Avg Exit Velocity:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.average_exit_velocity || 0} MPH
+                  {playerProfile.average_exit_velocity ? `${playerProfile.average_exit_velocity} MPH` : '0 MPH'}
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mb={1}>
                 <Typography variant="body2" color="#1c2c4d">Max Exit Velocity:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.best_exit_velocity || 0} MPH
+                  {playerProfile.best_exit_velocity ? `${playerProfile.best_exit_velocity} MPH` : '0 MPH'}
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mb={1}>
