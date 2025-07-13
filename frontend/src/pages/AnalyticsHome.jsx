@@ -120,18 +120,10 @@ const AnalyticsHome = () => {
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
   
-  // Selection states - Initialize with URL parameter immediately
-  const [selectedPlayer, setSelectedPlayer] = useState(() => {
-    const urlPlayer = searchParams.get('player');
-    console.log('[DEBUG] AnalyticsHome - Initial URL player parameter:', urlPlayer);
-    return urlPlayer || '';
-  });
+  // Selection states
+  const [selectedPlayer, setSelectedPlayer] = useState(searchParams.get('player') || '');
   const [selectedSessionTypes, setSelectedSessionTypes] = useState([]);
-  const [selectedSessions] = useState([]);
-  
-  // Debug URL parameter
-  console.log('[DEBUG] AnalyticsHome - URL player parameter:', searchParams.get('player'));
-  console.log('[DEBUG] AnalyticsHome - selectedPlayer initialized as:', selectedPlayer);
+  const [selectedSessions, setSelectedSessions] = useState([]);
   
   // Filter states
   const [filters, setFilters] = useState({});
@@ -163,21 +155,6 @@ const AnalyticsHome = () => {
       setSearchParams({ player: user.id });
     }
   }, [user]);
-
-  // Handle URL parameter changes - improved logic
-  useEffect(() => {
-    const urlPlayer = searchParams.get('player');
-    console.log('[DEBUG] AnalyticsHome - URL parameter changed to:', urlPlayer);
-    console.log('[DEBUG] AnalyticsHome - Current selectedPlayer:', selectedPlayer);
-    
-    if (urlPlayer && urlPlayer !== selectedPlayer) {
-      console.log('[DEBUG] AnalyticsHome - Setting selectedPlayer from URL:', urlPlayer);
-      setSelectedPlayer(urlPlayer);
-    } else if (!urlPlayer && selectedPlayer) {
-      console.log('[DEBUG] AnalyticsHome - URL parameter cleared, keeping selectedPlayer:', selectedPlayer);
-      // Don't clear selectedPlayer if URL parameter is removed but we have a selected player
-    }
-  }, [searchParams]);
 
   // Prevent player from changing player selector
   const isPlayerLocked = user && user.role === 'player';
@@ -214,15 +191,12 @@ const AnalyticsHome = () => {
 
   // New effect for player profile data
   useEffect(() => {
-    console.log('[DEBUG] AnalyticsHome useEffect - selectedPlayer changed to:', selectedPlayer);
     if (selectedPlayer) {
-      console.log('[DEBUG] AnalyticsHome useEffect - calling fetchPlayerProfile for player:', selectedPlayer);
       fetchPlayerProfile();
       fetchPlayerTrends();
       fetchPlayerBenchmarks();
       fetchSessionHistory();
     } else {
-      console.log('[DEBUG] AnalyticsHome useEffect - no selectedPlayer, clearing profile data');
       setPlayerProfile(null);
       setPlayerTrends(null);
       setPlayerBenchmarks(null);
@@ -233,21 +207,15 @@ const AnalyticsHome = () => {
   const fetchPlayers = async () => {
     setLoading(true);
     try {
-      console.log('[DEBUG] AnalyticsHome fetchPlayers - starting...');
       const res = await api.get('/players');
-      console.log('[DEBUG] AnalyticsHome fetchPlayers response:', res.data);
-      // Handle the backend response format: { players, pagination }
+      // Ensure we always have an array
       const playersData = res.data.players || res.data || [];
-      console.log('[DEBUG] AnalyticsHome processed players data:', playersData);
-      console.log('[DEBUG] AnalyticsHome players array length:', playersData.length);
       setPlayers(Array.isArray(playersData) ? playersData : []);
-      console.log('[DEBUG] AnalyticsHome setPlayers called with:', Array.isArray(playersData) ? playersData : []);
     } catch (err) {
       console.error('Error fetching players:', err);
       setPlayers([]);
     } finally {
       setLoading(false);
-      console.log('[DEBUG] AnalyticsHome fetchPlayers - loading set to false');
     }
   };
 
@@ -281,12 +249,6 @@ const AnalyticsHome = () => {
   const fetchSwingData = async () => {
     setDataLoading(true);
     try {
-      // Ensure selectedSessions is an array
-      if (!Array.isArray(selectedSessions) || selectedSessions.length === 0) {
-        setSwingData([]);
-        return;
-      }
-
       // Fetch swing data for selected sessions
       const swingDataPromises = selectedSessions.map(sessionId => 
         api.get(`/sessions/${sessionId}/swings`)
@@ -301,14 +263,10 @@ const AnalyticsHome = () => {
         const sessionSwings = Array.isArray(res.data)
           ? res.data
           : (res.data.swings || []);
-        
-        // Ensure sessionSwings is an array before mapping
-        if (Array.isArray(sessionSwings)) {
-          allSwings.push(...sessionSwings.map(swing => ({
-            ...swing,
-            sessionId: selectedSessions[index]
-          })));
-        }
+        allSwings.push(...sessionSwings.map(swing => ({
+          ...swing,
+          sessionId: selectedSessions[index]
+        })));
       });
 
       // Apply filters
@@ -341,33 +299,18 @@ const AnalyticsHome = () => {
   const fetchPlayerProfile = async () => {
     setProfileLoading(true);
     try {
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile - starting for player:', selectedPlayer);
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile - API URL:', `/players/${selectedPlayer}/analytics`);
-      
       const res = await api.get(`/players/${selectedPlayer}/analytics`);
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response status:', res.status);
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response data:', res.data);
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response data type:', typeof res.data);
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile response data keys:', Object.keys(res.data || {}));
-      
       if (res.data.success && res.data.data) {
-        console.log('[DEBUG] AnalyticsHome player profile data:', res.data.data);
-        console.log('[DEBUG] AnalyticsHome average_exit_velocity:', res.data.data.average_exit_velocity);
-        console.log('[DEBUG] AnalyticsHome average_launch_angle:', res.data.data.average_launch_angle);
-        console.log('[DEBUG] AnalyticsHome best_exit_velocity:', res.data.data.best_exit_velocity);
         setPlayerProfile(res.data.data);
       } else {
-        console.warn('[DEBUG] No player profile data received - res.data:', res.data);
+        console.warn('No player profile data received');
         setPlayerProfile(null);
       }
     } catch (err) {
-      console.error('[DEBUG] Error fetching player profile:', err);
-      console.error('[DEBUG] Error response:', err.response);
-      console.error('[DEBUG] Error message:', err.message);
+      console.error('Error fetching player profile:', err);
       setPlayerProfile(null);
     } finally {
       setProfileLoading(false);
-      console.log('[DEBUG] AnalyticsHome fetchPlayerProfile - loading set to false');
     }
   };
 
@@ -415,8 +358,6 @@ const AnalyticsHome = () => {
   };
 
   const handlePlayerChange = (playerId) => {
-    console.log('[DEBUG] handlePlayerChange called with playerId:', playerId);
-    console.log('[DEBUG] handlePlayerChange - current selectedPlayer:', selectedPlayer);
     setSelectedPlayer(playerId);
     setSelectedSessionTypes([]);
     setSelectedSessions([]);
@@ -429,7 +370,6 @@ const AnalyticsHome = () => {
     } else {
       setSearchParams({});
     }
-    console.log('[DEBUG] handlePlayerChange - new selectedPlayer will be:', playerId);
   };
 
   const handleSessionTypeToggle = (sessionType) => {
@@ -462,19 +402,13 @@ const AnalyticsHome = () => {
     console.log('[DEBUG] getFilteredSessions - sessions:', sessions);
     console.log('[DEBUG] getFilteredSessions - selectedSessionTypes:', selectedSessionTypes);
     
-    // Ensure sessions is always an array
-    const safeSessions = Array.isArray(sessions) ? sessions : [];
-    
-    // Ensure selectedSessionTypes is always an array
-    const safeSelectedSessionTypes = Array.isArray(selectedSessionTypes) ? selectedSessionTypes : [];
-    
-    if (safeSelectedSessionTypes.length === 0) {
-      console.log('[DEBUG] getFilteredSessions - returning all sessions:', safeSessions);
-      return safeSessions;
+    if (selectedSessionTypes.length === 0) {
+      console.log('[DEBUG] getFilteredSessions - returning all sessions:', sessions);
+      return sessions;
     }
     
-    const filtered = safeSessions.filter(session => 
-      safeSelectedSessionTypes.some(type => 
+    const filtered = sessions.filter(session => 
+      selectedSessionTypes.some(type => 
         session.session_type?.toLowerCase().includes(type.toLowerCase()) ||
         session.notes?.toLowerCase().includes(type.toLowerCase())
       )
@@ -583,7 +517,7 @@ const AnalyticsHome = () => {
   };
 
   const handleViewReport = async () => {
-    if (!Array.isArray(selectedSessions) || selectedSessions.length === 0) {
+    if (selectedSessions.length === 0) {
       setReportError('Please select at least one session to generate a report.');
       return;
     }
@@ -612,7 +546,7 @@ const AnalyticsHome = () => {
   };
 
   const handleDownloadReport = async () => {
-    if (!Array.isArray(selectedSessions) || selectedSessions.length === 0) {
+    if (selectedSessions.length === 0) {
       setReportError('Please select at least one session to download a report.');
       return;
     }
@@ -645,12 +579,9 @@ const AnalyticsHome = () => {
   };
 
   const sortedSwingData = useMemo(() => {
-    // Ensure filteredSwingData is always an array
-    const safeFilteredData = Array.isArray(filteredSwingData) ? filteredSwingData : [];
-    
-    if (!sortConfig.key) return safeFilteredData;
+    if (!sortConfig.key) return filteredSwingData;
 
-    return [...safeFilteredData].sort((a, b) => {
+    return [...filteredSwingData].sort((a, b) => {
       let aValue = a[sortConfig.key];
       let bValue = b[sortConfig.key];
 
@@ -670,17 +601,6 @@ const AnalyticsHome = () => {
     });
   }, [filteredSwingData, sortConfig]);
 
-  // Ensure all array states are properly initialized
-  useEffect(() => {
-    if (!Array.isArray(players)) setPlayers([]);
-    if (!Array.isArray(sessions)) setSessions([]);
-    if (!Array.isArray(swingData)) setSwingData([]);
-    if (!Array.isArray(filteredSwingData)) setFilteredSwingData([]);
-    if (!Array.isArray(sessionHistory)) setSessionHistory([]);
-    if (!Array.isArray(selectedSessionTypes)) setSelectedSessionTypes([]);
-    if (!Array.isArray(selectedSessions)) setSelectedSessions([]);
-  }, [players, sessions, swingData, filteredSwingData, sessionHistory, selectedSessionTypes, selectedSessions]);
-
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 6 }}>
       {/* Header */}
@@ -696,11 +616,11 @@ const AnalyticsHome = () => {
         <Box display="flex" alignItems="center" mb={2}>
           <AnalyticsIcon sx={{ fontSize: 40, mr: 2, color: '#1c2c4d' }} />
           <Typography variant="h4" fontWeight="bold" color="#1c2c4d">
-            Player Progression Analytics
+            Advanced Analytics Hub
           </Typography>
         </Box>
         <Typography variant="body1" color="#1c2c4d" sx={{ opacity: 0.8 }}>
-          Track individual player development, analyze performance trends, and monitor progression over time.
+          Select a player, filter sessions, and analyze individual swing data with advanced filtering capabilities.
         </Typography>
       </Paper>
 
@@ -738,11 +658,7 @@ const AnalyticsHome = () => {
           <InputLabel sx={{ color: '#1c2c4d' }}>Select Player</InputLabel>
           <Select
             value={selectedPlayer}
-            onChange={(e) => {
-              console.log('[DEBUG] Player selection changed to:', e.target.value);
-              console.log('[DEBUG] Player selection event:', e);
-              handlePlayerChange(e.target.value);
-            }}
+            onChange={(e) => handlePlayerChange(e.target.value)}
             label="Select Player"
             sx={{
               '& .MuiOutlinedInput-notchedOutline': {
@@ -758,40 +674,16 @@ const AnalyticsHome = () => {
                 color: '#1c2c4d',
               },
             }}
-            disabled={false}
+            disabled={isPlayerLocked}
           >
-            <MenuItem value="">
-              <em>All Players</em>
-            </MenuItem>
-            {Array.isArray(players) && players.map(player => (
-              <MenuItem key={player.id} value={player.id.toString()}>
+            <MenuItem value="">All Players</MenuItem>
+            {(players || []).map(player => (
+              <MenuItem key={player.id} value={player.id}>
                 {player.name} - {player.position}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
-        
-        {/* Debug info */}
-        <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: '0.8rem' }}>
-          <Typography variant="caption" color="textSecondary">
-            Debug: {players.length} players loaded | Selected: {selectedPlayer || 'none'}
-          </Typography>
-          <Typography variant="caption" color="textSecondary" display="block">
-            Selected Player Name: {getSelectedPlayer()?.name || 'none'}
-          </Typography>
-          <Typography variant="caption" color="textSecondary" display="block">
-            URL Parameter: {searchParams.get('player') || 'none'}
-          </Typography>
-          <Typography variant="caption" color="textSecondary" display="block">
-            Profile Loading: {profileLoading ? 'true' : 'false'}
-          </Typography>
-          <Typography variant="caption" color="textSecondary" display="block">
-            Player Profile: {playerProfile ? 'loaded' : 'not loaded'}
-          </Typography>
-          <Typography variant="caption" color="textSecondary" display="block">
-            Players Array: {Array.isArray(players) ? `${players.length} items` : 'not array'}
-          </Typography>
-        </Box>
       </Paper>
 
       {selectedPlayer && (
@@ -809,13 +701,13 @@ const AnalyticsHome = () => {
               Session Type Filter
             </Typography>
             <Box display="flex" flexWrap="wrap" gap={1}>
-              {(Array.isArray(SESSION_TYPES) ? SESSION_TYPES : []).map(type => (
+              {(SESSION_TYPES || []).map(type => (
                 <Chip
                   key={type}
                   label={type}
                   onClick={() => handleSessionTypeToggle(type)}
-                  color={(Array.isArray(selectedSessionTypes) && selectedSessionTypes.includes(type)) ? 'primary' : 'default'}
-                  variant={(Array.isArray(selectedSessionTypes) && selectedSessionTypes.includes(type)) ? 'filled' : 'outlined'}
+                  color={selectedSessionTypes.includes(type) ? 'primary' : 'default'}
+                  variant={selectedSessionTypes.includes(type) ? 'filled' : 'outlined'}
                   sx={{ 
                     fontWeight: 600,
                     '&.MuiChip-filled': {
@@ -856,15 +748,15 @@ const AnalyticsHome = () => {
               </Box>
             ) : (
               <Grid container spacing={2}>
-                {(Array.isArray(getFilteredSessions()) ? getFilteredSessions() : []).map((session, idx) => (
+                {(getFilteredSessions() || []).map((session, idx) => (
                   <Grid item xs={12} sm={6} md={4} key={session.id}>
                     <Card 
                       sx={{ 
                         cursor: 'pointer',
-                        border: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '2px solid #3a7bd5' : '1px solid #e0e3e8',
-                        bgcolor: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '#f0f8ff' : '#fff',
+                        border: selectedSessions.includes(session.id) ? '2px solid #3a7bd5' : '1px solid #e0e3e8',
+                        bgcolor: selectedSessions.includes(session.id) ? '#f0f8ff' : '#fff',
                         borderRadius: 3,
-                        boxShadow: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '0 4px 12px rgba(58,123,213,0.15)' : '0 2px 8px rgba(28,44,77,0.08)',
+                        boxShadow: selectedSessions.includes(session.id) ? '0 4px 12px rgba(58,123,213,0.15)' : '0 2px 8px rgba(28,44,77,0.08)',
                         transition: 'all 0.2s ease',
                         '&:hover': {
                           boxShadow: '0 4px 16px rgba(28,44,77,0.12)',
@@ -898,7 +790,7 @@ const AnalyticsHome = () => {
                         })()}
                         {session.session_tags && (
                           <Box display="flex" flexWrap="wrap" gap={0.5} mt={1}>
-                            {(session.session_tags ? session.session_tags.split(',') : []).map((tag, index) => (
+                            {(session.session_tags || '').split(',').map((tag, index) => (
                               <Chip
                                 key={index}
                                 label={tag.trim()}
@@ -970,7 +862,7 @@ const AnalyticsHome = () => {
                   <Tab label="Blast Metrics" />
                 </Tabs>
                 <Grid container spacing={3}>
-                  {(Array.isArray(activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast) ? (activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast) : []).map(metric => (
+                  {((activeTab === 0 ? FILTERABLE_METRICS.hittrax : FILTERABLE_METRICS.blast) || []).map(metric => (
                     <Grid item xs={12} sm={6} md={4} key={metric.key}>
                       <Card sx={{ 
                         p: 2, 
@@ -1072,7 +964,7 @@ const AnalyticsHome = () => {
           </Paper>
 
           {/* Data Display */}
-          {((Array.isArray(selectedSessions) && selectedSessions.length > 0) || viewMode === 'profile') && (
+          {(selectedSessions.length > 0 || viewMode === 'profile') && (
             <Paper sx={{ 
               p: 3, 
               bgcolor: '#fff', 
@@ -1137,7 +1029,7 @@ const AnalyticsHome = () => {
                       Player Profile
                     </Button>
                   )}
-                  {(Array.isArray(selectedSessions) && selectedSessions.length > 0) && (
+                  {selectedSessions.length > 0 && (
                     <Button
                       variant="contained"
                       startIcon={reportLoading ? <CircularProgress size={20} color="inherit" /> : <PictureAsPdf />}
@@ -1170,7 +1062,7 @@ const AnalyticsHome = () => {
               )}
 
               {/* Barrels Filter */}
-              {(Array.isArray(swingData) && swingData.length > 0) && viewMode !== 'profile' && (
+              {swingData.length > 0 && viewMode !== 'profile' && (
                 <BarrelsFilter
                   swingData={swingData}
                   onFilteredDataChange={setFilteredSwingData}
@@ -1295,7 +1187,7 @@ const AnalyticsHome = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {(Array.isArray(sortedSwingData) ? sortedSwingData : []).map((swing, index) => (
+                      {sortedSwingData.map((swing, index) => (
                         <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f8f9fa' } }}>
                           <TableCell sx={{ color: '#1c2c4d' }}>{swing.sessionId}</TableCell>
                           <TableCell sx={{ color: '#1c2c4d' }}>{safeToFixed(swing.exit_velocity, 1)} MPH</TableCell>
@@ -1310,9 +1202,9 @@ const AnalyticsHome = () => {
                 </TableContainer>
               ) : viewMode === 'chart' ? (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-                  {(Array.isArray(filteredSwingData) && filteredSwingData.length > 0) ? (
+                  {filteredSwingData.length > 0 ? (
                     <SprayChart3D
-                      swings={Array.isArray(filteredSwingData) ? filteredSwingData : []}
+                      swings={filteredSwingData}
                       width={800}
                       height={500}
                     />
@@ -1323,7 +1215,7 @@ const AnalyticsHome = () => {
                       border: '1px solid #3a7bd5',
                       borderRadius: 3
                     }}>
-                      {Array.isArray(filteredSwingData) ? 'No swing data available for visualization.' : 'Loading swing data...'}
+                      No swing data available for visualization.
                     </Alert>
                   )}
                 </Box>
@@ -1475,14 +1367,6 @@ const PlayerProfileView = ({
     );
   }
 
-  // Debug info
-  console.log('[DEBUG] PlayerProfileView - playerProfile:', playerProfile);
-  console.log('[DEBUG] PlayerProfileView - average_exit_velocity:', playerProfile.average_exit_velocity);
-  console.log('[DEBUG] PlayerProfileView - average_launch_angle:', playerProfile.average_launch_angle);
-  console.log('[DEBUG] PlayerProfileView - best_exit_velocity:', playerProfile.best_exit_velocity);
-  console.log('[DEBUG] PlayerProfileView - total_swings:', playerProfile.total_swings);
-  console.log('[DEBUG] PlayerProfileView - sessions_count:', playerProfile.sessions_count);
-
   return (
     <Box>
       {/* Player Header */}
@@ -1543,22 +1427,7 @@ const PlayerProfileView = ({
               <Box display="flex" justifyContent="space-between" mb={1}>
                 <Typography variant="body2" color="#1c2c4d">Avg Launch Angle:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.average_launch_angle ? `${playerProfile.average_launch_angle}°` : '0°'}
-                </Typography>
-              </Box>
-              <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2" color="#1c2c4d">Avg Distance:</Typography>
-                <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.average_distance ? `${playerProfile.average_distance} ft` : '0 ft'}
-                </Typography>
-              </Box>
-              <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2" color="#1c2c4d">Barrel %:</Typography>
-                <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.sweet_spot_swings && playerProfile.total_swings ? 
-                    `${((playerProfile.sweet_spot_swings / playerProfile.total_swings) * 100).toFixed(1)}%` : 
-                    '0%'
-                  }
+                  {playerProfile.average_launch_angle || 0}°
                 </Typography>
               </Box>
             </Box>
@@ -1584,22 +1453,19 @@ const PlayerProfileView = ({
               <Box display="flex" justifyContent="space-between" mb={1}>
                 <Typography variant="body2" color="#1c2c4d">Avg Exit Velocity:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.average_exit_velocity ? `${playerProfile.average_exit_velocity} MPH` : '0 MPH'}
+                  {playerProfile.average_exit_velocity || 0} MPH
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mb={1}>
                 <Typography variant="body2" color="#1c2c4d">Max Exit Velocity:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.best_exit_velocity ? `${playerProfile.best_exit_velocity} MPH` : '0 MPH'}
+                  {playerProfile.best_exit_velocity || 0} MPH
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2" color="#1c2c4d">Barrel %:</Typography>
+                <Typography variant="body2" color="#1c2c4d">Hard Hit %:</Typography>
                 <Typography variant="body2" fontWeight="bold" color="#1c2c4d">
-                  {playerProfile.sweet_spot_swings && playerProfile.total_swings ? 
-                    `${((playerProfile.sweet_spot_swings / playerProfile.total_swings) * 100).toFixed(1)}%` : 
-                    '0%'
-                  }
+                  {getHardHitPercentage()}%
                 </Typography>
               </Box>
             </Box>
@@ -1717,7 +1583,7 @@ const PlayerProfileView = ({
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${safeToFixed((percent * 100), 0)}%`}
                 >
-                  {(Array.isArray(generateLaunchAngleDistribution()) ? generateLaunchAngleDistribution() : []).map((entry, index) => (
+                  {generateLaunchAngleDistribution().map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </RechartsPie>
@@ -1826,13 +1692,13 @@ const PlayerProfileView = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {(Array.isArray(sessionHistory) ? sessionHistory : []).map((session) => (
+              {sessionHistory.map((session) => (
                 <TableRow 
                   key={session.id} 
                   sx={{ 
                     '&:hover': { bgcolor: '#f8f9fa' },
                     cursor: 'pointer',
-                    bgcolor: (Array.isArray(selectedSessions) && selectedSessions.includes(session.id)) ? '#e3f2fd' : 'transparent'
+                    bgcolor: selectedSessions.includes(session.id) ? '#e3f2fd' : 'transparent'
                   }}
                   onClick={() => handleSessionToggle(session.id)}
                 >
