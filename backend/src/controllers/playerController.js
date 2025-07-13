@@ -145,7 +145,7 @@ class PlayerController {
   static async getPlayers(req, res) {
     try {
       console.log('🔍 getPlayers called with query:', req.query);
-      const { page = 1, limit = 10, search, team, school } = req.query;
+      const { page = 1, limit = 100, search, team, school } = req.query;
       const offset = (page - 1) * limit;
 
       // Build where clause for filtering

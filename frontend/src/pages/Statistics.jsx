@@ -104,6 +104,7 @@ const Statistics = () => {
       console.log('📊 [STATISTICS] Players data:', playersData);
       console.log('📊 [STATISTICS] Stats data:', statsData);
       console.log('📊 [STATISTICS] Stats data length:', statsData.length);
+      console.log('📊 [STATISTICS] Raw API response:', statsRes.data);
 
       setPlayers(Array.isArray(playersData) ? playersData : []);
       setPlayerStats(Array.isArray(statsData) ? statsData : []);
@@ -234,7 +235,8 @@ const Statistics = () => {
     { key: 'total_swings', label: 'Swings', sortable: true },
     { key: 'avg_exit_velocity', label: 'Avg EV (mph)', sortable: true },
     { key: 'avg_launch_angle', label: 'Avg LA (°)', sortable: true },
-    { key: 'barrel_percentage', label: 'Barrel %', sortable: true }
+    { key: 'barrel_percentage', label: 'Barrel %', sortable: true },
+    { key: 'max_exit_velocity', label: 'Max EV (mph)', sortable: true }
   ];
 
   if (loading) {
@@ -579,6 +581,9 @@ const Statistics = () => {
                         size="small"
                         color={stat.barrel_percentage >= 10 ? 'success' : 'default'}
                       />
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#d32f2f' }}>
+                      {formatNumber(stat.max_exit_velocity)}
                     </TableCell>
                   </TableRow>
                 ))}
