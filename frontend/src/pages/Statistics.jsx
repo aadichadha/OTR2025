@@ -225,13 +225,11 @@ const Statistics = () => {
     { key: 'total_swings', label: 'Swings', sortable: true },
     { key: 'max_exit_velocity', label: 'Max EV (mph)', sortable: true },
     { key: 'avg_exit_velocity', label: 'Avg EV (mph)', sortable: true },
-    { key: 'max_launch_angle', label: 'Max LA (°)', sortable: true },
     { key: 'avg_launch_angle', label: 'Avg LA (°)', sortable: true },
     { key: 'avg_time_to_contact', label: 'Avg TTC (sec)', sortable: true },
     { key: 'max_bat_speed', label: 'Max BS (mph)', sortable: true },
     { key: 'avg_bat_speed', label: 'Avg BS (mph)', sortable: true },
-    { key: 'barrel_percentage', label: 'Barrel %', sortable: true },
-    { key: 'last_session_date', label: 'Last Session', sortable: true }
+    { key: 'barrel_percentage', label: 'Barrel %', sortable: true }
   ];
 
   if (loading) {
@@ -297,7 +295,7 @@ const Statistics = () => {
             <Typography variant="h6" fontWeight="bold" color="#1c2c4d">
               Advanced Filters
             </Typography>
-            <Button variant="outlined" size="small" onClick={clearFilters}>
+            <Button variant="outlined" size="small" onClick={clearFilters} sx={{ color: '#1c2c4d', borderColor: '#1c2c4d' }}>
               Clear All
             </Button>
           </Box>
@@ -306,7 +304,7 @@ const Statistics = () => {
             {/* Player Selection */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Select Players</InputLabel>
+                <InputLabel sx={{ color: '#1c2c4d' }}>Select Players</InputLabel>
                 <Select
                   multiple
                   value={filters.selectedPlayers}
@@ -322,6 +320,20 @@ const Statistics = () => {
                       ))}
                     </Box>
                   )}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '& .MuiSelect-select': {
+                      color: '#1c2c4d',
+                    },
+                  }}
                 >
                   {Array.isArray(players) && players.map(player => (
                     <MenuItem key={player.id} value={player.id.toString()}>
@@ -335,7 +347,7 @@ const Statistics = () => {
             {/* Player Level Filter */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Player Levels</InputLabel>
+                <InputLabel sx={{ color: '#1c2c4d' }}>Player Levels</InputLabel>
                 <Select
                   multiple
                   value={filters.playerLevels}
@@ -347,6 +359,20 @@ const Statistics = () => {
                       ))}
                     </Box>
                   )}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e0e3e8',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3a7bd5',
+                    },
+                    '& .MuiSelect-select': {
+                      color: '#1c2c4d',
+                    },
+                  }}
                 >
                   <MenuItem value="Little League">Little League</MenuItem>
                   <MenuItem value="Travel Team">Travel Team</MenuItem>
@@ -366,6 +392,23 @@ const Statistics = () => {
                 value={filters.startDate}
                 onChange={(e) => handleFilterChange('startDate', e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                sx={{
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#e0e3e8',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '& .MuiInputBase-input': {
+                    color: '#1c2c4d',
+                  },
+                }}
               />
             </Grid>
 
@@ -377,6 +420,23 @@ const Statistics = () => {
                 value={filters.endDate}
                 onChange={(e) => handleFilterChange('endDate', e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                sx={{
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#e0e3e8',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '& .MuiInputBase-input': {
+                    color: '#1c2c4d',
+                  },
+                }}
               />
             </Grid>
           </Grid>
@@ -512,9 +572,6 @@ const Statistics = () => {
                       {formatNumber(stat.max_exit_velocity)}
                     </TableCell>
                     <TableCell>{formatNumber(stat.avg_exit_velocity)}</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#1976d2' }}>
-                      {formatNumber(stat.max_launch_angle)}
-                    </TableCell>
                     <TableCell>{formatNumber(stat.avg_launch_angle)}</TableCell>
                     <TableCell>{formatNumber(stat.avg_time_to_contact, 3)}</TableCell>
                     <TableCell sx={{ fontWeight: 600, color: '#388e3c' }}>
@@ -527,12 +584,6 @@ const Statistics = () => {
                         size="small"
                         color={stat.barrel_percentage >= 10 ? 'success' : 'default'}
                       />
-                    </TableCell>
-                    <TableCell>
-                      {stat.last_session_date ? 
-                        new Date(stat.last_session_date).toLocaleDateString() : 
-                        'N/A'
-                      }
                     </TableCell>
                   </TableRow>
                 ))}
