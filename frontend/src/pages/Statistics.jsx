@@ -410,7 +410,19 @@ const Statistics = () => {
                           key={playerId} 
                           label={getPlayerName(playerId)} 
                           size="medium" 
-                          sx={{ fontSize: 16, height: 32 }}
+                          sx={{ 
+                            fontSize: 16, 
+                            height: 32, 
+                            bgcolor: '#1c2c4d', 
+                            color: '#fff',
+                            '& .MuiChip-deleteIcon': { color: '#fff' }
+                          }}
+                          onDelete={() => {
+                            setFilters(prev => ({
+                              ...prev,
+                              selectedPlayers: prev.selectedPlayers.filter(id => id !== playerId)
+                            }));
+                          }}
                         />
                       ))}
                     </Box>
@@ -444,7 +456,7 @@ const Statistics = () => {
 
             {/* Player Level Filter */}
             <Grid item xs={12} md={6} lg={4}>
-              <FormControl fullWidth sx={{ minHeight: 56 }}>
+              <FormControl fullWidth sx={{ minHeight: 56, minWidth: 300 }}>
                 <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Player Levels</InputLabel>
                 <Select
                   multiple
@@ -453,7 +465,7 @@ const Statistics = () => {
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(Array.isArray(selected) ? selected : []).map((level) => (
-                        <Chip key={level} label={level} size="medium" sx={{ fontSize: 16, height: 32 }} />
+                        <Chip key={level} label={level} size="medium" sx={{ fontSize: 16, height: 32, bgcolor: '#e3eafc', color: '#1c2c4d' }} />
                       ))}
                     </Box>
                   )}
@@ -578,7 +590,7 @@ const Statistics = () => {
 
             {/* Session Tags */}
             <Grid item xs={12} md={6} lg={4}>
-              <FormControl fullWidth sx={{ minHeight: 56 }}>
+              <FormControl fullWidth sx={{ minHeight: 56, minWidth: 300 }}>
                 <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Session Tags</InputLabel>
                 <Select
                   multiple
@@ -591,8 +603,14 @@ const Statistics = () => {
                           key={tag} 
                           label={tag} 
                           size="medium" 
-                          icon={<LocalOffer />}
-                          sx={{ fontSize: 16, height: 32 }}
+                          icon={<LocalOffer sx={{ color: '#fff' }} />}
+                          sx={{ fontSize: 16, height: 32, bgcolor: '#1c2c4d', color: '#fff', '& .MuiChip-deleteIcon': { color: '#fff' } }}
+                          onDelete={() => {
+                            setFilters(prev => ({
+                              ...prev,
+                              sessionTags: prev.sessionTags.filter(t => t !== tag)
+                            }));
+                          }}
                         />
                       ))}
                     </Box>
@@ -616,7 +634,7 @@ const Statistics = () => {
                   {sessionTags.map(tag => (
                     <MenuItem key={tag} value={tag} sx={{ fontSize: 18, minHeight: 48 }}>
                       <Box display="flex" alignItems="center">
-                        <LocalOffer sx={{ mr: 1, fontSize: 18 }} />
+                        <LocalOffer sx={{ mr: 1, fontSize: 18, color: '#1c2c4d' }} />
                         {tag}
                       </Box>
                     </MenuItem>
