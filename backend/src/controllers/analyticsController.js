@@ -787,7 +787,7 @@ const getPlayerStats = async (req, res) => {
 
       for (const player of players) {
         // Aggregate all exit velocity data
-        const allExitVelocityData = [];
+        let allExitVelocityData = [];
         const allBatSpeedData = [];
         const sessionTagsSet = new Set();
 
@@ -798,7 +798,6 @@ const getPlayerStats = async (req, res) => {
           if (session.batSpeedData && Array.isArray(session.batSpeedData)) {
             allBatSpeedData.push(...session.batSpeedData);
           }
-          
           // Collect session tags
           if (session.session_tags) {
             try {
@@ -811,6 +810,17 @@ const getPlayerStats = async (req, res) => {
               console.log('[FANGRAPHS] Error parsing session tags:', e);
             }
           }
+        }
+
+        // --- SWING FILTER: Only use swings within pitch speed range for all stats ---
+        if (pitchSpeedMin || pitchSpeedMax) {
+          allExitVelocityData = allExitVelocityData.filter(row => {
+            const ps = parseFloat(row.pitch_speed);
+            if (isNaN(ps)) return false;
+            if (pitchSpeedMin && ps < parseFloat(pitchSpeedMin)) return false;
+            if (pitchSpeedMax && ps > parseFloat(pitchSpeedMax)) return false;
+            return true;
+          });
         }
 
         // Infer player level using the same logic as Player Management
@@ -836,7 +846,7 @@ const getPlayerStats = async (req, res) => {
           player_level: inferredLevel,
           position: player.position,
           total_sessions: player.sessions.length,
-          total_swings: Math.max(allExitVelocityData.length, allBatSpeedData.length),
+          total_swings: allExitVelocityData.length, // Swings after pitch speed filter
           last_session_date: player.sessions.length > 0 ? 
             player.sessions[0].session_date : null,
           // Initialize all stats fields to null
@@ -851,7 +861,7 @@ const getPlayerStats = async (req, res) => {
           session_tags: Array.from(sessionTagsSet)
         };
 
-        // Calculate exit velocity metrics
+        // Calculate exit velocity metrics (using filtered swings)
         if (allExitVelocityData.length > 0) {
           const exitVelocities = allExitVelocityData
             .map(row => parseFloat(row.exit_velocity))
@@ -891,7 +901,7 @@ const getPlayerStats = async (req, res) => {
             Math.round((barrels / allExitVelocityData.length) * 1000) / 10 : null;
         }
 
-        // Calculate bat speed metrics
+        // Calculate bat speed metrics (not filtered by pitch speed)
         if (allBatSpeedData.length > 0) {
           const batSpeeds = allBatSpeedData
             .map(row => parseFloat(row.bat_speed))
@@ -917,21 +927,8 @@ const getPlayerStats = async (req, res) => {
         playerStats.push(stats);
       }
 
-      // Apply additional filters
+      // Apply additional filters (session tags only)
       let filteredStats = playerStats.filter(player => player.total_swings > 0);
-
-      // Filter by pitch speed range
-      if (pitchSpeedMin && !isNaN(parseFloat(pitchSpeedMin))) {
-        filteredStats = filteredStats.filter(player => 
-          player.avg_pitch_speed >= parseFloat(pitchSpeedMin)
-        );
-      }
-
-      if (pitchSpeedMax && !isNaN(parseFloat(pitchSpeedMax))) {
-        filteredStats = filteredStats.filter(player => 
-          player.avg_pitch_speed <= parseFloat(pitchSpeedMax)
-        );
-      }
 
       // Filter by session tags
       if (sessionTags) {
