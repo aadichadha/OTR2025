@@ -9,6 +9,7 @@ import Logout from '@mui/icons-material/Logout';
 import AdminPanelSettings from '@mui/icons-material/AdminPanelSettings';
 import Sports from '@mui/icons-material/Sports';
 import Person from '@mui/icons-material/Person';
+import Timeline from '@mui/icons-material/Timeline';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
