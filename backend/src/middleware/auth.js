@@ -48,9 +48,12 @@ const authenticateToken = async (req, res, next) => {
 
   try {
     console.log('🔍 [Auth Middleware] Verifying token...');
-    console.log('🔍 [Auth Middleware] JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET');
     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    // Get JWT secret with fallback
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
+    console.log('🔍 [Auth Middleware] JWT_SECRET:', jwtSecret ? 'SET' : 'NOT SET');
+    
+    const decoded = jwt.verify(token, jwtSecret);
     console.log('🔍 [Auth Middleware] Token decoded:', decoded);
     
     const user = await User.findByPk(decoded.userId);

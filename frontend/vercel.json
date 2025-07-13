@@ -2,6 +2,12 @@
   "buildCommand": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps && npm run build",
   "installCommand": "echo 'Installation handled in build command'",
   "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
   "redirects": [
     {
       "source": "/api/:path*",
