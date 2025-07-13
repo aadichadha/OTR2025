@@ -93,9 +93,22 @@ function Players() {
         setLoading(false);
         return;
       }
-      const res = await axios.get(`${API_URL}/players`, {
-        headers: { Authorization: `Bearer ${token}` }
+      
+      // Add cache busting parameter
+      const timestamp = new Date().getTime();
+      const res = await axios.get(`${API_URL}/players?t=${timestamp}`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
+      
+      console.log('[Players] API Response:', res.data);
+      console.log('[Players] Players received:', res.data.players?.length || 0);
+      console.log('[Players] Pagination info:', res.data.pagination);
+      console.log('[Players] All players:', res.data.players?.map(p => ({ id: p.id, name: p.name })));
+      
       setPlayers(res.data.players || []);
     } catch (err) {
       console.error('[Players] Error fetching players:', err, err.response);
@@ -409,29 +422,34 @@ function Players() {
         )}
         
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} width="100%">
-          <Button
-            variant="outlined"
-            startIcon={<Refresh />}
-            onClick={fetchPlayers}
-            disabled={loading}
-            sx={{
-              borderColor: '#1c2c4d',
-              color: '#1c2c4d',
-              fontWeight: 700,
-              borderRadius: 3,
-              px: 2.5,
-              py: 0.8,
-              fontSize: '0.98rem',
-              minWidth: 120,
-              boxShadow: '0 2px 8px rgba(28,44,77,0.08)',
-              '&:hover': {
-                borderColor: '#3a7bd5',
-                bgcolor: 'rgba(28,44,77,0.04)',
-              }
-            }}
-          >
-            Refresh
-          </Button>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Button
+              variant="outlined"
+              startIcon={<Refresh />}
+              onClick={fetchPlayers}
+              disabled={loading}
+              sx={{
+                borderColor: '#1c2c4d',
+                color: '#1c2c4d',
+                fontWeight: 700,
+                borderRadius: 3,
+                px: 2.5,
+                py: 0.8,
+                fontSize: '0.98rem',
+                minWidth: 120,
+                boxShadow: '0 2px 8px rgba(28,44,77,0.08)',
+                '&:hover': {
+                  borderColor: '#3a7bd5',
+                  bgcolor: 'rgba(28,44,77,0.04)',
+                }
+              }}
+            >
+              Refresh
+            </Button>
+            <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+              {loading ? 'Loading...' : `${players.length} players loaded`}
+            </Typography>
+          </Box>
           <Button
             variant="contained"
             startIcon={<Add />}
