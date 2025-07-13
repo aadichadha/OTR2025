@@ -809,10 +809,32 @@ const getPlayerStats = async (req, res) => {
 
         // Calculate exit velocity metrics
         if (allExitVelocityData.length > 0) {
-          const exitVelocities = allExitVelocityData.map(row => row.exit_velocity).filter(val => val !== null);
-          const launchAngles = allExitVelocityData.map(row => row.launch_angle).filter(val => val !== null);
-          const pitchSpeeds = allExitVelocityData.map(row => row.pitch_speed).filter(val => val !== null);
-          const barrelSwings = allExitVelocityData.filter(row => row.is_barrel === 1).length;
+          const exitVelocities = allExitVelocityData
+            .map(row => parseFloat(row.exit_velocity))
+            .filter(val => !isNaN(val) && val > 0);
+          
+          const launchAngles = allExitVelocityData
+            .map(row => parseFloat(row.launch_angle))
+            .filter(val => !isNaN(val));
+          
+          const pitchSpeeds = allExitVelocityData
+            .map(row => parseFloat(row.pitch_speed))
+            .filter(val => !isNaN(val) && val > 0);
+
+          // Calculate barrel percentage using the same logic as metricsCalculator
+          let barrels = 0;
+          if (exitVelocities.length > 0) {
+            const maxEV = Math.max(...exitVelocities);
+            const barrelThreshold = maxEV * 0.90; // 90% of max EV
+            
+            barrels = allExitVelocityData.filter(row => {
+              const ev = parseFloat(row.exit_velocity);
+              const la = parseFloat(row.launch_angle);
+              return !isNaN(ev) && !isNaN(la) && 
+                     ev >= barrelThreshold && 
+                     la >= 8 && la <= 25;
+            }).length;
+          }
 
           stats.avg_exit_velocity = exitVelocities.length > 0 ? 
             Math.round((exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length) * 10) / 10 : null;
@@ -822,14 +844,22 @@ const getPlayerStats = async (req, res) => {
           stats.avg_pitch_speed = pitchSpeeds.length > 0 ? 
             Math.round((pitchSpeeds.reduce((a, b) => a + b, 0) / pitchSpeeds.length) * 10) / 10 : null;
           stats.barrel_percentage = allExitVelocityData.length > 0 ? 
-            Math.round((barrelSwings / allExitVelocityData.length) * 1000) / 10 : null;
+            Math.round((barrels / allExitVelocityData.length) * 1000) / 10 : null;
         }
 
         // Calculate bat speed metrics
         if (allBatSpeedData.length > 0) {
-          const batSpeeds = allBatSpeedData.map(row => row.bat_speed).filter(val => val !== null);
-          const attackAngles = allBatSpeedData.map(row => row.attack_angle).filter(val => val !== null);
-          const timeToContacts = allBatSpeedData.map(row => row.time_to_contact).filter(val => val !== null);
+          const batSpeeds = allBatSpeedData
+            .map(row => parseFloat(row.bat_speed))
+            .filter(val => !isNaN(val) && val > 0);
+          
+          const attackAngles = allBatSpeedData
+            .map(row => parseFloat(row.attack_angle))
+            .filter(val => !isNaN(val));
+          
+          const timeToContacts = allBatSpeedData
+            .map(row => parseFloat(row.time_to_contact))
+            .filter(val => !isNaN(val) && val > 0);
 
           stats.avg_bat_speed = batSpeeds.length > 0 ? 
             Math.round((batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length) * 10) / 10 : null;

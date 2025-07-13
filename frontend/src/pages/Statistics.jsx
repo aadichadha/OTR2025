@@ -205,7 +205,9 @@ const Statistics = () => {
 
   const formatNumber = (value, decimals = 1) => {
     if (value === null || value === undefined || value === 'N/A') return 'N/A';
-    return safeToFixed(parseFloat(value), decimals);
+    const num = parseFloat(value);
+    if (isNaN(num)) return 'N/A';
+    return safeToFixed(num, decimals);
   };
 
   const getPlayerName = (playerId) => {
@@ -230,12 +232,8 @@ const Statistics = () => {
     { key: 'player_level', label: 'Level', sortable: true },
     { key: 'total_sessions', label: 'Sessions', sortable: true },
     { key: 'total_swings', label: 'Swings', sortable: true },
-    { key: 'max_exit_velocity', label: 'Max EV (mph)', sortable: true },
     { key: 'avg_exit_velocity', label: 'Avg EV (mph)', sortable: true },
     { key: 'avg_launch_angle', label: 'Avg LA (°)', sortable: true },
-    { key: 'avg_time_to_contact', label: 'Avg TTC (sec)', sortable: true },
-    { key: 'max_bat_speed', label: 'Max BS (mph)', sortable: true },
-    { key: 'avg_bat_speed', label: 'Avg BS (mph)', sortable: true },
     { key: 'barrel_percentage', label: 'Barrel %', sortable: true }
   ];
 
@@ -493,12 +491,10 @@ const Statistics = () => {
                 <Speed color="primary" sx={{ mr: 2 }} />
                 <Box>
                   <Typography color="textSecondary" gutterBottom>
-                    Avg Exit Velocity
+                    Total Swings
                   </Typography>
                   <Typography variant="h5" component="div">
-                    {filteredStats.length > 0 ? 
-                      formatNumber(filteredStats.reduce((sum, stat) => sum + (stat.avg_exit_velocity || 0), 0) / filteredStats.length) : 
-                      '0.0'} mph
+                    {filteredStats.reduce((sum, stat) => sum + (stat.total_swings || 0), 0)}
                   </Typography>
                 </Box>
               </Box>
@@ -510,21 +506,21 @@ const Statistics = () => {
             <CardContent>
               <Box display="flex" alignItems="center">
                 <Straighten color="primary" sx={{ mr: 2 }} />
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Avg Launch Angle
-                  </Typography>
-                  <Typography variant="h5" component="div">
-                    {filteredStats.length > 0 ? 
-                      formatNumber(filteredStats.reduce((sum, stat) => sum + (stat.avg_launch_angle || 0), 0) / filteredStats.length) : 
-                      '0.0'}°
-                  </Typography>
-                </Box>
+              <Box>
+                <Typography color="textSecondary" gutterBottom>
+                  Avg Barrel %
+                </Typography>
+                <Typography variant="h5" component="div">
+                  {filteredStats.length > 0 ? 
+                    formatNumber(filteredStats.reduce((sum, stat) => sum + (stat.barrel_percentage || 0), 0) / filteredStats.length) : 
+                    '0.0'}%
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Box>
+          </CardContent>
+        </Card>
       </Grid>
+    </Grid>
 
       {/* Statistics Table */}
       <Paper sx={{ width: '100%', overflow: 'hidden', bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
@@ -575,16 +571,8 @@ const Statistics = () => {
                     </TableCell>
                     <TableCell>{stat.total_sessions || 0}</TableCell>
                     <TableCell>{stat.total_swings || 0}</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#d32f2f' }}>
-                      {formatNumber(stat.max_exit_velocity)}
-                    </TableCell>
                     <TableCell>{formatNumber(stat.avg_exit_velocity)}</TableCell>
                     <TableCell>{formatNumber(stat.avg_launch_angle)}</TableCell>
-                    <TableCell>{formatNumber(stat.avg_time_to_contact, 3)}</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#388e3c' }}>
-                      {formatNumber(stat.max_bat_speed)}
-                    </TableCell>
-                    <TableCell>{formatNumber(stat.avg_bat_speed)}</TableCell>
                     <TableCell>
                       <Chip 
                         label={`${formatNumber(stat.barrel_percentage)}%`}
