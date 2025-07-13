@@ -779,10 +779,10 @@ const getPlayerStats = async (req, res) => {
         const allBatSpeedData = [];
 
         for (const session of player.sessions) {
-          if (session.exitVelocityData) {
+          if (session.exitVelocityData && Array.isArray(session.exitVelocityData)) {
             allExitVelocityData.push(...session.exitVelocityData);
           }
-          if (session.batSpeedData) {
+          if (session.batSpeedData && Array.isArray(session.batSpeedData)) {
             allBatSpeedData.push(...session.batSpeedData);
           }
         }
@@ -794,7 +794,17 @@ const getPlayerStats = async (req, res) => {
           player_level: player.player_level || 'High School',
           position: player.position,
           total_sessions: player.sessions.length,
-          total_swings: allExitVelocityData.length + allBatSpeedData.length
+          total_swings: Math.max(allExitVelocityData.length, allBatSpeedData.length),
+          last_session_date: player.sessions.length > 0 ? 
+            player.sessions[0].session_date : null,
+          // Initialize all stats fields to null
+          avg_exit_velocity: null,
+          max_exit_velocity: null,
+          avg_launch_angle: null,
+          avg_time_to_contact: null,
+          avg_bat_speed: null,
+          max_bat_speed: null,
+          barrel_percentage: null
         };
 
         // Calculate exit velocity metrics
@@ -837,6 +847,7 @@ const getPlayerStats = async (req, res) => {
       const filteredStats = playerStats.filter(player => player.total_swings > 0);
 
       console.log(`[FANGRAPHS] Returning stats for ${filteredStats.length} players`);
+      console.log('[FANGRAPHS] Sample player stats:', filteredStats[0] || 'No data');
 
       res.json({
         success: true,
