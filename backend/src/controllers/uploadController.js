@@ -6,6 +6,78 @@ const fs = require('fs');
 
 class UploadController {
   /**
+   * Extract session date from CSV file (Column C)
+   * @param {string} filePath - Path to the CSV file
+   * @param {string} type - 'blast' or 'hittrax'
+   * @returns {Date|null} - Parsed session date or null if not found
+   */
+  static async extractSessionDateFromCSV(filePath, type) {
+    try {
+      const fileContent = await fs.promises.readFile(filePath, 'utf-8');
+      const lines = fileContent.split('\n').filter(line => line.trim());
+      
+      if (type === 'blast') {
+        // For Blast CSV, find the first data row (after header noise)
+        let dataStartRow = -1;
+        for (let i = 0; i < Math.min(lines.length, 20); i++) {
+          const columns = lines[i].split(',');
+          if (columns.length >= 15) {
+            const batSpeed = parseFloat(columns[7]);
+            const attackAngle = parseFloat(columns[10]);
+            if (!isNaN(batSpeed) && !isNaN(attackAngle)) {
+              dataStartRow = i;
+              break;
+            }
+          }
+        }
+        
+        if (dataStartRow !== -1) {
+          const columns = lines[dataStartRow].split(',').map(col => col.trim());
+          if (columns.length >= 3) {
+            const dateString = columns[2]; // Column C (0-indexed)
+            console.log(`📅 Extracted session date from Blast CSV Column C: ${dateString}`);
+            
+            // Parse the date string (format: 3/3/2025 21:23:22.144)
+            const dateMatch = dateString.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+            if (dateMatch) {
+              const parsedDate = new Date(dateMatch[1]);
+              if (!isNaN(parsedDate.getTime())) {
+                console.log(`✅ Successfully parsed session date: ${parsedDate.toDateString()}`);
+                return parsedDate;
+              }
+            }
+          }
+        }
+      } else if (type === 'hittrax') {
+        // For Hittrax CSV, start from row 2 (index 1)
+        if (lines.length > 1) {
+          const columns = lines[1].split(',').map(col => col.trim());
+          if (columns.length >= 3) {
+            const dateString = columns[2]; // Column C (0-indexed)
+            console.log(`📅 Extracted session date from Hittrax CSV Column C: ${dateString}`);
+            
+            // Parse the date string (format: 3/3/2025 21:23:22.144)
+            const dateMatch = dateString.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+            if (dateMatch) {
+              const parsedDate = new Date(dateMatch[1]);
+              if (!isNaN(parsedDate.getTime())) {
+                console.log(`✅ Successfully parsed session date: ${parsedDate.toDateString()}`);
+                return parsedDate;
+              }
+            }
+          }
+        }
+      }
+      
+      console.log(`⚠️ Could not extract session date from CSV, will use provided date or current date`);
+      return null;
+    } catch (error) {
+      console.error('Error extracting session date from CSV:', error);
+      return null;
+    }
+  }
+
+  /**
    * Handle Blast CSV upload
    */
   static async uploadBlast(req, res) {
@@ -40,9 +112,15 @@ class UploadController {
         return res.status(404).json({ error: 'Player not found' });
       }
 
-      // Allow multiple sessions per day by using current timestamp
-      const sessionDateVal = sessionDate || new Date();
+      // Extract session date from CSV Column C first
+      console.log('📅 Extracting session date from CSV Column C...');
+      const csvSessionDate = await UploadController.extractSessionDateFromCSV(req.file.path, 'blast');
+      
+      // Use CSV date if found, otherwise use provided date, otherwise use current date
+      const sessionDateVal = csvSessionDate || (sessionDate ? new Date(sessionDate) : new Date());
       const sessionTimestamp = new Date(); // This ensures each upload creates a unique session
+
+      console.log(`📅 Final session date: ${sessionDateVal.toDateString()}`);
 
       // Parse CSV first to get the data
       console.log('Parsing Blast CSV file...');
@@ -96,18 +174,20 @@ class UploadController {
         sessionId: session.id,
         playerName: player.name,
         playerCode: player.player_code,
+        sessionDate: sessionDateVal.toDateString(),
         report: reportData,
         parseResult: {
           totalRows: parseResult.totalRows,
-          skippedRows: parseResult.skippedRows,
           parsedRows: parseResult.parsedRows,
           errorCount: parseResult.errorCount
         }
       });
 
     } catch (error) {
-      console.error('Blast upload error:', error);
+      console.error('💥 Blast upload error:', error);
+      console.error('Error stack:', error.stack);
       if (req.file && fs.existsSync(req.file.path)) {
+        console.log('🧹 Cleaning up file after error...');
         fs.unlinkSync(req.file.path);
       }
       res.status(500).json({ error: 'Failed to process Blast file', details: error.message });
@@ -160,10 +240,14 @@ class UploadController {
       
       console.log('✅ Player found:', player.name);
 
-      // Allow multiple sessions per day by using current timestamp
-      const sessionDateVal = sessionDate || new Date();
+      // Extract session date from CSV Column C first
+      console.log('📅 Extracting session date from CSV Column C...');
+      const csvSessionDate = await UploadController.extractSessionDateFromCSV(req.file.path, 'hittrax');
+      
+      // Use CSV date if found, otherwise use provided date, otherwise use current date
+      const sessionDateVal = csvSessionDate || (sessionDate ? new Date(sessionDate) : new Date());
       const sessionTimestamp = new Date(); // This ensures each upload creates a unique session
-      console.log('📅 Session date:', sessionDateVal);
+      console.log(`📅 Final session date: ${sessionDateVal.toDateString()}`);
       
       let session;
       let fullParseResult;
@@ -216,6 +300,7 @@ class UploadController {
         sessionId: session.id,
         playerName: player.name,
         playerCode: player.player_code,
+        sessionDate: sessionDateVal.toDateString(),
         report: reportData,
         parseResult: {
           totalRows: fullParseResult.totalRows,
