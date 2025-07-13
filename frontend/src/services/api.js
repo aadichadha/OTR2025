@@ -31,6 +31,17 @@ api.interceptors.response.use(response => {
 }, error => {
   console.error('[API ERROR] Response error:', error);
   console.error('[API ERROR] Error response:', error.response?.data);
+  
+  // Handle authentication errors gracefully
+  if (error.response?.status === 401 || error.response?.status === 403) {
+    console.log('[API ERROR] Authentication error, clearing token');
+    localStorage.removeItem('token');
+    // Optionally redirect to login page
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+  }
+  
   return Promise.reject(error);
 });
 

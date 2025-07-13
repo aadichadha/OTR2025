@@ -29,11 +29,22 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      // First check if API is available
+      try {
+        await api.get('/health');
+      } catch (healthError) {
+        console.log('API not available, skipping auth check:', healthError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Check if token is valid by making a simple API call
       const response = await api.get('/auth/verify');
       setUser(response.data.user);
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.log('Auth check failed, clearing invalid token:', error.message);
+      // Clear invalid token and reset auth state
       localStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
