@@ -398,7 +398,7 @@ const Statistics = () => {
             {/* Player Selection */}
             <Grid item xs={12} md={6} lg={4}>
               <FormControl fullWidth sx={{ minHeight: 56 }}>
-                <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Select Players</InputLabel>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: 14 }}>Select Players</InputLabel>
                 <Select
                   multiple
                   value={filters.selectedPlayers}
@@ -411,8 +411,8 @@ const Statistics = () => {
                           label={getPlayerName(playerId)} 
                           size="medium" 
                           sx={{ 
-                            fontSize: 16, 
-                            height: 32, 
+                            fontSize: 14, 
+                            height: 28, 
                             bgcolor: '#1c2c4d', 
                             color: '#fff',
                             '& .MuiChip-deleteIcon': { color: '#fff' }
@@ -439,12 +439,12 @@ const Statistics = () => {
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', minHeight: 56 },
-                    minHeight: 56
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 14, padding: '12px 10px', minHeight: 40 },
+                    minHeight: 40
                   }}
                 >
                   {Array.isArray(players) && players.map(player => (
-                    <MenuItem key={player.id} value={player.id.toString()} sx={{ fontSize: 18, minHeight: 48 }}>
+                    <MenuItem key={player.id} value={player.id.toString()} sx={{ fontSize: 14, minHeight: 32 }}>
                       <Box sx={{ whiteSpace: 'normal', wordBreak: 'break-word', width: '100%' }}>
                         {player.name} {player.position ? `- ${player.position}` : ''}
                       </Box>
@@ -456,8 +456,8 @@ const Statistics = () => {
 
             {/* Player Level Filter */}
             <Grid item xs={12} md={6} lg={4}>
-              <FormControl fullWidth sx={{ minHeight: 56, minWidth: 300 }}>
-                <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Player Levels</InputLabel>
+              <FormControl fullWidth sx={{ minHeight: 56, minWidth: 200, maxWidth: 240 }}>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: 14 }}>Player Levels</InputLabel>
                 <Select
                   multiple
                   value={filters.playerLevels}
@@ -465,7 +465,7 @@ const Statistics = () => {
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(Array.isArray(selected) ? selected : []).map((level) => (
-                        <Chip key={level} label={level} size="medium" sx={{ fontSize: 16, height: 32, bgcolor: '#e3eafc', color: '#1c2c4d' }} />
+                        <Chip key={level} label={level} size="medium" sx={{ fontSize: 14, height: 28, bgcolor: '#e3eafc', color: '#1c2c4d' }} />
                       ))}
                     </Box>
                   )}
@@ -473,7 +473,7 @@ const Statistics = () => {
                     PaperProps: {
                       style: {
                         maxHeight: 400,
-                        width: 300
+                        width: 220
                       }
                     }
                   }}
@@ -481,15 +481,15 @@ const Statistics = () => {
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', minHeight: 56 },
-                    minHeight: 56
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 14, padding: '12px 10px', minHeight: 40 },
+                    minHeight: 40
                   }}
                 >
-                  <MenuItem value="Little League" sx={{ fontSize: 18, minHeight: 48 }}>Little League</MenuItem>
-                  <MenuItem value="Travel Team" sx={{ fontSize: 18, minHeight: 48 }}>Travel Team</MenuItem>
-                  <MenuItem value="High School" sx={{ fontSize: 18, minHeight: 48 }}>High School</MenuItem>
-                  <MenuItem value="College" sx={{ fontSize: 18, minHeight: 48 }}>College</MenuItem>
-                  <MenuItem value="Professional" sx={{ fontSize: 18, minHeight: 48 }}>Professional</MenuItem>
+                  <MenuItem value="Little League" sx={{ fontSize: 14, minHeight: 32 }}>Little League</MenuItem>
+                  <MenuItem value="Travel Team" sx={{ fontSize: 14, minHeight: 32 }}>Travel Team</MenuItem>
+                  <MenuItem value="High School" sx={{ fontSize: 14, minHeight: 32 }}>High School</MenuItem>
+                  <MenuItem value="College" sx={{ fontSize: 14, minHeight: 32 }}>College</MenuItem>
+                  <MenuItem value="Professional" sx={{ fontSize: 14, minHeight: 32 }}>Professional</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -590,8 +590,8 @@ const Statistics = () => {
 
             {/* Session Tags */}
             <Grid item xs={12} md={6} lg={4}>
-              <FormControl fullWidth sx={{ minHeight: 56, minWidth: 300 }}>
-                <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Session Tags</InputLabel>
+              <FormControl fullWidth sx={{ minHeight: 56, minWidth: 220 }}>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: 14 }}>Session Tags</InputLabel>
                 <Select
                   multiple
                   value={filters.sessionTags}
@@ -604,7 +604,7 @@ const Statistics = () => {
                           label={tag} 
                           size="medium" 
                           icon={<LocalOffer sx={{ color: '#fff' }} />}
-                          sx={{ fontSize: 16, height: 32, bgcolor: '#1c2c4d', color: '#fff', '& .MuiChip-deleteIcon': { color: '#fff' } }}
+                          sx={{ fontSize: 14, height: 28, bgcolor: '#1c2c4d', color: '#fff', '& .MuiChip-deleteIcon': { color: '#fff' } }}
                           onDelete={() => {
                             setFilters(prev => ({
                               ...prev,
@@ -619,7 +619,7 @@ const Statistics = () => {
                     PaperProps: {
                       style: {
                         maxHeight: 400,
-                        width: 300
+                        width: 220
                       }
                     }
                   }}
@@ -627,14 +627,14 @@ const Statistics = () => {
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', minHeight: 56 },
-                    minHeight: 56
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 14, padding: '12px 10px', minHeight: 40 },
+                    minHeight: 40
                   }}
                 >
                   {sessionTags.map(tag => (
-                    <MenuItem key={tag} value={tag} sx={{ fontSize: 18, minHeight: 48 }}>
+                    <MenuItem key={tag} value={tag} sx={{ fontSize: 14, minHeight: 32 }}>
                       <Box display="flex" alignItems="center">
-                        <LocalOffer sx={{ mr: 1, fontSize: 18, color: '#1c2c4d' }} />
+                        <LocalOffer sx={{ mr: 1, fontSize: 14, color: '#1c2c4d' }} />
                         {tag}
                       </Box>
                     </MenuItem>
