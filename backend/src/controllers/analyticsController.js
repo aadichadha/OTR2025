@@ -787,11 +787,27 @@ const getPlayerStats = async (req, res) => {
           }
         }
 
+        // Infer player level using the same logic as Player Management
+        let inferredLevel = 'N/A';
+        if (player.college) {
+          inferredLevel = 'College';
+        } else if (player.high_school) {
+          inferredLevel = 'High School';
+        } else if (player.travel_team) {
+          inferredLevel = 'Youth/Travel';
+        } else if (player.indy) {
+          inferredLevel = 'Independent';
+        } else if (player.affiliate) {
+          inferredLevel = 'Affiliate';
+        } else if (player.little_league) {
+          inferredLevel = 'Little League';
+        }
+
         // Calculate aggregated metrics
         let stats = {
           player_id: player.id,
           player_name: player.name,
-          player_level: player.player_level || 'High School',
+          player_level: inferredLevel,
           position: player.position,
           total_sessions: player.sessions.length,
           total_swings: Math.max(allExitVelocityData.length, allBatSpeedData.length),
