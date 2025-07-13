@@ -324,7 +324,7 @@ One-time password: exwx bdjz xjid qhmh`);
   // Tag editing functions
   const handleEditTags = (session) => {
     setEditingSession(session);
-    setSessionTags(session.session_tags ? session.session_tags.split(',').map(tag => tag.trim()) : []);
+    setSessionTags(session.session_tags ? Array.isArray(session.session_tags) ? session.session_tags : session.session_tags.split(',').map(tag => tag.trim()) : []);
     setTagDialogOpen(true);
   };
 
@@ -336,7 +336,7 @@ One-time password: exwx bdjz xjid qhmh`);
     try {
       const token = localStorage.getItem('token');
       await axios.patch(`${API_URL}/sessions/${editingSession.id}`, {
-        session_tags: sessionTags.join(', ')
+        session_tags: JSON.stringify(sessionTags)
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -369,7 +369,12 @@ One-time password: exwx bdjz xjid qhmh`);
 
   const renderSessionTags = (tags) => {
     if (!tags) return null;
-    const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    let tagArray = [];
+    try {
+      tagArray = Array.isArray(tags) ? tags : JSON.parse(tags);
+    } catch {
+      tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    }
     return (
       <Box display="flex" flexWrap="wrap" gap={0.5}>
         {tagArray.map((tag, index) => (
