@@ -453,15 +453,15 @@ const Statistics = () => {
       {/* Summary Stats */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
             <CardContent>
               <Box display="flex" alignItems="center">
-                <Person color="primary" sx={{ mr: 2 }} />
+                <Person sx={{ mr: 2, color: '#1c2c4d' }} />
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="#1c2c4d" gutterBottom fontWeight="bold">
                     Total Players
                   </Typography>
-                  <Typography variant="h5" component="div">
+                  <Typography variant="h5" component="div" sx={{ color: '#1c2c4d', fontWeight: 700 }}>
                     {filteredStats.length}
                   </Typography>
                 </Box>
@@ -470,15 +470,15 @@ const Statistics = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
             <CardContent>
               <Box display="flex" alignItems="center">
-                <Timeline color="primary" sx={{ mr: 2 }} />
+                <Timeline sx={{ mr: 2, color: '#1c2c4d' }} />
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="#1c2c4d" gutterBottom fontWeight="bold">
                     Total Sessions
                   </Typography>
-                  <Typography variant="h5" component="div">
+                  <Typography variant="h5" component="div" sx={{ color: '#1c2c4d', fontWeight: 700 }}>
                     {filteredStats.reduce((sum, stat) => sum + (stat.total_sessions || 0), 0)}
                   </Typography>
                 </Box>
@@ -487,15 +487,15 @@ const Statistics = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
             <CardContent>
               <Box display="flex" alignItems="center">
-                <Speed color="primary" sx={{ mr: 2 }} />
+                <Speed sx={{ mr: 2, color: '#1c2c4d' }} />
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="#1c2c4d" gutterBottom fontWeight="bold">
                     Total Swings
                   </Typography>
-                  <Typography variant="h5" component="div">
+                  <Typography variant="h5" component="div" sx={{ color: '#1c2c4d', fontWeight: 700 }}>
                     {filteredStats.reduce((sum, stat) => sum + (stat.total_swings || 0), 0)}
                   </Typography>
                 </Box>
@@ -504,25 +504,25 @@ const Statistics = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
             <CardContent>
               <Box display="flex" alignItems="center">
-                <Straighten color="primary" sx={{ mr: 2 }} />
-              <Box>
-                <Typography color="textSecondary" gutterBottom>
-                  Avg Barrel %
-                </Typography>
-                <Typography variant="h5" component="div">
-                  {filteredStats.length > 0 ? 
-                    formatNumber(filteredStats.reduce((sum, stat) => sum + (stat.barrel_percentage || 0), 0) / filteredStats.length) : 
-                    '0.0'}%
-                </Typography>
+                <Straighten sx={{ mr: 2, color: '#1c2c4d' }} />
+                <Box>
+                  <Typography color="#1c2c4d" gutterBottom fontWeight="bold">
+                    Avg Barrel %
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{ color: '#1c2c4d', fontWeight: 700 }}>
+                    {filteredStats.length > 0 ? 
+                      formatNumber(filteredStats.reduce((sum, stat) => sum + (stat.barrel_percentage || 0), 0) / filteredStats.length) : 
+                      '0.0'}%
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
 
       {/* Statistics Table */}
       <Paper sx={{ width: '100%', overflow: 'hidden', bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
