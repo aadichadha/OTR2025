@@ -352,8 +352,8 @@ const Statistics = () => {
 
       {/* Enhanced Filters */}
       {showFilters && (
-        <Paper sx={{ p: 4, mb: 4, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Paper sx={{ p: 5, mb: 5, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
             <Typography variant="h5" fontWeight="bold" color="#1c2c4d">
               Advanced Filters
             </Typography>
@@ -361,15 +361,15 @@ const Statistics = () => {
               variant="outlined" 
               startIcon={<Clear />}
               onClick={clearFilters} 
-              sx={{ color: '#1c2c4d', borderColor: '#1c2c4d', minWidth: 120 }}
+              sx={{ color: '#1c2c4d', borderColor: '#1c2c4d', minWidth: 140, fontSize: '1rem', height: 48 }}
             >
               Clear All
             </Button>
           </Box>
           
-          <Grid container spacing={4}>
+          <Grid container spacing={4} alignItems="center">
             {/* Search Bar */}
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6} lg={4}>
               <TextField
                 fullWidth
                 label="Search Players or Levels"
@@ -381,21 +381,24 @@ const Statistics = () => {
                       <Search sx={{ color: '#1c2c4d' }} />
                     </InputAdornment>
                   ),
+                  style: { fontSize: 18, height: 56 }
                 }}
+                InputLabelProps={{ style: { fontSize: 18 } }}
                 sx={{
                   '& .MuiInputLabel-root': { color: '#1c2c4d' },
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', height: 20 },
+                  minHeight: 56
                 }}
               />
             </Grid>
 
             {/* Player Selection */}
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: '#1c2c4d', fontSize: '16px' }}>Select Players</InputLabel>
+            <Grid item xs={12} md={6} lg={4}>
+              <FormControl fullWidth sx={{ minHeight: 56 }}>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Select Players</InputLabel>
                 <Select
                   multiple
                   value={filters.selectedPlayers}
@@ -406,23 +409,33 @@ const Statistics = () => {
                         <Chip 
                           key={playerId} 
                           label={getPlayerName(playerId)} 
-                          size="small" 
-                          sx={{ fontSize: '12px' }}
+                          size="medium" 
+                          sx={{ fontSize: 16, height: 32 }}
                         />
                       ))}
                     </Box>
                   )}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 400,
+                        width: 350
+                      }
+                    }
+                  }}
                   sx={{
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
-                    minHeight: '56px'
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', minHeight: 56 },
+                    minHeight: 56
                   }}
                 >
                   {Array.isArray(players) && players.map(player => (
-                    <MenuItem key={player.id} value={player.id.toString()}>
-                      {player.name} - {player.position}
+                    <MenuItem key={player.id} value={player.id.toString()} sx={{ fontSize: 18, minHeight: 48 }}>
+                      <Box sx={{ whiteSpace: 'normal', wordBreak: 'break-word', width: '100%' }}>
+                        {player.name} {player.position ? `- ${player.position}` : ''}
+                      </Box>
                     </MenuItem>
                   ))}
                 </Select>
@@ -430,9 +443,9 @@ const Statistics = () => {
             </Grid>
 
             {/* Player Level Filter */}
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: '#1c2c4d', fontSize: '16px' }}>Player Levels</InputLabel>
+            <Grid item xs={12} md={6} lg={4}>
+              <FormControl fullWidth sx={{ minHeight: 56 }}>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Player Levels</InputLabel>
                 <Select
                   multiple
                   value={filters.playerLevels}
@@ -440,67 +453,79 @@ const Statistics = () => {
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(Array.isArray(selected) ? selected : []).map((level) => (
-                        <Chip key={level} label={level} size="small" sx={{ fontSize: '12px' }} />
+                        <Chip key={level} label={level} size="medium" sx={{ fontSize: 16, height: 32 }} />
                       ))}
                     </Box>
                   )}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 400,
+                        width: 300
+                      }
+                    }
+                  }}
                   sx={{
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
-                    minHeight: '56px'
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', minHeight: 56 },
+                    minHeight: 56
                   }}
                 >
-                  <MenuItem value="Little League">Little League</MenuItem>
-                  <MenuItem value="Travel Team">Travel Team</MenuItem>
-                  <MenuItem value="High School">High School</MenuItem>
-                  <MenuItem value="College">College</MenuItem>
-                  <MenuItem value="Professional">Professional</MenuItem>
+                  <MenuItem value="Little League" sx={{ fontSize: 18, minHeight: 48 }}>Little League</MenuItem>
+                  <MenuItem value="Travel Team" sx={{ fontSize: 18, minHeight: 48 }}>Travel Team</MenuItem>
+                  <MenuItem value="High School" sx={{ fontSize: 18, minHeight: 48 }}>High School</MenuItem>
+                  <MenuItem value="College" sx={{ fontSize: 18, minHeight: 48 }}>College</MenuItem>
+                  <MenuItem value="Professional" sx={{ fontSize: 18, minHeight: 48 }}>Professional</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
             {/* Date Range */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={6} lg={4}>
               <TextField
                 fullWidth
                 label="Start Date"
                 type="date"
                 value={filters.startDate}
                 onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ shrink: true, style: { fontSize: 18 } }}
+                inputProps={{ style: { fontSize: 18, height: 56 } }}
                 sx={{
-                  '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                  '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: 18 },
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', height: 20 },
+                  minHeight: 56
                 }}
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={6} lg={4}>
               <TextField
                 fullWidth
                 label="End Date"
                 type="date"
                 value={filters.endDate}
                 onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ shrink: true, style: { fontSize: 18 } }}
+                inputProps={{ style: { fontSize: 18, height: 56 } }}
                 sx={{
-                  '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                  '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: 18 },
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', height: 20 },
+                  minHeight: 56
                 }}
               />
             </Grid>
 
             {/* Pitch Speed Range */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" color="#1c2c4d" fontWeight="bold" mb={2}>
+            <Grid item xs={12} md={6} lg={4}>
+              <Typography variant="subtitle1" color="#1c2c4d" fontWeight="bold" mb={2} sx={{ fontSize: 18 }}>
                 Pitch Speed Range (mph)
               </Typography>
               <Grid container spacing={2}>
@@ -513,13 +538,16 @@ const Statistics = () => {
                     onChange={(e) => handleFilterChange('pitchSpeedMin', e.target.value)}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">mph</InputAdornment>,
+                      style: { fontSize: 18, height: 56 }
                     }}
+                    InputLabelProps={{ style: { fontSize: 18 } }}
                     sx={{
-                      '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                      '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: 18 },
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                       '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                       '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                      '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                      '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', height: 20 },
+                      minHeight: 56
                     }}
                   />
                 </Grid>
@@ -532,13 +560,16 @@ const Statistics = () => {
                     onChange={(e) => handleFilterChange('pitchSpeedMax', e.target.value)}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">mph</InputAdornment>,
+                      style: { fontSize: 18, height: 56 }
                     }}
+                    InputLabelProps={{ style: { fontSize: 18 } }}
                     sx={{
-                      '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                      '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: 18 },
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                       '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                       '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                      '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                      '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', height: 20 },
+                      minHeight: 56
                     }}
                   />
                 </Grid>
@@ -546,9 +577,9 @@ const Statistics = () => {
             </Grid>
 
             {/* Session Tags */}
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: '#1c2c4d', fontSize: '16px' }}>Session Tags</InputLabel>
+            <Grid item xs={12} md={6} lg={4}>
+              <FormControl fullWidth sx={{ minHeight: 56 }}>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: 18 }}>Session Tags</InputLabel>
                 <Select
                   multiple
                   value={filters.sessionTags}
@@ -559,25 +590,33 @@ const Statistics = () => {
                         <Chip 
                           key={tag} 
                           label={tag} 
-                          size="small" 
+                          size="medium" 
                           icon={<LocalOffer />}
-                          sx={{ fontSize: '12px' }}
+                          sx={{ fontSize: 16, height: 32 }}
                         />
                       ))}
                     </Box>
                   )}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 400,
+                        width: 300
+                      }
+                    }
+                  }}
                   sx={{
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
-                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
-                    minHeight: '56px'
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: 18, padding: '18px 16px', minHeight: 56 },
+                    minHeight: 56
                   }}
                 >
                   {sessionTags.map(tag => (
-                    <MenuItem key={tag} value={tag}>
+                    <MenuItem key={tag} value={tag} sx={{ fontSize: 18, minHeight: 48 }}>
                       <Box display="flex" alignItems="center">
-                        <LocalOffer sx={{ mr: 1, fontSize: 16 }} />
+                        <LocalOffer sx={{ mr: 1, fontSize: 18 }} />
                         {tag}
                       </Box>
                     </MenuItem>
@@ -596,34 +635,34 @@ const Statistics = () => {
             filters.pitchSpeedMax || 
             filters.sessionTags.length > 0 ||
             filters.searchTerm) && (
-            <Box mt={3} p={2} bgcolor="#f8f9fa" borderRadius={2}>
-              <Typography variant="subtitle2" color="#1c2c4d" fontWeight="bold" mb={1}>
+            <Box mt={4} p={2} bgcolor="#f8f9fa" borderRadius={2}>
+              <Typography variant="subtitle2" color="#1c2c4d" fontWeight="bold" mb={1} sx={{ fontSize: 16 }}>
                 Active Filters:
               </Typography>
               <Box display="flex" flexWrap="wrap" gap={1}>
                 {filters.searchTerm && (
-                  <Chip label={`Search: "${filters.searchTerm}"`} size="small" color="primary" />
+                  <Chip label={`Search: "${filters.searchTerm}"`} size="medium" color="primary" sx={{ fontSize: 15, height: 32 }} />
                 )}
                 {filters.selectedPlayers.map(playerId => (
-                  <Chip key={playerId} label={getPlayerName(playerId)} size="small" color="primary" />
+                  <Chip key={playerId} label={getPlayerName(playerId)} size="medium" color="primary" sx={{ fontSize: 15, height: 32 }} />
                 ))}
                 {filters.playerLevels.map(level => (
-                  <Chip key={level} label={level} size="small" color="secondary" />
+                  <Chip key={level} label={level} size="medium" color="secondary" sx={{ fontSize: 15, height: 32 }} />
                 ))}
                 {filters.startDate && (
-                  <Chip label={`From: ${filters.startDate}`} size="small" color="info" />
+                  <Chip label={`From: ${filters.startDate}`} size="medium" color="info" sx={{ fontSize: 15, height: 32 }} />
                 )}
                 {filters.endDate && (
-                  <Chip label={`To: ${filters.endDate}`} size="small" color="info" />
+                  <Chip label={`To: ${filters.endDate}`} size="medium" color="info" sx={{ fontSize: 15, height: 32 }} />
                 )}
                 {filters.pitchSpeedMin && (
-                  <Chip label={`Min Pitch: ${filters.pitchSpeedMin} mph`} size="small" color="warning" />
+                  <Chip label={`Min Pitch: ${filters.pitchSpeedMin} mph`} size="medium" color="warning" sx={{ fontSize: 15, height: 32 }} />
                 )}
                 {filters.pitchSpeedMax && (
-                  <Chip label={`Max Pitch: ${filters.pitchSpeedMax} mph`} size="small" color="warning" />
+                  <Chip label={`Max Pitch: ${filters.pitchSpeedMax} mph`} size="medium" color="warning" sx={{ fontSize: 15, height: 32 }} />
                 )}
                 {filters.sessionTags.map(tag => (
-                  <Chip key={tag} label={tag} size="small" color="success" icon={<LocalOffer />} />
+                  <Chip key={tag} label={tag} size="medium" color="success" icon={<LocalOffer />} sx={{ fontSize: 15, height: 32 }} />
                 ))}
               </Box>
             </Box>
