@@ -571,10 +571,10 @@ const Statistics = () => {
                         variant="outlined"
                       />
                     </TableCell>
-                    <TableCell>{stat.total_sessions || 0}</TableCell>
-                    <TableCell>{stat.total_swings || 0}</TableCell>
-                    <TableCell>{formatNumber(stat.avg_exit_velocity)}</TableCell>
-                    <TableCell>{formatNumber(stat.avg_launch_angle)}</TableCell>
+                    <TableCell sx={{ color: '#1c2c4d' }}>{stat.total_sessions || 0}</TableCell>
+                    <TableCell sx={{ color: '#1c2c4d' }}>{stat.total_swings || 0}</TableCell>
+                    <TableCell sx={{ color: '#1c2c4d' }}>{formatNumber(stat.avg_exit_velocity)}</TableCell>
+                    <TableCell sx={{ color: '#1c2c4d' }}>{formatNumber(stat.avg_launch_angle)}</TableCell>
                     <TableCell>
                       <Chip 
                         label={`${formatNumber(stat.barrel_percentage)}%`}
