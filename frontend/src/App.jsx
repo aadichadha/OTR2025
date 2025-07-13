@@ -11,6 +11,7 @@ import SessionVisualization from './pages/SessionVisualization';
 import Landing from './pages/Landing';
 import AnalyticsHome from './pages/AnalyticsHome';
 import SessionAnalytics from './pages/SessionAnalytics';
+import Statistics from './pages/Statistics';
 import AdminDashboard from './pages/AdminDashboard';
 import CoachDashboard from './pages/CoachDashboard';
 import Topbar from './components/Topbar';
@@ -145,6 +146,12 @@ function AppRoutes() {
           <Route path="/progression" element={
             <ProtectedRoute requiredPermission="view_analytics">
               <SessionAnalytics />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/statistics" element={
+            <ProtectedRoute requiredPermission="view_analytics">
+              <Statistics />
             </ProtectedRoute>
           } />
 

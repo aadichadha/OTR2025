@@ -65,6 +65,7 @@ const Topbar = () => {
     // Add coach-specific items
     if (user?.role === 'coach') {
       baseItems.push({ label: 'Progression', icon: <Assessment />, to: '/progression' });
+      baseItems.push({ label: 'Statistics', icon: <Timeline />, to: '/statistics' });
     }
 
     return baseItems;
