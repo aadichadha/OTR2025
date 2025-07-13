@@ -30,7 +30,9 @@ import {
   FormControlLabel,
   Checkbox,
   Slider,
-  Divider
+  Divider,
+  InputAdornment,
+  Tooltip
 } from '@mui/material';
 import {
   TrendingUp,
@@ -44,7 +46,10 @@ import {
   Timeline,
   Straighten,
   CalendarToday,
-  Person
+  Person,
+  LocalOffer,
+  Clear,
+  Search
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -59,14 +64,19 @@ const Statistics = () => {
   const [players, setPlayers] = useState([]);
   const [playerStats, setPlayerStats] = useState([]);
   const [filteredStats, setFilteredStats] = useState([]);
+  const [sessionTags, setSessionTags] = useState([]);
   
-  // Filter states
+  // Enhanced filter states
   const [filters, setFilters] = useState({
     selectedPlayers: [],
     playerLevels: [],
     startDate: '',
     endDate: '',
-    timeRange: 'all'
+    timeRange: 'all',
+    pitchSpeedMin: '',
+    pitchSpeedMax: '',
+    sessionTags: [],
+    searchTerm: ''
   });
   
   // UI states
@@ -92,7 +102,7 @@ const Statistics = () => {
     setError(null);
     
     try {
-      // Load players and their stats
+      // Load players and their stats with enhanced filtering
       const [playersRes, statsRes] = await Promise.all([
         api.get('/players'),
         api.get('/analytics/player-stats?timeRange=all')
@@ -108,6 +118,15 @@ const Statistics = () => {
 
       setPlayers(Array.isArray(playersData) ? playersData : []);
       setPlayerStats(Array.isArray(statsData) ? statsData : []);
+      
+      // Extract unique session tags from the data
+      const tags = new Set();
+      statsData.forEach(stat => {
+        if (stat.session_tags && Array.isArray(stat.session_tags)) {
+          stat.session_tags.forEach(tag => tags.add(tag));
+        }
+      });
+      setSessionTags(Array.from(tags).sort());
     } catch (err) {
       console.error('Error loading statistics data:', err);
       setError('Failed to load statistics data');
@@ -118,6 +137,15 @@ const Statistics = () => {
 
   const applyFilters = () => {
     let filtered = [...playerStats];
+
+    // Filter by search term
+    if (filters.searchTerm) {
+      const searchLower = filters.searchTerm.toLowerCase();
+      filtered = filtered.filter(stat => 
+        stat.player_name?.toLowerCase().includes(searchLower) ||
+        stat.player_level?.toLowerCase().includes(searchLower)
+      );
+    }
 
     // Filter by selected players
     if (filters.selectedPlayers.length > 0) {
@@ -143,6 +171,27 @@ const Statistics = () => {
     if (filters.endDate) {
       filtered = filtered.filter(stat => 
         new Date(stat.last_session_date) <= new Date(filters.endDate)
+      );
+    }
+
+    // Filter by pitch speed range
+    if (filters.pitchSpeedMin && !isNaN(parseFloat(filters.pitchSpeedMin))) {
+      filtered = filtered.filter(stat => 
+        stat.avg_pitch_speed >= parseFloat(filters.pitchSpeedMin)
+      );
+    }
+
+    if (filters.pitchSpeedMax && !isNaN(parseFloat(filters.pitchSpeedMax))) {
+      filtered = filtered.filter(stat => 
+        stat.avg_pitch_speed <= parseFloat(filters.pitchSpeedMax)
+      );
+    }
+
+    // Filter by session tags
+    if (filters.sessionTags.length > 0) {
+      filtered = filtered.filter(stat => 
+        stat.session_tags && 
+        filters.sessionTags.some(tag => stat.session_tags.includes(tag))
       );
     }
 
@@ -200,7 +249,11 @@ const Statistics = () => {
       playerLevels: [],
       startDate: '',
       endDate: '',
-      timeRange: 'all'
+      timeRange: 'all',
+      pitchSpeedMin: '',
+      pitchSpeedMax: '',
+      sessionTags: [],
+      searchTerm: ''
     });
   };
 
@@ -220,9 +273,9 @@ const Statistics = () => {
     const player = players.find(p => p.id.toString() === playerId?.toString());
     if (!player) return 'N/A';
     
+    if (player.college) return 'College';
     if (player.high_school) return 'High School';
     if (player.travel_team) return 'Travel Team';
-    if (player.college) return 'College';
     if (player.indy || player.affiliate) return 'Professional';
     if (player.little_league) return 'Little League';
     return 'N/A';
@@ -236,7 +289,8 @@ const Statistics = () => {
     { key: 'avg_exit_velocity', label: 'Avg EV (mph)', sortable: true },
     { key: 'avg_launch_angle', label: 'Avg LA (°)', sortable: true },
     { key: 'barrel_percentage', label: 'Barrel %', sortable: true },
-    { key: 'max_exit_velocity', label: 'Max EV (mph)', sortable: true }
+    { key: 'max_exit_velocity', label: 'Max EV (mph)', sortable: true },
+    { key: 'avg_pitch_speed', label: 'Avg Pitch Speed (mph)', sortable: true }
   ];
 
   if (loading) {
@@ -277,14 +331,15 @@ const Statistics = () => {
               variant="outlined"
               startIcon={<FilterList />}
               onClick={() => setShowFilters(!showFilters)}
-              sx={{ mr: 2 }}
+              sx={{ mr: 2, minWidth: 120 }}
             >
-              Filters
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
             </Button>
             <Button
               variant="contained"
               startIcon={<Refresh />}
               onClick={loadData}
+              sx={{ minWidth: 120 }}
             >
               Refresh
             </Button>
@@ -295,23 +350,52 @@ const Statistics = () => {
         </Typography>
       </Paper>
 
-      {/* Filters */}
+      {/* Enhanced Filters */}
       {showFilters && (
-        <Paper sx={{ p: 3, mb: 3, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6" fontWeight="bold" color="#1c2c4d">
+        <Paper sx={{ p: 4, mb: 4, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography variant="h5" fontWeight="bold" color="#1c2c4d">
               Advanced Filters
             </Typography>
-            <Button variant="outlined" size="small" onClick={clearFilters} sx={{ color: '#1c2c4d', borderColor: '#1c2c4d' }}>
+            <Button 
+              variant="outlined" 
+              startIcon={<Clear />}
+              onClick={clearFilters} 
+              sx={{ color: '#1c2c4d', borderColor: '#1c2c4d', minWidth: 120 }}
+            >
               Clear All
             </Button>
           </Box>
           
-          <Grid container spacing={3}>
+          <Grid container spacing={4}>
+            {/* Search Bar */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Search Players or Levels"
+                value={filters.searchTerm}
+                onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: '#1c2c4d' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                }}
+              />
+            </Grid>
+
             {/* Player Selection */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel sx={{ color: '#1c2c4d' }}>Select Players</InputLabel>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: '16px' }}>Select Players</InputLabel>
                 <Select
                   multiple
                   value={filters.selectedPlayers}
@@ -323,23 +407,17 @@ const Statistics = () => {
                           key={playerId} 
                           label={getPlayerName(playerId)} 
                           size="small" 
+                          sx={{ fontSize: '12px' }}
                         />
                       ))}
                     </Box>
                   )}
                   sx={{
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#e0e3e8',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '& .MuiSelect-select': {
-                      color: '#1c2c4d',
-                    },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                    minHeight: '56px'
                   }}
                 >
                   {Array.isArray(players) && players.map(player => (
@@ -354,7 +432,7 @@ const Statistics = () => {
             {/* Player Level Filter */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel sx={{ color: '#1c2c4d' }}>Player Levels</InputLabel>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: '16px' }}>Player Levels</InputLabel>
                 <Select
                   multiple
                   value={filters.playerLevels}
@@ -362,23 +440,16 @@ const Statistics = () => {
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(Array.isArray(selected) ? selected : []).map((level) => (
-                        <Chip key={level} label={level} size="small" />
+                        <Chip key={level} label={level} size="small" sx={{ fontSize: '12px' }} />
                       ))}
                     </Box>
                   )}
                   sx={{
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#e0e3e8',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3a7bd5',
-                    },
-                    '& .MuiSelect-select': {
-                      color: '#1c2c4d',
-                    },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                    minHeight: '56px'
                   }}
                 >
                   <MenuItem value="Little League">Little League</MenuItem>
@@ -400,21 +471,11 @@ const Statistics = () => {
                 onChange={(e) => handleFilterChange('startDate', e.target.value)}
                 InputLabelProps={{ shrink: true }}
                 sx={{
-                  '& .MuiInputLabel-root': {
-                    color: '#1c2c4d',
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#e0e3e8',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#3a7bd5',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#3a7bd5',
-                  },
-                  '& .MuiInputBase-input': {
-                    color: '#1c2c4d',
-                  },
+                  '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
                 }}
               />
             </Grid>
@@ -428,25 +489,145 @@ const Statistics = () => {
                 onChange={(e) => handleFilterChange('endDate', e.target.value)}
                 InputLabelProps={{ shrink: true }}
                 sx={{
-                  '& .MuiInputLabel-root': {
-                    color: '#1c2c4d',
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#e0e3e8',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#3a7bd5',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#3a7bd5',
-                  },
-                  '& .MuiInputBase-input': {
-                    color: '#1c2c4d',
-                  },
+                  '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                  '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
                 }}
               />
             </Grid>
+
+            {/* Pitch Speed Range */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" color="#1c2c4d" fontWeight="bold" mb={2}>
+                Pitch Speed Range (mph)
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Min Speed"
+                    type="number"
+                    value={filters.pitchSpeedMin}
+                    onChange={(e) => handleFilterChange('pitchSpeedMin', e.target.value)}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">mph</InputAdornment>,
+                    }}
+                    sx={{
+                      '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Max Speed"
+                    type="number"
+                    value={filters.pitchSpeedMax}
+                    onChange={(e) => handleFilterChange('pitchSpeedMax', e.target.value)}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">mph</InputAdornment>,
+                    }}
+                    sx={{
+                      '& .MuiInputLabel-root': { color: '#1c2c4d', fontSize: '16px' },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '& .MuiInputBase-input': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Session Tags */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: '#1c2c4d', fontSize: '16px' }}>Session Tags</InputLabel>
+                <Select
+                  multiple
+                  value={filters.sessionTags}
+                  onChange={(e) => handleFilterChange('sessionTags', e.target.value)}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(Array.isArray(selected) ? selected : []).map((tag) => (
+                        <Chip 
+                          key={tag} 
+                          label={tag} 
+                          size="small" 
+                          icon={<LocalOffer />}
+                          sx={{ fontSize: '12px' }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                    '& .MuiSelect-select': { color: '#1c2c4d', fontSize: '16px', padding: '16px 14px' },
+                    minHeight: '56px'
+                  }}
+                >
+                  {sessionTags.map(tag => (
+                    <MenuItem key={tag} value={tag}>
+                      <Box display="flex" alignItems="center">
+                        <LocalOffer sx={{ mr: 1, fontSize: 16 }} />
+                        {tag}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
+
+          {/* Active Filters Summary */}
+          {(filters.selectedPlayers.length > 0 || 
+            filters.playerLevels.length > 0 || 
+            filters.startDate || 
+            filters.endDate || 
+            filters.pitchSpeedMin || 
+            filters.pitchSpeedMax || 
+            filters.sessionTags.length > 0 ||
+            filters.searchTerm) && (
+            <Box mt={3} p={2} bgcolor="#f8f9fa" borderRadius={2}>
+              <Typography variant="subtitle2" color="#1c2c4d" fontWeight="bold" mb={1}>
+                Active Filters:
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={1}>
+                {filters.searchTerm && (
+                  <Chip label={`Search: "${filters.searchTerm}"`} size="small" color="primary" />
+                )}
+                {filters.selectedPlayers.map(playerId => (
+                  <Chip key={playerId} label={getPlayerName(playerId)} size="small" color="primary" />
+                ))}
+                {filters.playerLevels.map(level => (
+                  <Chip key={level} label={level} size="small" color="secondary" />
+                ))}
+                {filters.startDate && (
+                  <Chip label={`From: ${filters.startDate}`} size="small" color="info" />
+                )}
+                {filters.endDate && (
+                  <Chip label={`To: ${filters.endDate}`} size="small" color="info" />
+                )}
+                {filters.pitchSpeedMin && (
+                  <Chip label={`Min Pitch: ${filters.pitchSpeedMin} mph`} size="small" color="warning" />
+                )}
+                {filters.pitchSpeedMax && (
+                  <Chip label={`Max Pitch: ${filters.pitchSpeedMax} mph`} size="small" color="warning" />
+                )}
+                {filters.sessionTags.map(tag => (
+                  <Chip key={tag} label={tag} size="small" color="success" icon={<LocalOffer />} />
+                ))}
+              </Box>
+            </Box>
+          )}
         </Paper>
       )}
 
@@ -540,7 +721,9 @@ const Statistics = () => {
                       bgcolor: '#f5f5f5',
                       color: '#1c2c4d',
                       '&:hover': column.sortable ? { bgcolor: '#e0e0e0' } : {},
-                      userSelect: 'none'
+                      userSelect: 'none',
+                      fontSize: '14px',
+                      padding: '16px 8px'
                     }}
                   >
                     <Box display="flex" alignItems="center">
@@ -584,6 +767,9 @@ const Statistics = () => {
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600, color: '#d32f2f' }}>
                       {formatNumber(stat.max_exit_velocity)}
+                    </TableCell>
+                    <TableCell sx={{ color: '#1c2c4d' }}>
+                      {formatNumber(stat.avg_pitch_speed)}
                     </TableCell>
                   </TableRow>
                 ))}

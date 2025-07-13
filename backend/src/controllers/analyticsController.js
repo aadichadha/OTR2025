@@ -714,10 +714,22 @@ const getPlayerStats = async (req, res) => {
         endDate, 
         playerLevel, 
         playerIds,
-        timeRange = 'all' // 'all', 'recent', 'career'
+        timeRange = 'all', // 'all', 'recent', 'career'
+        pitchSpeedMin,
+        pitchSpeedMax,
+        sessionTags
       } = req.query;
 
-      console.log('[FANGRAPHS] Getting player stats with filters:', { startDate, endDate, playerLevel, playerIds, timeRange });
+      console.log('[FANGRAPHS] Getting player stats with filters:', { 
+        startDate, 
+        endDate, 
+        playerLevel, 
+        playerIds, 
+        timeRange,
+        pitchSpeedMin,
+        pitchSpeedMax,
+        sessionTags
+      });
 
       // Build date filter
       let dateFilter = {};
@@ -777,6 +789,7 @@ const getPlayerStats = async (req, res) => {
         // Aggregate all exit velocity data
         const allExitVelocityData = [];
         const allBatSpeedData = [];
+        const sessionTagsSet = new Set();
 
         for (const session of player.sessions) {
           if (session.exitVelocityData && Array.isArray(session.exitVelocityData)) {
@@ -784,6 +797,19 @@ const getPlayerStats = async (req, res) => {
           }
           if (session.batSpeedData && Array.isArray(session.batSpeedData)) {
             allBatSpeedData.push(...session.batSpeedData);
+          }
+          
+          // Collect session tags
+          if (session.session_tags) {
+            try {
+              const tags = typeof session.session_tags === 'string' ? 
+                JSON.parse(session.session_tags) : session.session_tags;
+              if (Array.isArray(tags)) {
+                tags.forEach(tag => sessionTagsSet.add(tag));
+              }
+            } catch (e) {
+              console.log('[FANGRAPHS] Error parsing session tags:', e);
+            }
           }
         }
 
@@ -820,7 +846,9 @@ const getPlayerStats = async (req, res) => {
           avg_time_to_contact: null,
           avg_bat_speed: null,
           max_bat_speed: null,
-          barrel_percentage: null
+          barrel_percentage: null,
+          avg_pitch_speed: null,
+          session_tags: Array.from(sessionTagsSet)
         };
 
         // Calculate exit velocity metrics
@@ -889,8 +917,30 @@ const getPlayerStats = async (req, res) => {
         playerStats.push(stats);
       }
 
-      // Filter out players with no data if requested
-      const filteredStats = playerStats.filter(player => player.total_swings > 0);
+      // Apply additional filters
+      let filteredStats = playerStats.filter(player => player.total_swings > 0);
+
+      // Filter by pitch speed range
+      if (pitchSpeedMin && !isNaN(parseFloat(pitchSpeedMin))) {
+        filteredStats = filteredStats.filter(player => 
+          player.avg_pitch_speed >= parseFloat(pitchSpeedMin)
+        );
+      }
+
+      if (pitchSpeedMax && !isNaN(parseFloat(pitchSpeedMax))) {
+        filteredStats = filteredStats.filter(player => 
+          player.avg_pitch_speed <= parseFloat(pitchSpeedMax)
+        );
+      }
+
+      // Filter by session tags
+      if (sessionTags) {
+        const tagsArray = sessionTags.split(',').map(tag => tag.trim());
+        filteredStats = filteredStats.filter(player => 
+          player.session_tags && 
+          tagsArray.some(tag => player.session_tags.includes(tag))
+        );
+      }
 
       console.log(`[FANGRAPHS] Returning stats for ${filteredStats.length} players`);
       console.log('[FANGRAPHS] Sample player stats:', filteredStats[0] || 'No data');
@@ -899,7 +949,16 @@ const getPlayerStats = async (req, res) => {
         success: true,
         players: filteredStats,
         total: filteredStats.length,
-        filters: { startDate, endDate, playerLevel, playerIds, timeRange }
+        filters: { 
+          startDate, 
+          endDate, 
+          playerLevel, 
+          playerIds, 
+          timeRange,
+          pitchSpeedMin,
+          pitchSpeedMax,
+          sessionTags
+        }
       });
 
     } catch (error) {
@@ -910,7 +969,7 @@ const getPlayerStats = async (req, res) => {
         details: error.message 
       });
     }
-  }
+  };
 
 module.exports = {
   getSessionSwings,
