@@ -85,7 +85,7 @@ export default function Home() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Box sx={{ width: '100%', maxWidth: 900, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 }, mx: 'auto' }}>
+      <Box sx={{ width: '100%', maxWidth: 600, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 }, mx: 'auto' }}>
         <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 3, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
           Coach Dashboard
         </Typography>
@@ -103,32 +103,6 @@ export default function Home() {
               <CardContent>
                 <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Total Sessions</Typography>
                 <Typography variant="h2" sx={{ color: NAVY, fontWeight: 900, textAlign: 'center' }}>{stats.totalSessions}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-        <Grid container spacing={4} justifyContent="center" alignItems="center" sx={{ mt: 2 }}>
-          <Grid item xs={12}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Recent Sessions</Typography>
-                {loading ? <CircularProgress /> : (
-                  <Box>
-                    {(Array.isArray(stats.recentSessions) && stats.recentSessions.length === 0) ? (
-                      <Typography color="error">No recent sessions found.</Typography>
-                    ) : (
-                      (Array.isArray(stats.recentSessions) ? stats.recentSessions : []).map((session, idx) => (
-                        <Box key={idx} sx={{ mb: 2, p: 2, borderRadius: 2, bgcolor: '#fff', border: '1px solid #e0e3e8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Box>
-                            <Typography variant="body1" sx={{ color: NAVY, fontWeight: 600, mb: 0.5 }}>{formatDate(session.session_date)}</Typography>
-                            <Typography variant="body2" sx={{ color: NAVY, mb: 1 }}>{session.session_type?.toUpperCase() || 'Unknown Type'}</Typography>
-                            <Chip label={session.session_type?.toUpperCase() || 'Unknown'} color={getSessionTypeColor(session.session_type)} size="small" />
-                          </Box>
-                        </Box>
-                      ))
-                    )}
-                  </Box>
-                )}
               </CardContent>
             </Card>
           </Grid>
