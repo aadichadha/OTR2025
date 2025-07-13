@@ -798,11 +798,20 @@ const getPlayerStats = async (req, res) => {
           if (session.batSpeedData && Array.isArray(session.batSpeedData)) {
             allBatSpeedData.push(...session.batSpeedData);
           }
-          // Collect session tags
+          // Collect session tags robustly (JSON array or comma-separated string)
           if (session.session_tags) {
             try {
-              const tags = typeof session.session_tags === 'string' ? 
-                JSON.parse(session.session_tags) : session.session_tags;
+              let tags;
+              if (typeof session.session_tags === 'string') {
+                try {
+                  tags = JSON.parse(session.session_tags);
+                } catch {
+                  // Fallback: treat as comma-separated
+                  tags = session.session_tags.split(',').map(t => t.trim()).filter(Boolean);
+                }
+              } else {
+                tags = session.session_tags;
+              }
               if (Array.isArray(tags)) {
                 tags.forEach(tag => sessionTagsSet.add(tag));
               }
@@ -968,6 +977,36 @@ const getPlayerStats = async (req, res) => {
     }
   };
 
+// Get dashboard stats for coaches
+const getDashboardStats = async (req, res) => {
+  try {
+    console.log('[DASHBOARD] Getting dashboard stats');
+
+    // Get total players count
+    const totalPlayers = await Player.count();
+
+    // Get total sessions count
+    const totalSessions = await Session.count();
+
+    console.log(`[DASHBOARD] Found ${totalPlayers} players and ${totalSessions} sessions`);
+
+    res.json({
+      success: true,
+      data: {
+        totalPlayers,
+        totalSessions
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch dashboard stats',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getSessionSwings,
   updateSessionCategory,
@@ -979,5 +1018,6 @@ module.exports = {
   getPlayerBenchmarks,
   getPlayerProgress,
   getFilterOptions,
-  getPlayerStats
+  getPlayerStats,
+  getDashboardStats
 }; 

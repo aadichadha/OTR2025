@@ -187,6 +187,7 @@ try {
   app.get('/api/players/:playerId/sessions', authenticateToken, AnalyticsController.getPlayerSessions);
   app.get('/api/players/:playerId/swings', authenticateToken, AnalyticsController.getPlayerSwings);
   app.get('/api/players/:playerId/analytics', authenticateToken, AnalyticsController.getPlayerAnalytics);
+  app.get('/api/analytics/dashboard-stats', authenticateToken, AnalyticsController.getDashboardStats);
   console.log('✅ Analytics routes loaded');
 
   // Advanced analytics routes (protected)

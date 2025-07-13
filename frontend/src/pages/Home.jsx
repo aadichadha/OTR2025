@@ -31,37 +31,14 @@ export default function Home() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch players count
-      const playersRes = await api.get('/players');
-      const totalPlayers = playersRes.data.length || 0;
-
-      // Fetch recent sessions (we'll get this from the first few players)
-      let totalSessions = 0;
-      let recentSessions = [];
-      
-      if (playersRes.data.length > 0) {
-        // Get sessions from the first few players to show recent activity
-        const recentPlayers = playersRes.data.slice(0, 3);
-        for (const player of recentPlayers) {
-          try {
-            const sessionsRes = await api.get(`/players/${player.id}/sessions`);
-            const sessions = sessionsRes.data.sessions || [];
-            totalSessions += sessions.length;
-            recentSessions.push(...sessions.slice(0, 2)); // Get 2 most recent from each player
-          } catch (err) {
-            console.error(`Error fetching sessions for player ${player.id}:`, err);
-          }
-        }
-      }
-
-      // Sort by date and take the 5 most recent
-      recentSessions.sort((a, b) => new Date(b.session_date) - new Date(a.session_date));
-      recentSessions = recentSessions.slice(0, 5);
+      // Fetch dashboard stats from the new endpoint
+      const statsRes = await api.get('/analytics/dashboard-stats');
+      const { totalPlayers, totalSessions } = statsRes.data.data;
 
       setStats({
         totalPlayers,
         totalSessions,
-        recentSessions
+        recentSessions: [] // No longer needed for the simplified dashboard
       });
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
