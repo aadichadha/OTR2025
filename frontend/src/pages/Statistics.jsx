@@ -101,6 +101,10 @@ const Statistics = () => {
       const playersData = playersRes.data.players || playersRes.data || [];
       const statsData = statsRes.data.players || statsRes.data || [];
 
+      console.log('📊 [STATISTICS] Players data:', playersData);
+      console.log('📊 [STATISTICS] Stats data:', statsData);
+      console.log('📊 [STATISTICS] Stats data length:', statsData.length);
+
       setPlayers(Array.isArray(playersData) ? playersData : []);
       setPlayerStats(Array.isArray(statsData) ? statsData : []);
     } catch (err) {
@@ -160,6 +164,9 @@ const Statistics = () => {
   };
 
   const sortedStats = React.useMemo(() => {
+    console.log('📊 [STATISTICS] Filtered stats:', filteredStats);
+    console.log('📊 [STATISTICS] Filtered stats length:', filteredStats.length);
+    
     if (!sortConfig.key) return filteredStats;
 
     return [...filteredStats].sort((a, b) => {
@@ -556,11 +563,11 @@ const Statistics = () => {
                 .map((stat, index) => (
                   <TableRow key={stat.player_id || index} hover>
                     <TableCell sx={{ fontWeight: 600, color: '#1c2c4d' }}>
-                      {getPlayerName(stat.player_id)}
+                      {stat.player_name || getPlayerName(stat.player_id)}
                     </TableCell>
                     <TableCell>
                       <Chip 
-                        label={getPlayerLevel(stat.player_id)} 
+                        label={stat.player_level || getPlayerLevel(stat.player_id)} 
                         size="small" 
                         color="primary" 
                         variant="outlined"
