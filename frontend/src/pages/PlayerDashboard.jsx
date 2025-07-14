@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
 import ReportDisplay from '../components/ReportDisplay';
 import SwingLogTable from '../components/SwingLogTable';
+import Timeline from '@mui/icons-material/Timeline';
 
 const NAVY = '#1c2c4d';
 
@@ -184,12 +185,20 @@ const PlayerDashboard = () => {
   const handleCloseReport = () => setReportModal({ open: false, report: null, loading: false, error: '', sessionId: null });
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 4, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
       <Box sx={{ width: '100%', maxWidth: 1200, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
-        <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 4, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-          Player Dashboard
-        </Typography>
-        {/* Dashboard Grid */}
+        {/* Welcome Section */}
+        <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: NAVY, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+              Welcome, {user?.name || 'Player'}!
+            </Typography>
+            <Typography variant="subtitle1" sx={{ color: '#3a7bd5', fontWeight: 500, mt: 1 }}>
+              Here is your personalized dashboard.
+            </Typography>
+          </Box>
+        </Box>
+
         <Grid container spacing={3}>
           {/* Stats Card */}
           <Grid item xs={12} md={4}>
@@ -234,13 +243,13 @@ const PlayerDashboard = () => {
                 <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 3 }}>Quick Actions</Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="contained" startIcon={<AssessmentIcon />} onClick={() => navigate('/analytics')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>View Analytics</Button>
+                    <Button fullWidth variant="contained" startIcon={<Timeline />} onClick={() => navigate('/player/statistics')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>Statistics</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="contained" startIcon={<EmojiEventsIcon />} onClick={() => navigate('/leaderboard')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>View Leaderboard</Button>
+                    <Button fullWidth variant="contained" startIcon={<AssessmentIcon />} onClick={() => navigate('/progression')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>Progression</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="outlined" startIcon={<AssessmentIcon />} onClick={() => navigate('/player/statistics')} sx={{ borderColor: NAVY, color: NAVY, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}>View Statistics</Button>
+                    <Button fullWidth variant="contained" startIcon={<EmojiEventsIcon />} onClick={() => navigate('/leaderboard')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>Leaderboard</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Button fullWidth variant="outlined" startIcon={<AssessmentIcon />} onClick={() => navigate('/upload')} sx={{ borderColor: NAVY, color: NAVY, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}>Upload Session</Button>
@@ -253,10 +262,7 @@ const PlayerDashboard = () => {
           <Grid item xs={12}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700 }}>Recent Sessions</Typography>
-                  <Button variant="outlined" size="small" startIcon={<AssessmentIcon />} sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }} onClick={handleViewAnalytics}>View All Analytics</Button>
-                </Box>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 3 }}>Recent Sessions</Typography>
                 {loading ? <CircularProgress /> : (Array.isArray(sessions) && sessions.length > 0) ? (
                   <Grid container spacing={2}>
                     {(Array.isArray(sessions) ? sessions.slice(0, 6) : []).map((session) => (
