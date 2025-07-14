@@ -263,191 +263,305 @@ const SessionAnalytics = () => {
 
   const filteredSwingsFromFilters = getFilteredSwings();
 
+  const NAVY = '#1c2c4d';
+
   // Main return block
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#1c2c4d', py: { xs: 2, sm: 4 } }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: { xs: 2, sm: 4 } }}>
       <Container maxWidth="xl" sx={{ p: { xs: 0.5, sm: 2 } }}>
-        {/* Header */}
-        <Box sx={{ mb: { xs: 2, sm: 4 } }}>
-          <Typography variant="h5" sx={{ fontWeight: 900, color: '#1c2c4d', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
-            Progression
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#666', mb: 2, fontSize: { xs: '0.95rem', sm: '1.1rem' } }}>
-            Track your progress and analyze your sessions over time.
-          </Typography>
-        </Box>
-        {/* Tabs and Filters */}
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<FilterList />}
-            onClick={() => setShowFilters(!showFilters)}
-            sx={{ mr: 2 }}
-          >
-            Filters {filters.categories.length > 0 && `(${filters.categories.length})`}
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<Refresh />}
-            onClick={loadAllData}
-            disabled={!selectedPlayerId}
-          >
-            Refresh
-          </Button>
-        </Box>
-        {/* Player Selection */}
-        <Box sx={{ p: 3, mb: 3, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
-          <Typography variant="h6" fontWeight="bold" mb={2} color="#1c2c4d">
-            Select Player
-          </Typography>
-          <FormControl fullWidth>
-            <InputLabel sx={{ color: '#1c2c4d' }}>Choose Player</InputLabel>
-            <Select
-              value={selectedPlayerId}
-              onChange={(e) => handlePlayerChange(e.target.value)}
-              label="Choose Player"
-              disabled={playersLoading}
-              sx={{
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#e0e3e8',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#3a7bd5',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#3a7bd5',
-                },
-                '& .MuiSelect-select': {
-                  color: '#1c2c4d',
-                },
-              }}
-            >
-              <MenuItem value="">
-                <em>Select a player to view progression</em>
-              </MenuItem>
-              {Array.isArray(players) && players.map(player => (
-                <MenuItem key={player.id} value={player.id.toString()}>
-                  {player.name} - {player.position}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-        
-        {/* Quick Stats - Only show when player is selected */}
-        {selectedPlayerId ? (
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box display="flex" alignItems="center">
-                    <Speed color="primary" sx={{ mr: 2 }} />
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom>
-                        Total Swings
-                      </Typography>
-                      <Typography variant="h5" component="div">
-                        {swings.length}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <CalendarToday color="primary" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Sessions
-                    </Typography>
-                    <Typography variant="h5" component="div">
-                      {sessions.length}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <TrendingUp color="primary" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Avg Exit Velocity
-                    </Typography>
-                    <Typography variant="h5" component="div">
-                      {swings.length > 0 ? 
-                        safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.exit_velocity || 0), 0) / swings.length), 1) : 
-                        '0.0'} mph
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <ShowChart color="primary" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Avg Launch Angle
-                    </Typography>
-                    <Typography variant="h5" component="div">
-                      {swings.length > 0 ? 
-                        safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.launch_angle || 0), 0) / swings.length), 1) : 
-                        '0.0'}°
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-        ) : (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="h6" color="textSecondary">
-              Select a player above to view their progression analytics
+        {/* Main Content Box */}
+        <Paper sx={{ 
+          p: { xs: 2, sm: 4 }, 
+          bgcolor: '#fff', 
+          borderRadius: 4, 
+          boxShadow: '0 4px 32px rgba(28,44,77,0.10)', 
+          border: '2.5px solid #1c2c4d'
+        }}>
+          {/* Header */}
+          <Box sx={{ mb: { xs: 2, sm: 4 } }}>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 900, 
+              color: NAVY, 
+              mb: 1, 
+              fontFamily: 'Inter, Roboto, Arial, sans-serif', 
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } 
+            }}>
+              Progression
+            </Typography>
+            <Typography variant="body1" sx={{ 
+              color: NAVY, 
+              mb: 2, 
+              fontSize: { xs: '1rem', sm: '1.1rem' },
+              opacity: 0.8
+            }}>
+              Track your progress and analyze your sessions over time.
             </Typography>
           </Box>
-        )}
 
-        {/* Filters */}
-        {showFilters && (
-          <Box sx={{ p: 3, mb: 3, bgcolor: '#f8f9fa', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Advanced Filters
+          {/* Action Buttons */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' }, 
+            gap: 2, 
+            mb: 3 
+          }}>
+            <Button
+              variant="outlined"
+              startIcon={<FilterList />}
+              onClick={() => setShowFilters(!showFilters)}
+              sx={{ 
+                borderColor: NAVY,
+                color: NAVY,
+                fontWeight: 600,
+                '&:hover': {
+                  borderColor: '#3a7bd5',
+                  bgcolor: 'rgba(28,44,77,0.04)'
+                }
+              }}
+            >
+              Filters {filters.categories.length > 0 && `(${filters.categories.length})`}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Refresh />}
+              onClick={loadAllData}
+              disabled={!selectedPlayerId}
+              sx={{ 
+                bgcolor: NAVY,
+                color: '#fff',
+                fontWeight: 700,
+                '&:hover': {
+                  bgcolor: '#3a7bd5'
+                },
+                '&:disabled': {
+                  bgcolor: '#ccc',
+                  color: '#666'
+                }
+              }}
+            >
+              Refresh
+            </Button>
+          </Box>
+
+          {/* Player Selection */}
+          <Box sx={{ 
+            p: 3, 
+            mb: 3, 
+            bgcolor: '#f8f9fa', 
+            border: '2px solid #e0e3e8', 
+            borderRadius: 4 
+          }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 700, 
+              mb: 2, 
+              color: NAVY 
+            }}>
+              Select Player
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Session Categories</InputLabel>
-                  <Select
-                    multiple
-                    value={filters.categories}
-                    onChange={(e) => handleFilterChange('categories', e.target.value)}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {(Array.isArray(selected) ? selected : []).map((value) => (
-                          <Chip key={value} label={value} size="small" />
-                        ))}
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: NAVY, fontWeight: 600 }}>Choose Player</InputLabel>
+              <Select
+                value={selectedPlayerId}
+                onChange={(e) => handlePlayerChange(e.target.value)}
+                label="Choose Player"
+                disabled={playersLoading}
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: NAVY,
+                    borderWidth: 2,
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3a7bd5',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: NAVY,
+                    borderWidth: 2,
+                  },
+                  '& .MuiSelect-select': {
+                    color: NAVY,
+                    fontWeight: 500,
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: NAVY,
+                    fontWeight: 600,
+                  }
+                }}
+              >
+                <MenuItem value="">
+                  <em>Select a player to view progression</em>
+                </MenuItem>
+                {Array.isArray(players) && players.map(player => (
+                  <MenuItem key={player.id} value={player.id.toString()}>
+                    {player.name} - {player.position}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        
+          {/* Quick Stats - Only show when player is selected */}
+          {selectedPlayerId ? (
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ 
+                  bgcolor: '#f8f9fa', 
+                  border: '2px solid #e0e3e8',
+                  '&:hover': { borderColor: NAVY }
+                }}>
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <Speed sx={{ mr: 2, color: NAVY }} />
+                      <Box>
+                        <Typography sx={{ color: NAVY, fontWeight: 600, mb: 1 }}>
+                          Total Swings
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: NAVY, fontWeight: 700 }}>
+                          {swings.length}
+                        </Typography>
                       </Box>
-                    )}
-                  >
-                    {(filterOptions.categories || []).map((category) => (
-                      <MenuItem key={category} value={category}>
-                        {category}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                    </Box>
+                  </CardContent>
+                </Card>
               </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ 
+                  bgcolor: '#f8f9fa', 
+                  border: '2px solid #e0e3e8',
+                  '&:hover': { borderColor: NAVY }
+                }}>
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <CalendarToday sx={{ mr: 2, color: NAVY }} />
+                      <Box>
+                        <Typography sx={{ color: NAVY, fontWeight: 600, mb: 1 }}>
+                          Sessions
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: NAVY, fontWeight: 700 }}>
+                          {sessions.length}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ 
+                  bgcolor: '#f8f9fa', 
+                  border: '2px solid #e0e3e8',
+                  '&:hover': { borderColor: NAVY }
+                }}>
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <TrendingUp sx={{ mr: 2, color: NAVY }} />
+                      <Box>
+                        <Typography sx={{ color: NAVY, fontWeight: 600, mb: 1 }}>
+                          Avg Exit Velocity
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: NAVY, fontWeight: 700 }}>
+                          {swings.length > 0 ? 
+                            safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.exit_velocity || 0), 0) / swings.length), 1) : 
+                            '0.0'} mph
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ 
+                  bgcolor: '#f8f9fa', 
+                  border: '2px solid #e0e3e8',
+                  '&:hover': { borderColor: NAVY }
+                }}>
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <ShowChart sx={{ mr: 2, color: NAVY }} />
+                      <Box>
+                        <Typography sx={{ color: NAVY, fontWeight: 600, mb: 1 }}>
+                          Avg Launch Angle
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: NAVY, fontWeight: 700 }}>
+                          {swings.length > 0 ? 
+                            safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.launch_angle || 0), 0) / swings.length), 1) : 
+                            '0.0'}°
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          ) : (
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 6,
+              bgcolor: '#f8f9fa',
+              borderRadius: 4,
+              border: '2px dashed #e0e3e8'
+            }}>
+              <Typography variant="h6" sx={{ color: NAVY, fontWeight: 600 }}>
+                Select a player above to view their progression analytics
+              </Typography>
+            </Box>
+          )}
+
+          {/* Filters */}
+          {showFilters && (
+            <Box sx={{ 
+              p: 3, 
+              mb: 3, 
+              bgcolor: '#f8f9fa', 
+              border: '2px solid #e0e3e8', 
+              borderRadius: 4 
+            }}>
+              <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>
+                Advanced Filters
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <InputLabel sx={{ color: NAVY, fontWeight: 600 }}>Session Categories</InputLabel>
+                    <Select
+                      multiple
+                      value={filters.categories}
+                      onChange={(e) => handleFilterChange('categories', e.target.value)}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {(Array.isArray(selected) ? selected : []).map((value) => (
+                            <Chip key={value} label={value} size="small" />
+                          ))}
+                        </Box>
+                      )}
+                      sx={{
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: NAVY,
+                          borderWidth: 2,
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#3a7bd5',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: NAVY,
+                          borderWidth: 2,
+                        },
+                        '& .MuiSelect-select': {
+                          color: NAVY,
+                          fontWeight: 500,
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: NAVY,
+                          fontWeight: 600,
+                        }
+                      }}
+                    >
+                      {(filterOptions.categories || []).map((category) => (
+                        <MenuItem key={category} value={category}>
+                          {category}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
               <Grid item xs={12} md={6}>
                 <Typography gutterBottom>Exit Velocity Range (mph)</Typography>
                 <Slider
@@ -503,18 +617,32 @@ const SessionAnalytics = () => {
           </Box>
         )}
 
-        {/* Main Content Tabs */}
-        <Box sx={{ width: '100%' }}>
-          <Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tab label="Overview" icon={<Assessment />} />
-            <Tab label="Trends" icon={<Timeline />} />
-            <Tab label="Benchmarks" icon={<EmojiEvents />} />
-            <Tab label="Progress" icon={<TrendingUp />} />
-            <Tab label="Swing Analysis" icon={<Speed />} />
-          </Tabs>
+          {/* Main Content Tabs */}
+          <Box sx={{ width: '100%' }}>
+            <Tabs value={activeTab} onChange={handleTabChange} sx={{ 
+              borderBottom: 1, 
+              borderColor: NAVY,
+              '& .MuiTab-root': {
+                color: NAVY,
+                fontWeight: 600,
+                '&.Mui-selected': {
+                  color: NAVY,
+                  fontWeight: 700
+                }
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: NAVY
+              }
+            }}>
+              <Tab label="Overview" icon={<Assessment />} />
+              <Tab label="Trends" icon={<Timeline />} />
+              <Tab label="Benchmarks" icon={<EmojiEvents />} />
+              <Tab label="Progress" icon={<TrendingUp />} />
+              <Tab label="Swing Analysis" icon={<Speed />} />
+            </Tabs>
 
-        {/* Tab Content */}
-        <Box sx={{ p: 3 }}>
+          {/* Tab Content */}
+          <Box sx={{ p: 3 }}>
           {/* Overview Tab */}
           {activeTab === 0 && (
             <Grid container spacing={3}>
@@ -792,10 +920,11 @@ const SessionAnalytics = () => {
               </Grid>
             </Grid>
           )}
+          </Box>
         </Box>
-      </Box>
-    </Container>
-  </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
 
