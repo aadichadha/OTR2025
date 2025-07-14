@@ -130,204 +130,190 @@ const Leaderboard = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Box sx={{ width: '100%', maxWidth: 1400, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
-        <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 3, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-          <EmojiEventsIcon sx={{ fontSize: 40, color: '#fbc02d', mb: -1, mr: 1 }} /> Leaderboard
+    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: { xs: 2, sm: 4 } }}>
+      <Paper sx={{ p: { xs: 1, sm: 4 }, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', maxWidth: 1200, mx: 'auto' }}>
+        <Typography variant="h5" sx={{ fontWeight: 900, color: NAVY, mb: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
+          Leaderboard
         </Typography>
-
-        {/* Filters */}
-        <Card sx={{ mb: 3, bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <FilterListIcon sx={{ color: NAVY, mr: 1 }} />
-              <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700 }}>Filters</Typography>
-            </Box>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel sx={{ color: NAVY }}>Level</InputLabel>
-                  <Select
-                    value={levelFilter}
-                    label="Level"
-                    onChange={(e) => setLevelFilter(e.target.value)}
-                    sx={{
-                      color: NAVY,
-                      '& .MuiSelect-select': { color: NAVY },
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: NAVY },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' }
-                    }}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: {
-                          backgroundColor: '#fff',
-                          '& .MuiMenuItem-root': {
-                            color: NAVY,
-                            '&:hover': {
-                              backgroundColor: '#e3f2fd'
-                            },
-                            '&.Mui-selected': {
-                              backgroundColor: '#d2e3fa',
-                              color: NAVY
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  >
-                    {(Array.isArray(levels) ? levels : []).map((level) => (
-                      <MenuItem key={level} value={level} sx={{ color: NAVY }}>
-                        {level}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel sx={{ color: NAVY }}>Sort By</InputLabel>
-                  <Select
-                    value={sortBy}
-                    label="Sort By"
-                    onChange={(e) => setSortBy(e.target.value)}
-                    sx={{
-                      color: NAVY,
-                      '& .MuiSelect-select': { color: NAVY },
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: NAVY },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' }
-                    }}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: {
-                          backgroundColor: '#fff',
-                          '& .MuiMenuItem-root': {
-                            color: NAVY,
-                            '&:hover': {
-                              backgroundColor: '#e3f2fd'
-                            },
-                            '&.Mui-selected': {
-                              backgroundColor: '#d2e3fa',
-                              color: NAVY
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  >
-                    {(Array.isArray(sortOptions) ? sortOptions : []).map((option) => (
-                      <MenuItem key={option.value} value={option.value} sx={{ color: NAVY }}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-              <Typography variant="body2" sx={{ color: NAVY }}>
-                Showing {filteredPlayers.length} of {players.length} players
-              </Typography>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setOrder(order === 'desc' ? 'asc' : 'desc');
+        {/* Filters and Controls */}
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
+            <FilterListIcon sx={{ color: NAVY, mr: 1 }} />
+            <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700 }}>Filters</Typography>
+            <FormControl fullWidth sx={{ minWidth: 150, mb: { xs: 1, sm: 0 } }}>
+              <InputLabel sx={{ color: NAVY }}>Level</InputLabel>
+              <Select
+                value={levelFilter}
+                label="Level"
+                onChange={(e) => setLevelFilter(e.target.value)}
+                sx={{
+                  color: NAVY,
+                  '& .MuiSelect-select': { color: NAVY },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: NAVY },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' }
                 }}
-                sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      backgroundColor: '#fff',
+                      '& .MuiMenuItem-root': {
+                        color: NAVY,
+                        '&:hover': {
+                          backgroundColor: '#e3f2fd'
+                        },
+                        '&.Mui-selected': {
+                          backgroundColor: '#d2e3fa',
+                          color: NAVY
+                        }
+                      }
+                    }
+                  }
+                }}
               >
-                {order === 'desc' ? '↓ Descending' : '↑ Ascending'}
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <TableContainer component={Paper} sx={{ bgcolor: '#fff', borderRadius: 3, border: '1.5px solid #1c2c4d', boxShadow: 'none' }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                {(Array.isArray(columns) ? columns : []).map((col) => (
-                  <TableCell
-                    key={col.id}
-                    sx={{ backgroundColor: '#fff', color: NAVY, fontWeight: 700, borderBottom: '2px solid #1c2c4d' }}
-                    align={col.id === 'rank' ? 'center' : 'left'}
-                    sortDirection={orderBy === col.id ? order : false}
-                  >
-                    {col.id === 'rank' ? (
-                      col.label
-                    ) : (
-                      <TableSortLabel
-                        active={orderBy === col.id}
-                        direction={orderBy === col.id ? order : 'asc'}
-                        onClick={() => handleSort(col.id)}
-                        sx={{ color: NAVY, '&.Mui-active': { color: NAVY } }}
-                      >
-                        {col.label}
-                      </TableSortLabel>
-                    )}
-                  </TableCell>
+                {(Array.isArray(levels) ? levels : []).map((level) => (
+                  <MenuItem key={level} value={level} sx={{ color: NAVY }}>
+                    {level}
+                  </MenuItem>
                 ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ minWidth: 150, mb: { xs: 1, sm: 0 } }}>
+              <InputLabel sx={{ color: NAVY }}>Sort By</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort By"
+                onChange={(e) => setSortBy(e.target.value)}
+                sx={{
+                  color: NAVY,
+                  '& .MuiSelect-select': { color: NAVY },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: NAVY },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' }
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      backgroundColor: '#fff',
+                      '& .MuiMenuItem-root': {
+                        color: NAVY,
+                        '&:hover': {
+                          backgroundColor: '#e3f2fd'
+                        },
+                        '&.Mui-selected': {
+                          backgroundColor: '#d2e3fa',
+                          color: NAVY
+                        }
+                      }
+                    }
+                  }
+                }}
+              >
+                {(Array.isArray(sortOptions) ? sortOptions : []).map((option) => (
+                  <MenuItem key={option.value} value={option.value} sx={{ color: NAVY }}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setOrder(order === 'desc' ? 'asc' : 'desc');
+              }}
+              sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
+            >
+              {order === 'desc' ? '↓ Descending' : '↑ Ascending'}
+            </Button>
+        </Box>
+        {/* Leaderboard Table */}
+        <Box sx={{ width: '100%', overflowX: 'auto', mt: 2 }}>
+          <TableContainer component={Paper} sx={{ bgcolor: '#f8f9fa', borderRadius: 2, minWidth: 600 }}>
+            <Table size="small">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
-                    <CircularProgress />
-                  </TableCell>
+                  {(Array.isArray(columns) ? columns : []).map((col) => (
+                    <TableCell
+                      key={col.id}
+                      sx={{ backgroundColor: '#fff', color: NAVY, fontWeight: 700, borderBottom: '2px solid #1c2c4d' }}
+                      align={col.id === 'rank' ? 'center' : 'left'}
+                      sortDirection={orderBy === col.id ? order : false}
+                    >
+                      {col.id === 'rank' ? (
+                        col.label
+                      ) : (
+                        <TableSortLabel
+                          active={orderBy === col.id}
+                          direction={orderBy === col.id ? order : 'asc'}
+                          onClick={() => handleSort(col.id)}
+                          sx={{ color: NAVY, '&.Mui-active': { color: NAVY } }}
+                        >
+                          {col.label}
+                        </TableSortLabel>
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ) : filteredPlayers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
-                    <Typography sx={{ color: NAVY }}>No players found</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                (Array.isArray(filteredPlayers) ? filteredPlayers : []).map((player, idx) => (
-                  <TableRow key={player.id} hover sx={{ bgcolor: '#fff', color: NAVY }}>
-                    <TableCell align="center" sx={{ fontWeight: 700, color: NAVY }}>
-                      {idx + 1}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: NAVY }}>
-                      {player.name}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={player.level}
-                        color={getLevelColor(player.level)}
-                        size="small"
-                        sx={{
-                          bgcolor: player.level === 'High School' ? '#e3f2fd' :
-                                  player.level === 'College' ? '#f3e5f5' :
-                                  player.level === 'Youth' ? '#e8f5e8' : '#f5f5f5',
-                          color: NAVY,
-                          fontWeight: 600
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ color: NAVY, fontWeight: 600 }}>
-                      {formatValue(player.barrelPercentage)}%
-                    </TableCell>
-                    <TableCell sx={{ color: NAVY }}>
-                      {formatValue(player.maxExitVelocity)}
-                    </TableCell>
-                    <TableCell sx={{ color: NAVY }}>
-                      {formatValue(player.avgExitVelocity)}
-                    </TableCell>
-                    <TableCell sx={{ color: NAVY }}>
-                      {formatValue(player.maxBatSpeed)}
-                    </TableCell>
-                    <TableCell sx={{ color: NAVY }}>
-                      {formatValue(player.avgBatSpeed)}
-                    </TableCell>
-                    <TableCell sx={{ color: NAVY }}>
-                      {player.sessionCount}
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} align="center">
+                      <CircularProgress />
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+                ) : filteredPlayers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} align="center">
+                      <Typography sx={{ color: NAVY }}>No players found</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  (Array.isArray(filteredPlayers) ? filteredPlayers : []).map((player, idx) => (
+                    <TableRow key={player.id} hover sx={{ bgcolor: '#fff', color: NAVY }}>
+                      <TableCell align="center" sx={{ fontWeight: 700, color: NAVY }}>
+                        {idx + 1}
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: NAVY }}>
+                        {player.name}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={player.level}
+                          color={getLevelColor(player.level)}
+                          size="small"
+                          sx={{
+                            bgcolor: player.level === 'High School' ? '#e3f2fd' :
+                                    player.level === 'College' ? '#f3e5f5' :
+                                    player.level === 'Youth' ? '#e8f5e8' : '#f5f5f5',
+                            color: NAVY,
+                            fontWeight: 600
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ color: NAVY, fontWeight: 600 }}>
+                        {formatValue(player.barrelPercentage)}%
+                      </TableCell>
+                      <TableCell sx={{ color: NAVY }}>
+                        {formatValue(player.maxExitVelocity)}
+                      </TableCell>
+                      <TableCell sx={{ color: NAVY }}>
+                        {formatValue(player.avgExitVelocity)}
+                      </TableCell>
+                      <TableCell sx={{ color: NAVY }}>
+                        {formatValue(player.maxBatSpeed)}
+                      </TableCell>
+                      <TableCell sx={{ color: NAVY }}>
+                        {formatValue(player.avgBatSpeed)}
+                      </TableCell>
+                      <TableCell sx={{ color: NAVY }}>
+                        {player.sessionCount}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Paper>
     </Box>
   );
 };

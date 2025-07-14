@@ -181,25 +181,24 @@ const PlayerStatistics = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 4 }}>
-      <Container maxWidth="xl">
-        <Paper sx={{ p: 4, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: { xs: 2, sm: 4 } }}>
+      <Container maxWidth="xl" sx={{ p: { xs: 0.5, sm: 2 } }}>
+        <Paper sx={{ p: { xs: 1, sm: 4 }, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d' }}>
           {/* Header */}
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h3" sx={{ fontWeight: 900, color: NAVY, mb: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+          <Box sx={{ mb: { xs: 2, sm: 4 } }}>
+            <Typography variant="h5" sx={{ fontWeight: 900, color: NAVY, mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
               Your Statistics
             </Typography>
-            <Typography variant="body1" sx={{ color: '#666', mb: 3 }}>
+            <Typography variant="body2" sx={{ color: '#666', mb: 2, fontSize: { xs: '0.95rem', sm: '1.1rem' } }}>
               View your performance statistics and track your progress over time.
             </Typography>
-            
             {/* Action Buttons */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
               <Button
                 variant="contained"
                 startIcon={<FilterList />}
                 onClick={() => setShowFilters(!showFilters)}
-                sx={{ bgcolor: NAVY, '&:hover': { bgcolor: '#3a7bd5' } }}
+                sx={{ bgcolor: NAVY, '&:hover': { bgcolor: '#3a7bd5' }, fontSize: { xs: '0.95rem', sm: '1rem' }, width: { xs: '100%', sm: 'auto' } }}
               >
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </Button>
@@ -208,7 +207,7 @@ const PlayerStatistics = () => {
                 startIcon={<Refresh />}
                 onClick={fetchStats}
                 disabled={dataLoading}
-                sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
+                sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' }, fontSize: { xs: '0.95rem', sm: '1rem' }, width: { xs: '100%', sm: 'auto' } }}
               >
                 Refresh
               </Button>
@@ -350,91 +349,77 @@ const PlayerStatistics = () => {
           )}
 
           {/* Statistics Table */}
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: NAVY, mb: 3 }}>
-              Your Performance Statistics
-            </Typography>
-            
-            {dataLoading ? (
-              <Box display="flex" justifyContent="center" py={4}>
-                <CircularProgress />
-              </Box>
-            ) : stats.length > 0 ? (
-              <TableContainer component={Paper} sx={{ bgcolor: '#f8f9fa', borderRadius: 2 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Player</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Level</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Sessions</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Swings</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Avg EV</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Max EV</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Avg LA</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Barrel %</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Last Session</TableCell>
+          <Box sx={{ width: '100%', overflowX: 'auto', mt: 2 }}>
+            <TableContainer component={Paper} sx={{ bgcolor: '#f8f9fa', borderRadius: 2, minWidth: 600 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Player</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Level</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Sessions</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Swings</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Avg EV</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Max EV</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Avg LA</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Barrel %</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Last Session</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {stats.map((player) => (
+                    <TableRow key={player.player_id} hover>
+                      <TableCell sx={{ fontWeight: 600, color: NAVY, fontSize: '1rem' }}>
+                        {player.player_name}
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={player.player_level || 'N/A'} 
+                          size="small"
+                          sx={{ bgcolor: '#e3f2fd', color: NAVY, fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '1rem' }}>{player.total_sessions}</TableCell>
+                      <TableCell sx={{ fontSize: '1rem' }}>{player.total_swings}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={`${roundNumber(player.avg_exit_velocity)} mph`}
+                          color={getGradeColor(player.avg_exit_velocity, 'avg_exit_velocity')}
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={`${roundNumber(player.max_exit_velocity)} mph`}
+                          color={getGradeColor(player.max_exit_velocity, 'max_exit_velocity')}
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={`${roundNumber(player.avg_launch_angle)}°`}
+                          color={getGradeColor(player.avg_launch_angle, 'avg_launch_angle')}
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={`${roundNumber(player.barrel_percentage)}%`}
+                          color={getGradeColor(player.barrel_percentage, 'barrel_percentage')}
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '1rem' }}>
+                        {player.last_session_date ? new Date(player.last_session_date).toLocaleDateString() : 'N/A'}
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {stats.map((player) => (
-                      <TableRow key={player.player_id} hover>
-                        <TableCell sx={{ fontWeight: 600, color: NAVY, fontSize: '1rem' }}>
-                          {player.player_name}
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={player.player_level || 'N/A'} 
-                            size="small"
-                            sx={{ bgcolor: '#e3f2fd', color: NAVY, fontWeight: 600 }}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ fontSize: '1rem' }}>{player.total_sessions}</TableCell>
-                        <TableCell sx={{ fontSize: '1rem' }}>{player.total_swings}</TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={`${roundNumber(player.avg_exit_velocity)} mph`}
-                            color={getGradeColor(player.avg_exit_velocity, 'avg_exit_velocity')}
-                            size="small"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={`${roundNumber(player.max_exit_velocity)} mph`}
-                            color={getGradeColor(player.max_exit_velocity, 'max_exit_velocity')}
-                            size="small"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={`${roundNumber(player.avg_launch_angle)}°`}
-                            color={getGradeColor(player.avg_launch_angle, 'avg_launch_angle')}
-                            size="small"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={`${roundNumber(player.barrel_percentage)}%`}
-                            color={getGradeColor(player.barrel_percentage, 'barrel_percentage')}
-                            size="small"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ fontSize: '1rem' }}>
-                          {player.last_session_date ? new Date(player.last_session_date).toLocaleDateString() : 'N/A'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Alert severity="info">
-                No statistics found for the selected filters. Try adjusting your filters or upload more sessions.
-              </Alert>
-            )}
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Box>
         </Paper>
       </Container>
