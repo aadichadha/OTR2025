@@ -107,82 +107,158 @@ const CompleteInvitation = () => {
     }
   };
 
+  const NAVY = '#1c2c4d';
+
   if (verifying) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 8 }}>
-        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-          <CircularProgress />
-          <Typography variant="h6" color="text.secondary">
-            Verifying your invitation...
-          </Typography>
-        </Box>
-      </Container>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        bgcolor: NAVY, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        py: 4
+      }}>
+        <Container maxWidth="sm">
+          <Paper sx={{ 
+            p: 4, 
+            bgcolor: '#fff', 
+            borderRadius: 4, 
+            boxShadow: '0 4px 32px rgba(28,44,77,0.10)', 
+            border: '2.5px solid #1c2c4d',
+            textAlign: 'center'
+          }}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+              <CircularProgress sx={{ color: NAVY }} />
+              <Typography variant="h6" sx={{ color: NAVY, fontWeight: 600 }}>
+                Verifying your invitation...
+              </Typography>
+            </Box>
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
   if (error && !invitationData) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 8 }}>
-        <Card>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <Error color="error" sx={{ fontSize: 64, mb: 2 }} />
-            <Typography variant="h5" color="error" gutterBottom>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        bgcolor: NAVY, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        py: 4
+      }}>
+        <Container maxWidth="sm">
+          <Paper sx={{ 
+            p: 4, 
+            bgcolor: '#fff', 
+            borderRadius: 4, 
+            boxShadow: '0 4px 32px rgba(28,44,77,0.10)', 
+            border: '2.5px solid #1c2c4d',
+            textAlign: 'center'
+          }}>
+            <Error sx={{ fontSize: 64, mb: 2, color: '#d32f2f' }} />
+            <Typography variant="h5" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>
               Invitation Error
             </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
+            <Typography variant="body1" sx={{ color: NAVY, mb: 3 }}>
               {error}
             </Typography>
             <Button 
               variant="contained" 
               onClick={() => navigate('/login')}
-              sx={{ mt: 2 }}
+              sx={{ 
+                bgcolor: NAVY,
+                color: '#fff',
+                fontWeight: 700,
+                px: 3,
+                py: 1.5,
+                borderRadius: 3,
+                '&:hover': {
+                  bgcolor: '#3a7bd5'
+                }
+              }}
             >
               Go to Login
             </Button>
-          </CardContent>
-        </Card>
-      </Container>
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
   if (success) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 8 }}>
-        <Card>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <CheckCircle color="success" sx={{ fontSize: 64, mb: 2 }} />
-            <Typography variant="h5" color="success.main" gutterBottom>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        bgcolor: NAVY, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        py: 4
+      }}>
+        <Container maxWidth="sm">
+          <Paper sx={{ 
+            p: 4, 
+            bgcolor: '#fff', 
+            borderRadius: 4, 
+            boxShadow: '0 4px 32px rgba(28,44,77,0.10)', 
+            border: '2.5px solid #1c2c4d',
+            textAlign: 'center'
+          }}>
+            <CheckCircle sx={{ fontSize: 64, mb: 2, color: '#2e7d32' }} />
+            <Typography variant="h5" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>
               Registration Complete!
             </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
+            <Typography variant="body1" sx={{ color: NAVY, mb: 3 }}>
               Your account has been successfully created. Redirecting you to your dashboard...
             </Typography>
-            <CircularProgress size={24} />
-          </CardContent>
-        </Card>
-      </Container>
+            <CircularProgress size={24} sx={{ color: NAVY }} />
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Card>
-        <CardHeader
-          title={
-            <Box display="flex" alignItems="center" gap={1}>
-              <Lock color="primary" />
-              <Typography variant="h5" component="h1">
+    <Box sx={{ 
+      minHeight: '100vh', 
+      bgcolor: NAVY, 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      py: 4
+    }}>
+      <Container maxWidth="sm">
+        <Paper sx={{ 
+          p: 4, 
+          bgcolor: '#fff', 
+          borderRadius: 4, 
+          boxShadow: '0 4px 32px rgba(28,44,77,0.10)', 
+          border: '2.5px solid #1c2c4d'
+        }}>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={2}>
+              <Lock sx={{ color: NAVY, fontSize: 32 }} />
+              <Typography variant="h4" component="h1" sx={{ color: NAVY, fontWeight: 700 }}>
                 Complete Your Registration
               </Typography>
             </Box>
-          }
-          subheader={`Welcome, ${invitationData?.name}! Please create your password to complete your account setup.`}
-        />
-        <CardContent>
+            <Typography variant="body1" sx={{ color: NAVY, fontSize: '1.1rem' }}>
+              Welcome, <strong>{invitationData?.name}</strong>! Please create your password to complete your account setup.
+            </Typography>
+          </Box>
+
           <form onSubmit={handleSubmit}>
             <Box display="flex" flexDirection="column" gap={3}>
               {error && (
-                <Alert severity="error">
+                <Alert severity="error" sx={{ 
+                  bgcolor: '#ffebee', 
+                  color: '#c62828',
+                  border: '1px solid #ffcdd2'
+                }}>
                   {error}
                 </Alert>
               )}
@@ -197,6 +273,16 @@ const CompleteInvitation = () => {
                 fullWidth
                 helperText="Password must be at least 6 characters long"
                 disabled={loading}
+                sx={{
+                  '& .MuiInputLabel-root': { color: NAVY, fontWeight: 600 },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: NAVY, borderWidth: 2 },
+                    '&:hover fieldset': { borderColor: '#3a7bd5' },
+                    '&.Mui-focused fieldset': { borderColor: NAVY, borderWidth: 2 }
+                  },
+                  '& .MuiInputBase-input': { color: NAVY, fontWeight: 500 },
+                  '& .MuiFormHelperText-root': { color: NAVY }
+                }}
               />
 
               <TextField
@@ -208,6 +294,15 @@ const CompleteInvitation = () => {
                 required
                 fullWidth
                 disabled={loading}
+                sx={{
+                  '& .MuiInputLabel-root': { color: NAVY, fontWeight: 600 },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: NAVY, borderWidth: 2 },
+                    '&:hover fieldset': { borderColor: '#3a7bd5' },
+                    '&.Mui-focused fieldset': { borderColor: NAVY, borderWidth: 2 }
+                  },
+                  '& .MuiInputBase-input': { color: NAVY, fontWeight: 500 }
+                }}
               />
 
               <Button
@@ -216,10 +311,21 @@ const CompleteInvitation = () => {
                 size="large"
                 disabled={loading || !formData.password || !formData.confirmPassword}
                 sx={{ 
-                  py: 1.5,
-                  bgcolor: '#1a2340',
+                  py: 2,
+                  bgcolor: NAVY,
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  borderRadius: 3,
+                  border: '2px solid #1c2c4d',
                   '&:hover': {
-                    bgcolor: '#3a7bd5'
+                    bgcolor: '#3a7bd5',
+                    borderColor: '#3a7bd5'
+                  },
+                  '&:disabled': {
+                    bgcolor: '#ccc',
+                    color: '#666',
+                    borderColor: '#ccc'
                   }
                 }}
               >
@@ -235,21 +341,24 @@ const CompleteInvitation = () => {
             </Box>
           </form>
 
-          <Box mt={3} p={2} bgcolor="grey.50" borderRadius={1}>
-            <Typography variant="body2" color="text.secondary">
-              <strong>Account Details:</strong>
-              <br />
-              Name: {invitationData?.name}
-              <br />
-              Email: {invitationData?.email}
-              <br />
-              Expires: {invitationData?.expires_at ? new Date(invitationData.expires_at).toLocaleDateString() : 'Unknown'}
+          <Box mt={4} p={3} sx={{ 
+            bgcolor: '#f8f9fa', 
+            borderRadius: 3, 
+            border: '1px solid #e0e3e8'
+          }}>
+            <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>
+              Account Details:
+            </Typography>
+            <Typography variant="body2" sx={{ color: NAVY, lineHeight: 1.8 }}>
+              <strong>Name:</strong> {invitationData?.name}<br />
+              <strong>Email:</strong> {invitationData?.email}<br />
+              <strong>Expires:</strong> {invitationData?.expires_at ? new Date(invitationData.expires_at).toLocaleDateString() : 'Unknown'}
             </Typography>
           </Box>
-        </CardContent>
-      </Card>
-    </Container>
-  );
+                 </Paper>
+       </Container>
+     </Box>
+   );
 };
 
 export default CompleteInvitation; 
