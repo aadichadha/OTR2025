@@ -1007,6 +1007,176 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+// Get leaderboard data
+const getLeaderboard = async (req, res) => {
+  try {
+    const { 
+      metric = 'max_exit_velocity', // 'max_exit_velocity', 'avg_exit_velocity', 'barrel_percentage', 'avg_bat_speed'
+      limit = 50,
+      playerLevel,
+      timeRange = 'all'
+    } = req.query;
+
+    console.log('[LEADERBOARD] Getting leaderboard with metric:', metric);
+
+    // Build date filter
+    let dateFilter = {};
+    if (timeRange === 'recent') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateFilter = {
+        session_date: {
+          [Op.gte]: thirtyDaysAgo.toISOString().split('T')[0]
+        }
+      };
+    }
+
+    // Build player filter
+    let playerFilter = {};
+    if (playerLevel) {
+      playerFilter.player_level = playerLevel;
+    }
+
+    // Get all players with their aggregated stats
+    const players = await Player.findAll({
+      where: playerFilter,
+      include: [{
+        model: Session,
+        as: 'sessions',
+        where: dateFilter,
+        required: false,
+        include: [
+          {
+            model: ExitVelocityData,
+            as: 'exitVelocityData',
+            required: false
+          },
+          {
+            model: BatSpeedData,
+            as: 'batSpeedData',
+            required: false
+          }
+        ]
+      }],
+      order: [['name', 'ASC']]
+    });
+
+    const leaderboardData = [];
+
+    for (const player of players) {
+      // Aggregate all exit velocity data
+      let allExitVelocityData = [];
+      const allBatSpeedData = [];
+
+      for (const session of player.sessions) {
+        if (session.exitVelocityData && Array.isArray(session.exitVelocityData)) {
+          allExitVelocityData.push(...session.exitVelocityData);
+        }
+        if (session.batSpeedData && Array.isArray(session.batSpeedData)) {
+          allBatSpeedData.push(...session.batSpeedData);
+        }
+      }
+
+      // Skip players with no data
+      if (allExitVelocityData.length === 0) continue;
+
+      // Infer player level using the same logic as Player Management
+      let inferredLevel = 'N/A';
+      if (player.college) {
+        inferredLevel = 'College';
+      } else if (player.high_school) {
+        inferredLevel = 'High School';
+      } else if (player.travel_team) {
+        inferredLevel = 'Youth/Travel';
+      } else if (player.indy) {
+        inferredLevel = 'Independent';
+      } else if (player.affiliate) {
+        inferredLevel = 'Affiliate';
+      } else if (player.little_league) {
+        inferredLevel = 'Little League';
+      }
+
+      // Calculate metrics
+      const exitVelocities = allExitVelocityData
+        .map(row => parseFloat(row.exit_velocity))
+        .filter(val => !isNaN(val) && val > 0);
+      
+      const launchAngles = allExitVelocityData
+        .map(row => parseFloat(row.launch_angle))
+        .filter(val => !isNaN(val));
+      
+      const batSpeeds = allBatSpeedData
+        .map(row => parseFloat(row.bat_speed))
+        .filter(val => !isNaN(val) && val > 0);
+
+      // Calculate barrel percentage
+      let barrels = 0;
+      if (exitVelocities.length > 0) {
+        const maxEV = Math.max(...exitVelocities);
+        const barrelThreshold = maxEV * 0.90; // 90% of max EV
+        
+        barrels = allExitVelocityData.filter(row => {
+          const ev = parseFloat(row.exit_velocity);
+          const la = parseFloat(row.launch_angle);
+          return !isNaN(ev) && !isNaN(la) && 
+                 ev >= barrelThreshold && 
+                 la >= 8 && la <= 25;
+        }).length;
+      }
+
+      const playerData = {
+        player_id: player.id,
+        player_name: player.name,
+        player_level: inferredLevel,
+        position: player.position,
+        total_sessions: player.sessions.length,
+        total_swings: allExitVelocityData.length,
+        max_exit_velocity: exitVelocities.length > 0 ? Math.max(...exitVelocities) : 0,
+        avg_exit_velocity: exitVelocities.length > 0 ? 
+          Math.round((exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length) * 10) / 10 : 0,
+        avg_launch_angle: launchAngles.length > 0 ? 
+          Math.round((launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length) * 10) / 10 : 0,
+        barrel_percentage: allExitVelocityData.length > 0 ? 
+          Math.round((barrels / allExitVelocityData.length) * 1000) / 10 : 0,
+        avg_bat_speed: batSpeeds.length > 0 ? 
+          Math.round((batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length) * 10) / 10 : 0,
+        max_bat_speed: batSpeeds.length > 0 ? Math.max(...batSpeeds) : 0,
+        last_session_date: player.sessions.length > 0 ? 
+          player.sessions[0].session_date : null
+      };
+
+      leaderboardData.push(playerData);
+    }
+
+    // Sort by the specified metric
+    leaderboardData.sort((a, b) => {
+      const aValue = parseFloat(a[metric]) || 0;
+      const bValue = parseFloat(b[metric]) || 0;
+      return bValue - aValue; // Descending order
+    });
+
+    // Apply limit
+    const limitedData = leaderboardData.slice(0, parseInt(limit));
+
+    console.log(`[LEADERBOARD] Returning ${limitedData.length} players sorted by ${metric}`);
+
+    res.json({
+      success: true,
+      data: limitedData,
+      metric,
+      total: leaderboardData.length
+    });
+
+  } catch (error) {
+    console.error('[LEADERBOARD] Error getting leaderboard:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to get leaderboard',
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   getSessionSwings,
   updateSessionCategory,
@@ -1019,5 +1189,6 @@ module.exports = {
   getPlayerProgress,
   getFilterOptions,
   getPlayerStats,
-  getDashboardStats
+  getDashboardStats,
+  getLeaderboard
 }; 

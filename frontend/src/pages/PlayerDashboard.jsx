@@ -311,14 +311,84 @@ const PlayerDashboard = () => {
             </Card>
           </Grid>
         </Grid>
+
+        {/* New Analytics and Statistics Sections */}
+        <Grid container spacing={4} sx={{ mt: 2 }}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Analytics Overview</Typography>
+                <Typography variant="body2" sx={{ color: '#666', mb: 3 }}>
+                  Track your progress, analyze performance trends, and compare against benchmarks.
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AssessmentIcon />}
+                    onClick={() => navigate('/player/analytics')}
+                    sx={{ bgcolor: NAVY, '&:hover': { bgcolor: '#3a7bd5' } }}
+                  >
+                    View Full Analytics
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<EmojiEventsIcon />}
+                    onClick={() => navigate('/leaderboard')}
+                    sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
+                  >
+                    View Leaderboard
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Statistics Dashboard</Typography>
+                <Typography variant="body2" sx={{ color: '#666', mb: 3 }}>
+                  View detailed statistics with advanced filtering and performance metrics.
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AssessmentIcon />}
+                    onClick={() => navigate('/player/statistics')}
+                    sx={{ bgcolor: NAVY, '&:hover': { bgcolor: '#3a7bd5' } }}
+                  >
+                    View Statistics
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AssessmentIcon />}
+                    onClick={() => navigate('/upload')}
+                    sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
+                  >
+                    Upload New Session
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 5 }}>
           <Button
             variant="contained"
             startIcon={<AssessmentIcon />}
             sx={{ bgcolor: NAVY, color: '#fff', fontWeight: 700, px: 4, py: 1.5, borderRadius: 3, fontSize: '1.1rem', '&:hover': { bgcolor: '#3a7bd5' } }}
-            onClick={handleViewAnalytics}
+            onClick={() => navigate('/player/analytics')}
           >
             Full Analytics
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AssessmentIcon />}
+            sx={{ bgcolor: NAVY, color: '#fff', fontWeight: 700, px: 4, py: 1.5, borderRadius: 3, fontSize: '1.1rem', '&:hover': { bgcolor: '#3a7bd5' } }}
+            onClick={() => navigate('/player/statistics')}
+          >
+            Statistics
           </Button>
           <Button
             variant="outlined"

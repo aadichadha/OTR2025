@@ -20,6 +20,8 @@ import { validateEnvironment } from './utils/environmentCheck';
 import { validateDeployment, generateDeploymentReport } from './utils/deploymentValidation';
 import { Box, CircularProgress } from '@mui/material';
 import PlayerDashboard from './pages/PlayerDashboard';
+import PlayerAnalytics from './pages/PlayerAnalytics';
+import PlayerStatistics from './pages/PlayerStatistics';
 import Leaderboard from './pages/Leaderboard';
 import ProfileSettings from './pages/ProfileSettings';
 import SessionReport from './pages/SessionReport';
@@ -109,6 +111,18 @@ function AppRoutes() {
           <Route path="/player/dashboard" element={
             <ProtectedRoute allowedRoles={['player']}>
               <PlayerDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/player/analytics" element={
+            <ProtectedRoute allowedRoles={['player']}>
+              <PlayerAnalytics />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/player/statistics" element={
+            <ProtectedRoute allowedRoles={['player']}>
+              <PlayerStatistics />
             </ProtectedRoute>
           } />
 
