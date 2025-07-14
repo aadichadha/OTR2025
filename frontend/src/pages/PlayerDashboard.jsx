@@ -186,38 +186,9 @@ const PlayerDashboard = () => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Box sx={{ width: '100%', maxWidth: 1200, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
-        <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 2, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+        <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 4, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
           Player Dashboard
         </Typography>
-        {/* Top Navigation Bar */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
-          {[
-            { label: 'Home', path: '/player/dashboard' },
-            { label: 'Progression', path: '/player/progression' },
-            { label: 'Leaderboard', path: '/leaderboard' },
-            { label: 'Statistics', path: '/player/statistics' },
-          ].map((nav) => (
-            <NavLink
-              key={nav.label}
-              to={nav.path}
-              style={({ isActive }) => ({
-                textDecoration: 'none',
-                fontWeight: 700,
-                color: isActive ? '#fff' : NAVY,
-                background: isActive ? NAVY : '#f8f9fa',
-                border: `2px solid ${NAVY}`,
-                borderRadius: 24,
-                padding: '8px 24px',
-                fontSize: '1.1rem',
-                transition: 'all 0.2s',
-                boxShadow: isActive ? '0 2px 8px rgba(28,44,77,0.10)' : 'none',
-                marginRight: 8,
-              })}
-            >
-              {nav.label}
-            </NavLink>
-          ))}
-        </Box>
         {/* Dashboard Grid */}
         <Grid container spacing={3}>
           {/* Stats Card */}
