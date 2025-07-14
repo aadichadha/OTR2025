@@ -41,6 +41,13 @@ const Topbar = () => {
 
   // Role-based navigation items
   const getNavItems = () => {
+    if (user?.role === 'player') {
+      return [
+        { label: 'Home', icon: <Home />, to: '/dashboard' },
+        { label: 'Progression', icon: <Assessment />, to: '/progression' },
+        { label: 'Leaderboard', icon: <EmojiEvents />, to: '/leaderboard' }
+      ];
+    }
     const baseItems = [
       { label: 'Home', icon: <Home />, to: '/dashboard' }
     ];
@@ -195,62 +202,7 @@ const Topbar = () => {
         </Box>
 
         {/* Quick Action Buttons */}
-        {user?.role === 'player' && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
-            <Button
-              component={Link}
-              to="/analytics"
-              startIcon={<Assessment />}
-              sx={{
-                color: NAVY,
-                fontWeight: 500,
-                borderRadius: 3,
-                px: 2,
-                py: 1,
-                background: 'transparent',
-                border: '1px solid #e0e3e8',
-                transition: 'all 0.2s ease',
-                '& .MuiButton-startIcon, & .MuiSvgIcon-root': {
-                  color: NAVY,
-                },
-                '&:hover': {
-                  background: 'rgba(58,123,213,0.08)',
-                  borderColor: '#3a7bd5',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 2px 8px rgba(58,123,213,0.15)',
-                },
-              }}
-            >
-              Progression
-            </Button>
-            <Button
-              component={Link}
-              to="/leaderboard"
-              startIcon={<EmojiEvents />}
-              sx={{
-                color: NAVY,
-                fontWeight: 500,
-                borderRadius: 3,
-                px: 2,
-                py: 1,
-                background: 'transparent',
-                border: '1px solid #e0e3e8',
-                transition: 'all 0.2s ease',
-                '& .MuiButton-startIcon, & .MuiSvgIcon-root': {
-                  color: NAVY,
-                },
-                '&:hover': {
-                  background: 'rgba(58,123,213,0.08)',
-                  borderColor: '#3a7bd5',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 2px 8px rgba(58,123,213,0.15)',
-                },
-              }}
-            >
-              Leaderboard
-            </Button>
-          </Box>
-        )}
+        {/* Remove quick action buttons for player, as all are now in navItems */}
 
         {/* User Profile Section */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

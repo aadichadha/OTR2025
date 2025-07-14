@@ -89,7 +89,7 @@ function AppRoutes() {
             <ProtectedRoute>
               {user?.role === 'admin' && <AdminDashboard />}
               {user?.role === 'coach' && <Home />}
-              {user?.role === 'player' && <PlayerDashboard />}
+              {user?.role === 'player' && <PlayerStatistics />}
             </ProtectedRoute>
           } />
 
@@ -107,70 +107,21 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
 
-          {/* Player routes */}
+          {/* Player routes - restrict to only Home (PlayerStatistics), Leaderboard, and Progression */}
           <Route path="/player/dashboard" element={
-            <ProtectedRoute allowedRoles={['player']}>
-              <PlayerDashboard />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/player/analytics" element={
-            <ProtectedRoute allowedRoles={['player']}>
-              <PlayerAnalytics />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/player/statistics" element={
             <ProtectedRoute allowedRoles={['player']}>
               <PlayerStatistics />
             </ProtectedRoute>
           } />
 
-          {/* Feature routes with role-based permissions */}
-          <Route path="/upload" element={
-            <ProtectedRoute requiredPermission="view_own_data">
-              <Upload />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/players" element={
-            <ProtectedRoute requiredPermission="view_all_players">
-              <Players />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/sessions/:id/visualize" element={
-            <ProtectedRoute requiredPermission="view_own_data">
-              <SessionVisualization />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/sessions/:id/swings" element={
-            <ProtectedRoute requiredPermission="view_own_data">
-              <SessionVisualization />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/analytics" element={
-            <ProtectedRoute requiredPermission="view_analytics">
-              <AnalyticsHome />
-            </ProtectedRoute>
-          } />
-
           <Route path="/progression" element={
-            <ProtectedRoute requiredPermission="view_analytics">
+            <ProtectedRoute allowedRoles={['player']}>
               <SessionAnalytics />
             </ProtectedRoute>
           } />
 
-          <Route path="/statistics" element={
-            <ProtectedRoute requiredPermission="view_analytics">
-              <Statistics />
-            </ProtectedRoute>
-          } />
-
           <Route path="/leaderboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['player']}>
               <Leaderboard />
             </ProtectedRoute>
           } />
