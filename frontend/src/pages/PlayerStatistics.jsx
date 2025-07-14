@@ -1,448 +1,602 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import {
   Box,
   Container,
   Typography,
   Paper,
-  Grid,
-  Card,
-  CardContent,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   TextField,
-  OutlinedInput,
-  InputAdornment,
+  Button,
+  Chip,
   IconButton,
+  Alert,
+  CircularProgress,
+  Grid,
+  Card,
+  CardContent,
+  InputAdornment,
   Tooltip
 } from '@mui/material';
 import {
-  Assessment,
-  FilterList,
-  Clear,
-  Refresh,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  UnfoldMore,
+  FilterList,
+  Refresh,
+  Assessment,
+  Speed,
+  Timeline,
+  Straighten,
+  CalendarToday,
+  Clear
 } from '@mui/icons-material';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import safeToFixed from '../utils/safeToFixed';
 
 const NAVY = '#1c2c4d';
 
 const PlayerStatistics = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [stats, setStats] = useState([]);
-  const [sessionTags, setSessionTags] = useState([]);
-  const [playerLevels, setPlayerLevels] = useState([]);
+  const [error, setError] = useState(null);
   
-  // Filter states
+  // Data states
+  const [players, setPlayers] = useState([]);
+  const [playerStats, setPlayerStats] = useState([]);
+  const [filteredStats, setFilteredStats] = useState([]);
+  const [currentPlayer, setCurrentPlayer] = useState(null);
+  
+  // Filter states (only date and pitch speed for players)
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
-    playerLevel: '',
-    sessionTags: [],
-    pitchSpeedRange: [0, 100],
-    timeRange: 'all'
+    pitchSpeedMin: '',
+    pitchSpeedMax: ''
   });
+  
+  // UI states
+  const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  
+  // Sorting states
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  // Selected filters
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [selectedLevel, setSelectedLevel] = useState('');
-
+  // Load data on component mount
   useEffect(() => {
-    if (user && user.role === 'player') {
-      fetchStats();
-    }
-  }, [user, filters]);
+    loadData();
+  }, []);
 
-  const fetchStats = async () => {
-    setDataLoading(true);
+  // Apply filters when data or filters change
+  useEffect(() => {
+    applyFilters();
+  }, [playerStats, filters]);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
       // First, get the player ID for the current user
       let playerId = null;
       try {
         const playersResponse = await api.get('/players');
-        const players = playersResponse.data.players || playersResponse.data || [];
-        const currentPlayer = players.find(p => p.name === user.name);
-        if (currentPlayer) {
-          playerId = currentPlayer.id;
+        const playersData = playersResponse.data.players || playersResponse.data || [];
+        const foundPlayer = playersData.find(p => p.name === user.name);
+        
+        if (foundPlayer) {
+          playerId = foundPlayer.id;
+          setCurrentPlayer(foundPlayer);
+          setPlayers(playersData);
         } else {
           console.error('No player found for current user:', user.name);
-          setStats([]);
+          setError('Player not found for current user');
           return;
         }
       } catch (error) {
         console.error('Error fetching players:', error);
-        setStats([]);
+        setError('Failed to load player data');
         return;
       }
 
+      // Load player stats with the correct player ID
       const params = new URLSearchParams();
-      
-      if (filters.startDate) {
-        params.append('startDate', filters.startDate);
-      }
-      if (filters.endDate) {
-        params.append('endDate', filters.endDate);
-      }
-      if (filters.playerLevel) {
-        params.append('playerLevel', filters.playerLevel);
-      }
-      if (filters.sessionTags.length > 0) {
-        params.append('sessionTags', filters.sessionTags.join(','));
-      }
-      if (filters.pitchSpeedRange[0] > 0 || filters.pitchSpeedRange[1] < 100) {
-        params.append('minPitchSpeed', filters.pitchSpeedRange[0]);
-        params.append('maxPitchSpeed', filters.pitchSpeedRange[1]);
-      }
-      params.append('timeRange', filters.timeRange);
-      params.append('playerId', playerId); // Use the correct player ID
+      params.append('playerId', playerId);
+      params.append('timeRange', 'all');
 
-      const response = await api.get(`/analytics/player-stats?${params}`);
+      const statsRes = await api.get(`/analytics/player-stats?${params}`);
+      const statsData = statsRes.data.players || statsRes.data || [];
+
+      console.log('📊 [PLAYER STATISTICS] Stats data:', statsData);
+      console.log('📊 [PLAYER STATISTICS] Stats data length:', statsData.length);
+
+      setPlayerStats(Array.isArray(statsData) ? statsData : []);
       
-      if (response.data.success) {
-        setStats(response.data.players || []); // Use 'players' instead of 'data'
-        setSessionTags(response.data.sessionTags || []);
-        setPlayerLevels(response.data.playerLevels || []);
-      }
-    } catch (error) {
-      console.error('Error fetching player statistics:', error);
+    } catch (err) {
+      console.error('Error loading player statistics:', err);
+      setError('Failed to load player statistics');
     } finally {
-      setDataLoading(false);
       setLoading(false);
     }
   };
 
-  const handleClearFilters = () => {
+  const applyFilters = () => {
+    let filtered = [...playerStats];
+
+    // Filter by date range
+    if (filters.startDate) {
+      filtered = filtered.filter(stat => 
+        new Date(stat.last_session_date) >= new Date(filters.startDate)
+      );
+    }
+
+    if (filters.endDate) {
+      filtered = filtered.filter(stat => 
+        new Date(stat.last_session_date) <= new Date(filters.endDate)
+      );
+    }
+
+    // Filter by pitch speed range
+    if (filters.pitchSpeedMin && !isNaN(parseFloat(filters.pitchSpeedMin))) {
+      filtered = filtered.filter(stat => 
+        stat.avg_pitch_speed >= parseFloat(filters.pitchSpeedMin)
+      );
+    }
+
+    if (filters.pitchSpeedMax && !isNaN(parseFloat(filters.pitchSpeedMax))) {
+      filtered = filtered.filter(stat => 
+        stat.avg_pitch_speed <= parseFloat(filters.pitchSpeedMax)
+      );
+    }
+
+    setFilteredStats(filtered);
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <UnfoldMore />;
+    }
+    return sortConfig.direction === 'asc' ? <TrendingUp /> : <TrendingDown />;
+  };
+
+  const sortedStats = React.useMemo(() => {
+    console.log('📊 [PLAYER STATISTICS] Filtered stats:', filteredStats);
+    console.log('📊 [PLAYER STATISTICS] Filtered stats length:', filteredStats.length);
+    
+    if (!sortConfig.key) return filteredStats;
+
+    return [...filteredStats].sort((a, b) => {
+      const aVal = a[sortConfig.key];
+      const bVal = b[sortConfig.key];
+
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+
+      if (typeof aVal === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+
+      return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  }, [filteredStats, sortConfig]);
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const clearFilters = () => {
     setFilters({
       startDate: '',
       endDate: '',
-      playerLevel: '',
-      sessionTags: [],
-      pitchSpeedRange: [0, 100],
-      timeRange: 'all'
+      pitchSpeedMin: '',
+      pitchSpeedMax: ''
     });
-    setSelectedTags([]);
-    setSelectedLevel('');
   };
 
-  const handleTagToggle = (tag) => {
-    const newTags = selectedTags.includes(tag)
-      ? selectedTags.filter(t => t !== tag)
-      : [...selectedTags, tag];
-    setSelectedTags(newTags);
-    setFilters(prev => ({ ...prev, sessionTags: newTags }));
+  const formatNumber = (value, decimals = 1) => {
+    if (value === null || value === undefined || value === 'N/A') return 'N/A';
+    const num = parseFloat(value);
+    if (isNaN(num)) return 'N/A';
+    return safeToFixed(num, decimals);
   };
 
-  const handleLevelChange = (level) => {
-    setSelectedLevel(level);
-    setFilters(prev => ({ ...prev, playerLevel: level }));
-  };
-
-  const handlePitchSpeedChange = (index, value) => {
-    const newRange = [...filters.pitchSpeedRange];
-    newRange[index] = value;
-    setFilters(prev => ({ ...prev, pitchSpeedRange: newRange }));
-  };
-
-  const roundNumber = (num) => {
-    if (num === null || num === undefined || num === 'N/A') return 'N/A';
-    return Math.round(parseFloat(num) * 10) / 10;
-  };
-
-  const getGradeColor = (value, metric) => {
-    if (value === null || value === undefined || value === 'N/A') return 'default';
-    
-    const numValue = parseFloat(value);
-    
-    switch (metric) {
-      case 'avg_exit_velocity':
-        if (numValue >= 95) return 'success';
-        if (numValue >= 85) return 'warning';
-        return 'error';
-      case 'max_exit_velocity':
-        if (numValue >= 105) return 'success';
-        if (numValue >= 95) return 'warning';
-        return 'error';
-      case 'barrel_percentage':
-        if (numValue >= 25) return 'success';
-        if (numValue >= 15) return 'warning';
-        return 'error';
-      case 'avg_launch_angle':
-        if (numValue >= 8 && numValue <= 32) return 'success';
-        if (numValue >= 5 && numValue <= 35) return 'warning';
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
+  const columns = [
+    { key: 'player_name', label: 'Player', sortable: true },
+    { key: 'player_level', label: 'Level', sortable: true },
+    { key: 'total_sessions', label: 'Sessions', sortable: true },
+    { key: 'total_swings', label: 'Swings', sortable: true },
+    { key: 'avg_exit_velocity', label: 'Avg EV (mph)', sortable: true },
+    { key: 'avg_launch_angle', label: 'Avg LA (°)', sortable: true },
+    { key: 'barrel_percentage', label: 'Barrel %', sortable: true },
+    { key: 'max_exit_velocity', label: 'Max EV (mph)', sortable: true },
+    { key: 'avg_pitch_speed', label: 'Avg Pitch Speed (mph)', sortable: true }
+  ];
 
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress />
+        <CircularProgress size={60} />
       </Box>
     );
   }
 
-  return (
-    <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: { xs: 2, sm: 4 } }}>
-      <Container maxWidth="xl" sx={{ p: { xs: 0.5, sm: 2 } }}>
-        <Paper sx={{ p: { xs: 1, sm: 4 }, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d' }}>
-          {/* Header */}
-          <Box sx={{ mb: { xs: 2, sm: 4 } }}>
-            <Typography variant="h5" sx={{ fontWeight: 900, color: NAVY, mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
-              Your Statistics
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#666', mb: 2, fontSize: { xs: '0.95rem', sm: '1.1rem' } }}>
-              View your performance statistics and track your progress over time.
-            </Typography>
-            {/* Action Buttons */}
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<FilterList />}
-                onClick={() => setShowFilters(!showFilters)}
-                sx={{ bgcolor: NAVY, '&:hover': { bgcolor: '#3a7bd5' }, fontSize: { xs: '0.95rem', sm: '1rem' }, width: { xs: '100%', sm: 'auto' } }}
-              >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Refresh />}
-                onClick={fetchStats}
-                disabled={dataLoading}
-                sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' }, fontSize: { xs: '0.95rem', sm: '1rem' }, width: { xs: '100%', sm: 'auto' } }}
-              >
-                Refresh
-              </Button>
-            </Box>
-          </Box>
-
-          {/* Enhanced Filters */}
-          {showFilters && (
-            <Paper sx={{ p: { xs: 2, sm: 4 }, mb: 5, bgcolor: '#fff', border: '2px solid #1c2c4d', borderRadius: 4, boxShadow: '0 4px 24px rgba(28,44,77,0.10)' }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h5" fontWeight={900} color="#1c2c4d" sx={{ fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
-                  Advanced Filters
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<Clear />}
-                  onClick={handleClearFilters}
-                  sx={{ borderColor: '#d32f2f', color: '#d32f2f', fontWeight: 700, '&:hover': { borderColor: '#b71c1c', color: '#b71c1c' } }}
-                >
-                  Clear All
-                </Button>
-              </Box>
-
-              <Grid container spacing={3}>
-                {/* Date Range */}
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h6" fontWeight={700} color="#1c2c4d" sx={{ mb: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-                    Date Range
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <TextField
-                        label="Start Date"
-                        type="date"
-                        value={filters.startDate}
-                        onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                        fullWidth
-                        size="small"
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <TextField
-                        label="End Date"
-                        type="date"
-                        value={filters.endDate}
-                        onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                        fullWidth
-                        size="small"
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                  </Grid>
-                </Grid>
-
-                {/* Player Level */}
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h6" fontWeight={700} color="#1c2c4d" sx={{ mb: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-                    Player Level
-                  </Typography>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Select Level</InputLabel>
-                    <Select
-                      value={selectedLevel}
-                      onChange={(e) => handleLevelChange(e.target.value)}
-                      label="Select Level"
-                    >
-                      <MenuItem value="">All Levels</MenuItem>
-                      {playerLevels.map((level) => (
-                        <MenuItem key={level} value={level}>{level}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Pitch Speed Range */}
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h6" fontWeight={700} color="#1c2c4d" sx={{ mb: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-                    Pitch Speed Range (mph)
-                  </Typography>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={5}>
-                      <TextField
-                        label="Min Speed"
-                        type="number"
-                        value={filters.pitchSpeedRange[0]}
-                        onChange={(e) => handlePitchSpeedChange(0, parseFloat(e.target.value) || 0)}
-                        size="small"
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">mph</InputAdornment>,
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={2}>
-                      <Typography align="center">to</Typography>
-                    </Grid>
-                    <Grid item xs={5}>
-                      <TextField
-                        label="Max Speed"
-                        type="number"
-                        value={filters.pitchSpeedRange[1]}
-                        onChange={(e) => handlePitchSpeedChange(1, parseFloat(e.target.value) || 100)}
-                        size="small"
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">mph</InputAdornment>,
-                        }}
-                      />
-                    </Grid>
-                  </Grid>
-                </Grid>
-
-                {/* Session Tags */}
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h6" fontWeight={700} color="#1c2c4d" sx={{ mb: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-                    Session Tags
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {sessionTags.map((tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        onClick={() => handleTagToggle(tag)}
-                        color={selectedTags.includes(tag) ? 'primary' : 'default'}
-                        variant={selectedTags.includes(tag) ? 'filled' : 'outlined'}
-                        sx={{
-                          bgcolor: selectedTags.includes(tag) ? NAVY : 'transparent',
-                          color: selectedTags.includes(tag) ? '#fff' : NAVY,
-                          borderColor: NAVY,
-                          '&:hover': {
-                            bgcolor: selectedTags.includes(tag) ? '#3a7bd5' : '#f0f0f0'
-                          }
-                        }}
-                      />
-                    ))}
-                  </Box>
-                </Grid>
-              </Grid>
-            </Paper>
-          )}
-
-          {/* Statistics Table */}
-          <Box sx={{ width: '100%', overflowX: 'auto', mt: 2 }}>
-            <TableContainer component={Paper} sx={{ bgcolor: '#f8f9fa', borderRadius: 2, minWidth: 600 }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Player</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Level</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Sessions</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Swings</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Avg EV</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Max EV</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Avg LA</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Barrel %</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: NAVY, fontSize: '1rem' }}>Last Session</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {stats.map((player) => (
-                    <TableRow key={player.player_id} hover>
-                      <TableCell sx={{ fontWeight: 600, color: NAVY, fontSize: '1rem' }}>
-                        {player.player_name}
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={player.player_level || 'N/A'} 
-                          size="small"
-                          sx={{ bgcolor: '#e3f2fd', color: NAVY, fontWeight: 600 }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ fontSize: '1rem' }}>{player.total_sessions}</TableCell>
-                      <TableCell sx={{ fontSize: '1rem' }}>{player.total_swings}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={`${roundNumber(player.avg_exit_velocity)} mph`}
-                          color={getGradeColor(player.avg_exit_velocity, 'avg_exit_velocity')}
-                          size="small"
-                          sx={{ fontWeight: 600 }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={`${roundNumber(player.max_exit_velocity)} mph`}
-                          color={getGradeColor(player.max_exit_velocity, 'max_exit_velocity')}
-                          size="small"
-                          sx={{ fontWeight: 600 }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={`${roundNumber(player.avg_launch_angle)}°`}
-                          color={getGradeColor(player.avg_launch_angle, 'avg_launch_angle')}
-                          size="small"
-                          sx={{ fontWeight: 600 }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={`${roundNumber(player.barrel_percentage)}%`}
-                          color={getGradeColor(player.barrel_percentage, 'barrel_percentage')}
-                          size="small"
-                          sx={{ fontWeight: 600 }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ fontSize: '1rem' }}>
-                        {player.last_session_date ? new Date(player.last_session_date).toLocaleDateString() : 'N/A'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        </Paper>
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Alert severity="error" action={
+          <Button color="inherit" size="small" onClick={loadData}>
+            Retry
+          </Button>
+        }>
+          {error}
+        </Alert>
       </Container>
-    </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Header */}
+      <Paper sx={{ p: 4, mb: 4, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box display="flex" alignItems="center">
+            <Assessment sx={{ fontSize: 40, mr: 2, color: NAVY }} />
+            <Typography variant="h4" fontWeight="bold" color={NAVY}>
+              Your Statistics Dashboard
+            </Typography>
+          </Box>
+          <Box>
+            <Button
+              variant="outlined"
+              startIcon={<FilterList />}
+              onClick={() => setShowFilters(!showFilters)}
+              sx={{ mr: 2, minWidth: 120, borderColor: NAVY, color: NAVY }}
+            >
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Refresh />}
+              onClick={loadData}
+              sx={{ minWidth: 120, bgcolor: NAVY }}
+            >
+              Refresh
+            </Button>
+          </Box>
+        </Box>
+        <Typography variant="body1" color={NAVY} sx={{ opacity: 0.8 }}>
+          Your comprehensive statistics compiled across all sessions with filtering and sorting capabilities.
+        </Typography>
+      </Paper>
+
+      {/* Enhanced Filters */}
+      {showFilters && (
+        <Paper sx={{ p: { xs: 2, sm: 4 }, mb: 5, bgcolor: '#fff', border: '2px solid #1c2c4d', borderRadius: 4, boxShadow: '0 4px 24px rgba(28,44,77,0.10)' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography variant="h5" fontWeight={900} color={NAVY} sx={{ fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+              Advanced Filters
+            </Typography>
+            <Button 
+              variant="outlined" 
+              startIcon={<Clear />}
+              onClick={clearFilters} 
+              sx={{ color: NAVY, borderColor: NAVY, minWidth: 140, fontWeight: 700, fontSize: '1rem', height: 48 }}
+            >
+              Clear All
+            </Button>
+          </Box>
+
+          <Grid container spacing={3}>
+            {/* Date Range */}
+            <Grid item xs={12} md={6}>
+              <Box display="flex" flexDirection="column" gap={3}>
+                <Typography variant="subtitle1" color={NAVY} fontWeight={700} mb={1} sx={{ fontSize: 18, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                  Date Range
+                </Typography>
+                <Box display="flex" gap={2}>
+                  <TextField
+                    fullWidth
+                    label="Start Date"
+                    type="date"
+                    value={filters.startDate}
+                    onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                    InputLabelProps={{ shrink: true, style: { fontSize: 18 } }}
+                    inputProps={{ style: { fontSize: 18, height: 56 } }}
+                    sx={{
+                      '& .MuiInputLabel-root': { color: NAVY, fontSize: 18 },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '& .MuiInputBase-input': { color: NAVY, fontSize: 18, padding: '18px 16px', height: 20 },
+                      minHeight: 56
+                    }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="End Date"
+                    type="date"
+                    value={filters.endDate}
+                    onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                    InputLabelProps={{ shrink: true, style: { fontSize: 18 } }}
+                    inputProps={{ style: { fontSize: 18, height: 56 } }}
+                    sx={{
+                      '& .MuiInputLabel-root': { color: NAVY, fontSize: 18 },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '& .MuiInputBase-input': { color: NAVY, fontSize: 18, padding: '18px 16px', height: 20 },
+                      minHeight: 56
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Grid>
+
+            {/* Pitch Speed Range */}
+            <Grid item xs={12} md={6}>
+              <Box display="flex" flexDirection="column" gap={3}>
+                <Typography variant="subtitle1" color={NAVY} fontWeight={700} mb={1} sx={{ fontSize: 18, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                  Pitch Speed Range (mph)
+                </Typography>
+                <Box display="flex" gap={2}>
+                  <TextField
+                    fullWidth
+                    label="Min Speed"
+                    type="number"
+                    value={filters.pitchSpeedMin}
+                    onChange={(e) => handleFilterChange('pitchSpeedMin', e.target.value)}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">mph</InputAdornment>,
+                      style: { fontSize: 18, height: 56 }
+                    }}
+                    InputLabelProps={{ style: { fontSize: 18 } }}
+                    sx={{
+                      '& .MuiInputLabel-root': { color: NAVY, fontSize: 18 },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '& .MuiInputBase-input': { color: NAVY, fontSize: 18, padding: '18px 16px', height: 20 },
+                      minHeight: 56
+                    }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Max Speed"
+                    type="number"
+                    value={filters.pitchSpeedMax}
+                    onChange={(e) => handleFilterChange('pitchSpeedMax', e.target.value)}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">mph</InputAdornment>,
+                      style: { fontSize: 18, height: 56 }
+                    }}
+                    InputLabelProps={{ style: { fontSize: 18 } }}
+                    sx={{
+                      '& .MuiInputLabel-root': { color: NAVY, fontSize: 18 },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e0e3e8' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3a7bd5' },
+                      '& .MuiInputBase-input': { color: NAVY, fontSize: 18, padding: '18px 16px', height: 20 },
+                      minHeight: 56
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+
+          {/* Active Filters Summary */}
+          {(filters.startDate || 
+            filters.endDate || 
+            filters.pitchSpeedMin || 
+            filters.pitchSpeedMax) && (
+            <Box mt={4} p={2} bgcolor="#f8f9fa" borderRadius={2}>
+              <Typography variant="subtitle2" color={NAVY} fontWeight="bold" mb={1} sx={{ fontSize: 16 }}>
+                Active Filters:
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={1}>
+                {filters.startDate && (
+                  <Chip label={`From: ${filters.startDate}`} size="medium" color="info" sx={{ fontSize: 15, height: 32 }} />
+                )}
+                {filters.endDate && (
+                  <Chip label={`To: ${filters.endDate}`} size="medium" color="info" sx={{ fontSize: 15, height: 32 }} />
+                )}
+                {filters.pitchSpeedMin && (
+                  <Chip label={`Min Pitch: ${filters.pitchSpeedMin} mph`} size="medium" color="warning" sx={{ fontSize: 15, height: 32 }} />
+                )}
+                {filters.pitchSpeedMax && (
+                  <Chip label={`Max Pitch: ${filters.pitchSpeedMax} mph`} size="medium" color="warning" sx={{ fontSize: 15, height: 32 }} />
+                )}
+              </Box>
+            </Box>
+          )}
+        </Paper>
+      )}
+
+      {/* Summary Stats */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Assessment sx={{ mr: 2, color: NAVY }} />
+                <Box>
+                  <Typography color={NAVY} gutterBottom fontWeight="bold">
+                    Total Sessions
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{ color: NAVY, fontWeight: 700 }}>
+                    {filteredStats.reduce((sum, stat) => sum + (stat.total_sessions || 0), 0)}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Timeline sx={{ mr: 2, color: NAVY }} />
+                <Box>
+                  <Typography color={NAVY} gutterBottom fontWeight="bold">
+                    Total Swings
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{ color: NAVY, fontWeight: 700 }}>
+                    {filteredStats.reduce((sum, stat) => sum + (stat.total_swings || 0), 0)}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Speed sx={{ mr: 2, color: NAVY }} />
+                <Box>
+                  <Typography color={NAVY} gutterBottom fontWeight="bold">
+                    Avg Exit Velocity
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{ color: NAVY, fontWeight: 700 }}>
+                    {filteredStats.length > 0 ? 
+                      formatNumber(filteredStats.reduce((sum, stat) => sum + (stat.avg_exit_velocity || 0), 0) / filteredStats.length) : 
+                      'N/A'} mph
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Straighten sx={{ mr: 2, color: NAVY }} />
+                <Box>
+                  <Typography color={NAVY} gutterBottom fontWeight="bold">
+                    Barrel %
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{ color: NAVY, fontWeight: 700 }}>
+                    {filteredStats.length > 0 ? 
+                      formatNumber(filteredStats.reduce((sum, stat) => sum + (stat.barrel_percentage || 0), 0) / filteredStats.length) : 
+                      '0.0'}%
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Statistics Table */}
+      <Paper sx={{ width: '100%', overflow: 'hidden', bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+        <TableContainer sx={{ maxHeight: 600 }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.key}
+                    onClick={() => column.sortable && handleSort(column.key)}
+                    sx={{
+                      cursor: column.sortable ? 'pointer' : 'default',
+                      fontWeight: 'bold',
+                      bgcolor: '#f5f5f5',
+                      color: NAVY,
+                      '&:hover': column.sortable ? { bgcolor: '#e0e0e0' } : {},
+                      userSelect: 'none',
+                      fontSize: '14px',
+                      padding: '16px 8px'
+                    }}
+                  >
+                    <Box display="flex" alignItems="center">
+                      {column.label}
+                      {column.sortable && (
+                        <IconButton size="small" sx={{ ml: 1 }}>
+                          {getSortIcon(column.key)}
+                        </IconButton>
+                      )}
+                    </Box>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedStats
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((stat, index) => (
+                  <TableRow key={stat.player_id || index} hover>
+                    <TableCell sx={{ fontWeight: 600, color: NAVY }}>
+                      {stat.player_name}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={stat.player_level} 
+                        size="small" 
+                        color="primary" 
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell sx={{ color: NAVY }}>{stat.total_sessions || 0}</TableCell>
+                    <TableCell sx={{ color: NAVY }}>{stat.total_swings || 0}</TableCell>
+                    <TableCell sx={{ color: NAVY }}>{formatNumber(stat.avg_exit_velocity)}</TableCell>
+                    <TableCell sx={{ color: NAVY }}>{formatNumber(stat.avg_launch_angle)}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={`${formatNumber(stat.barrel_percentage)}%`}
+                        size="small"
+                        color={stat.barrel_percentage >= 10 ? 'success' : 'default'}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#d32f2f' }}>
+                      {formatNumber(stat.max_exit_velocity)}
+                    </TableCell>
+                    <TableCell sx={{ color: NAVY }}>
+                      {formatNumber(stat.avg_pitch_speed)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          component="div"
+          count={sortedStats.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(event, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(parseInt(event.target.value, 10));
+            setPage(0);
+          }}
+        />
+      </Paper>
+    </Container>
   );
 };
 
