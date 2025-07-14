@@ -36,9 +36,6 @@ import {
   TrendingUp,
   TrendingDown
 } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import api from '../services/api';
 
 const NAVY = '#1c2c4d';
@@ -54,8 +51,8 @@ const PlayerStatistics = () => {
   
   // Filter states
   const [filters, setFilters] = useState({
-    startDate: null,
-    endDate: null,
+    startDate: '',
+    endDate: '',
     playerLevel: '',
     sessionTags: [],
     pitchSpeedRange: [0, 100],
@@ -78,10 +75,10 @@ const PlayerStatistics = () => {
       const params = new URLSearchParams();
       
       if (filters.startDate) {
-        params.append('startDate', filters.startDate.toISOString().split('T')[0]);
+        params.append('startDate', filters.startDate);
       }
       if (filters.endDate) {
-        params.append('endDate', filters.endDate.toISOString().split('T')[0]);
+        params.append('endDate', filters.endDate);
       }
       if (filters.playerLevel) {
         params.append('playerLevel', filters.playerLevel);
@@ -113,8 +110,8 @@ const PlayerStatistics = () => {
 
   const handleClearFilters = () => {
     setFilters({
-      startDate: null,
-      endDate: null,
+      startDate: '',
+      endDate: '',
       playerLevel: '',
       sessionTags: [],
       pitchSpeedRange: [0, 100],
@@ -241,26 +238,30 @@ const PlayerStatistics = () => {
                   <Typography variant="h6" fontWeight={700} color="#1c2c4d" sx={{ mb: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
                     Date Range
                   </Typography>
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6}>
-                        <DatePicker
-                          label="Start Date"
-                          value={filters.startDate}
-                          onChange={(newValue) => setFilters(prev => ({ ...prev, startDate: newValue }))}
-                          renderInput={(params) => <TextField {...params} fullWidth size="small" />}
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <DatePicker
-                          label="End Date"
-                          value={filters.endDate}
-                          onChange={(newValue) => setFilters(prev => ({ ...prev, endDate: newValue }))}
-                          renderInput={(params) => <TextField {...params} fullWidth size="small" />}
-                        />
-                      </Grid>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <TextField
+                        label="Start Date"
+                        type="date"
+                        value={filters.startDate}
+                        onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                      />
                     </Grid>
-                  </LocalizationProvider>
+                    <Grid item xs={6}>
+                      <TextField
+                        label="End Date"
+                        type="date"
+                        value={filters.endDate}
+                        onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                  </Grid>
                 </Grid>
 
                 {/* Player Level */}
