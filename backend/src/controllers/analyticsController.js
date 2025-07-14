@@ -714,6 +714,7 @@ const getPlayerStats = async (req, res) => {
         endDate, 
         playerLevel, 
         playerIds,
+        playerId, // Add support for single playerId parameter
         timeRange = 'all', // 'all', 'recent', 'career'
         pitchSpeedMin,
         pitchSpeedMax,
@@ -725,6 +726,7 @@ const getPlayerStats = async (req, res) => {
         endDate, 
         playerLevel, 
         playerIds, 
+        playerId,
         timeRange,
         pitchSpeedMin,
         pitchSpeedMax,
@@ -751,7 +753,10 @@ const getPlayerStats = async (req, res) => {
 
       // Build player filter
       let playerFilter = {};
-      if (playerIds) {
+      if (playerId) {
+        // If playerId is provided, use it to find the specific player
+        playerFilter = { id: parseInt(playerId) };
+      } else if (playerIds) {
         const playerIdArray = playerIds.split(',').map(id => parseInt(id.trim()));
         playerFilter = { id: { [Op.in]: playerIdArray } };
       }

@@ -72,6 +72,25 @@ const PlayerStatistics = () => {
   const fetchStats = async () => {
     setDataLoading(true);
     try {
+      // First, get the player ID for the current user
+      let playerId = null;
+      try {
+        const playersResponse = await api.get('/players');
+        const players = playersResponse.data.players || playersResponse.data || [];
+        const currentPlayer = players.find(p => p.name === user.name);
+        if (currentPlayer) {
+          playerId = currentPlayer.id;
+        } else {
+          console.error('No player found for current user:', user.name);
+          setStats([]);
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching players:', error);
+        setStats([]);
+        return;
+      }
+
       const params = new URLSearchParams();
       
       if (filters.startDate) {
@@ -91,12 +110,12 @@ const PlayerStatistics = () => {
         params.append('maxPitchSpeed', filters.pitchSpeedRange[1]);
       }
       params.append('timeRange', filters.timeRange);
-      params.append('playerId', user.id); // Only get current player's stats
+      params.append('playerId', playerId); // Use the correct player ID
 
       const response = await api.get(`/analytics/player-stats?${params}`);
       
       if (response.data.success) {
-        setStats(response.data.data || []);
+        setStats(response.data.players || []); // Use 'players' instead of 'data'
         setSessionTags(response.data.sessionTags || []);
         setPlayerLevels(response.data.playerLevels || []);
       }
