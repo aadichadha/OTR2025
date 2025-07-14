@@ -263,255 +263,255 @@ const SessionAnalytics = () => {
 
   const filteredSwingsFromFilters = getFilteredSwings();
 
+  // Main return block
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#1c2c4d', py: { xs: 2, sm: 4 } }}>
       <Container maxWidth="xl" sx={{ p: { xs: 0.5, sm: 2 } }}>
-        <Paper sx={{ p: { xs: 1, sm: 4 }, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d' }}>
-          {/* Header */}
-          <Box sx={{ mb: { xs: 2, sm: 4 } }}>
-            <Typography variant="h5" sx={{ fontWeight: 900, color: '#1c2c4d', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
-              Progression
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#666', mb: 2, fontSize: { xs: '0.95rem', sm: '1.1rem' } }}>
-              Track your progress and analyze your sessions over time.
-            </Typography>
-          </Box>
-          {/* Tabs and Filters */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<FilterList />}
-              onClick={() => setShowFilters(!showFilters)}
-              sx={{ mr: 2 }}
+        {/* Header */}
+        <Box sx={{ mb: { xs: 2, sm: 4 } }}>
+          <Typography variant="h5" sx={{ fontWeight: 900, color: '#1c2c4d', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
+            Progression
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#666', mb: 2, fontSize: { xs: '0.95rem', sm: '1.1rem' } }}>
+            Track your progress and analyze your sessions over time.
+          </Typography>
+        </Box>
+        {/* Tabs and Filters */}
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<FilterList />}
+            onClick={() => setShowFilters(!showFilters)}
+            sx={{ mr: 2 }}
+          >
+            Filters {filters.categories.length > 0 && `(${filters.categories.length})`}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Refresh />}
+            onClick={loadAllData}
+            disabled={!selectedPlayerId}
+          >
+            Refresh
+          </Button>
+        </Box>
+        {/* Player Selection */}
+        <Box sx={{ p: 3, mb: 3, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+          <Typography variant="h6" fontWeight="bold" mb={2} color="#1c2c4d">
+            Select Player
+          </Typography>
+          <FormControl fullWidth>
+            <InputLabel sx={{ color: '#1c2c4d' }}>Choose Player</InputLabel>
+            <Select
+              value={selectedPlayerId}
+              onChange={(e) => handlePlayerChange(e.target.value)}
+              label="Choose Player"
+              disabled={playersLoading}
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#e0e3e8',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#3a7bd5',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#3a7bd5',
+                },
+                '& .MuiSelect-select': {
+                  color: '#1c2c4d',
+                },
+              }}
             >
-              Filters {filters.categories.length > 0 && `(${filters.categories.length})`}
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              onClick={loadAllData}
-              disabled={!selectedPlayerId}
-            >
-              Refresh
-            </Button>
-          </Box>
-          {/* Player Selection */}
-          <Box sx={{ p: 3, mb: 3, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
-            <Typography variant="h6" fontWeight="bold" mb={2} color="#1c2c4d">
-              Select Player
-            </Typography>
-            <FormControl fullWidth>
-              <InputLabel sx={{ color: '#1c2c4d' }}>Choose Player</InputLabel>
-              <Select
-                value={selectedPlayerId}
-                onChange={(e) => handlePlayerChange(e.target.value)}
-                label="Choose Player"
-                disabled={playersLoading}
-                sx={{
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#e0e3e8',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#3a7bd5',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#3a7bd5',
-                  },
-                  '& .MuiSelect-select': {
-                    color: '#1c2c4d',
-                  },
-                }}
-              >
-                <MenuItem value="">
-                  <em>Select a player to view progression</em>
+              <MenuItem value="">
+                <em>Select a player to view progression</em>
+              </MenuItem>
+              {Array.isArray(players) && players.map(player => (
+                <MenuItem key={player.id} value={player.id.toString()}>
+                  {player.name} - {player.position}
                 </MenuItem>
-                {Array.isArray(players) && players.map(player => (
-                  <MenuItem key={player.id} value={player.id.toString()}>
-                    {player.name} - {player.position}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-          
-          {/* Quick Stats - Only show when player is selected */}
-          {selectedPlayerId ? (
-            <Grid container spacing={3} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card>
-                  <CardContent>
-                    <Box display="flex" alignItems="center">
-                      <Speed color="primary" sx={{ mr: 2 }} />
-                      <Box>
-                        <Typography color="textSecondary" gutterBottom>
-                          Total Swings
-                        </Typography>
-                        <Typography variant="h5" component="div">
-                          {swings.length}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Quick Stats - Only show when player is selected */}
+        {selectedPlayerId ? (
+          <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center">
-                    <CalendarToday color="primary" sx={{ mr: 2 }} />
+                    <Speed color="primary" sx={{ mr: 2 }} />
                     <Box>
                       <Typography color="textSecondary" gutterBottom>
-                        Sessions
+                        Total Swings
                       </Typography>
                       <Typography variant="h5" component="div">
-                        {sessions.length}
+                        {swings.length}
                       </Typography>
                     </Box>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box display="flex" alignItems="center">
-                    <TrendingUp color="primary" sx={{ mr: 2 }} />
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom>
-                        Avg Exit Velocity
-                      </Typography>
-                      <Typography variant="h5" component="div">
-                        {swings.length > 0 ? 
-                          safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.exit_velocity || 0), 0) / swings.length), 1) : 
-                          '0.0'} mph
-                      </Typography>
-                    </Box>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Box display="flex" alignItems="center">
+                  <CalendarToday color="primary" sx={{ mr: 2 }} />
+                  <Box>
+                    <Typography color="textSecondary" gutterBottom>
+                      Sessions
+                    </Typography>
+                    <Typography variant="h5" component="div">
+                      {sessions.length}
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box display="flex" alignItems="center">
-                    <ShowChart color="primary" sx={{ mr: 2 }} />
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom>
-                        Avg Launch Angle
-                      </Typography>
-                      <Typography variant="h5" component="div">
-                        {swings.length > 0 ? 
-                          safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.launch_angle || 0), 0) / swings.length), 1) : 
-                          '0.0'}°
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
-          ) : (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" color="textSecondary">
-                Select a player above to view their progression analytics
-              </Typography>
-            </Box>
-          )}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Box display="flex" alignItems="center">
+                  <TrendingUp color="primary" sx={{ mr: 2 }} />
+                  <Box>
+                    <Typography color="textSecondary" gutterBottom>
+                      Avg Exit Velocity
+                    </Typography>
+                    <Typography variant="h5" component="div">
+                      {swings.length > 0 ? 
+                        safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.exit_velocity || 0), 0) / swings.length), 1) : 
+                        '0.0'} mph
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Box display="flex" alignItems="center">
+                  <ShowChart color="primary" sx={{ mr: 2 }} />
+                  <Box>
+                    <Typography color="textSecondary" gutterBottom>
+                      Avg Launch Angle
+                    </Typography>
+                    <Typography variant="h5" component="div">
+                      {swings.length > 0 ? 
+                        safeToFixed((swings.reduce((sum, s) => sum + parseFloat(s.launch_angle || 0), 0) / swings.length), 1) : 
+                        '0.0'}°
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" color="textSecondary">
+              Select a player above to view their progression analytics
+            </Typography>
+          </Box>
+        )}
 
-          {/* Filters */}
-          {showFilters && (
-            <Box sx={{ p: 3, mb: 3, bgcolor: '#f8f9fa', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
-              <Typography variant="h6" gutterBottom>
-                Advanced Filters
-              </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Session Categories</InputLabel>
-                    <Select
-                      multiple
-                      value={filters.categories}
-                      onChange={(e) => handleFilterChange('categories', e.target.value)}
-                      renderValue={(selected) => (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {(Array.isArray(selected) ? selected : []).map((value) => (
-                            <Chip key={value} label={value} size="small" />
-                          ))}
-                        </Box>
-                      )}
-                    >
-                      {(filterOptions.categories || []).map((category) => (
-                        <MenuItem key={category} value={category}>
-                          {category}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography gutterBottom>Exit Velocity Range (mph)</Typography>
-                  <Slider
-                    value={filters.exitVelocityRange}
-                    onChange={(e, newValue) => handleFilterChange('exitVelocityRange', newValue)}
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={120}
-                  />
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="caption">{filters.exitVelocityRange[0]} mph</Typography>
-                    <Typography variant="caption">{filters.exitVelocityRange[1]} mph</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography gutterBottom>Launch Angle Range (°)</Typography>
-                  <Slider
-                    value={filters.launchAngleRange}
-                    onChange={(e, newValue) => handleFilterChange('launchAngleRange', newValue)}
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={45}
-                  />
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="caption">{filters.launchAngleRange[0]}°</Typography>
-                    <Typography variant="caption">{filters.launchAngleRange[1]}°</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Strike Zones</InputLabel>
-                    <Select
-                      multiple
-                      value={filters.strikeZones}
-                      onChange={(e) => handleFilterChange('strikeZones', e.target.value)}
-                      renderValue={(selected) => (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {(Array.isArray(selected) ? selected : []).map((value) => (
-                            <Chip key={value} label={value} size="small" />
-                          ))}
-                        </Box>
-                      )}
-                    >
-                      {(filterOptions.strike_zones || []).map((zone) => (
-                        <MenuItem key={zone} value={zone}>
-                          Zone {zone}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+        {/* Filters */}
+        {showFilters && (
+          <Box sx={{ p: 3, mb: 3, bgcolor: '#f8f9fa', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Advanced Filters
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Session Categories</InputLabel>
+                  <Select
+                    multiple
+                    value={filters.categories}
+                    onChange={(e) => handleFilterChange('categories', e.target.value)}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {(Array.isArray(selected) ? selected : []).map((value) => (
+                          <Chip key={value} label={value} size="small" />
+                        ))}
+                      </Box>
+                    )}
+                  >
+                    {(filterOptions.categories || []).map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
-            </Box>
-          )}
+              <Grid item xs={12} md={6}>
+                <Typography gutterBottom>Exit Velocity Range (mph)</Typography>
+                <Slider
+                  value={filters.exitVelocityRange}
+                  onChange={(e, newValue) => handleFilterChange('exitVelocityRange', newValue)}
+                  valueLabelDisplay="auto"
+                  min={0}
+                  max={120}
+                />
+                <Box display="flex" justifyContent="space-between">
+                  <Typography variant="caption">{filters.exitVelocityRange[0]} mph</Typography>
+                  <Typography variant="caption">{filters.exitVelocityRange[1]} mph</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography gutterBottom>Launch Angle Range (°)</Typography>
+                <Slider
+                  value={filters.launchAngleRange}
+                  onChange={(e, newValue) => handleFilterChange('launchAngleRange', newValue)}
+                  valueLabelDisplay="auto"
+                  min={0}
+                  max={45}
+                />
+                <Box display="flex" justifyContent="space-between">
+                  <Typography variant="caption">{filters.launchAngleRange[0]}°</Typography>
+                  <Typography variant="caption">{filters.launchAngleRange[1]}°</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Strike Zones</InputLabel>
+                  <Select
+                    multiple
+                    value={filters.strikeZones}
+                    onChange={(e) => handleFilterChange('strikeZones', e.target.value)}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {(Array.isArray(selected) ? selected : []).map((value) => (
+                          <Chip key={value} label={value} size="small" />
+                        ))}
+                      </Box>
+                    )}
+                  >
+                    {(filterOptions.strike_zones || []).map((zone) => (
+                      <MenuItem key={zone} value={zone}>
+                        Zone {zone}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
 
-          {/* Main Content Tabs */}
-          <Paper sx={{ width: '100%' }}>
-            <Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tab label="Overview" icon={<Assessment />} />
-              <Tab label="Trends" icon={<Timeline />} />
-              <Tab label="Benchmarks" icon={<EmojiEvents />} />
-              <Tab label="Progress" icon={<TrendingUp />} />
-              <Tab label="Swing Analysis" icon={<Speed />} />
-            </Tabs>
+        {/* Main Content Tabs */}
+        <Box sx={{ width: '100%' }}>
+          <Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tab label="Overview" icon={<Assessment />} />
+            <Tab label="Trends" icon={<Timeline />} />
+            <Tab label="Benchmarks" icon={<EmojiEvents />} />
+            <Tab label="Progress" icon={<TrendingUp />} />
+            <Tab label="Swing Analysis" icon={<Speed />} />
+          </Tabs>
 
         {/* Tab Content */}
         <Box sx={{ p: 3 }}>
@@ -793,9 +793,10 @@ const SessionAnalytics = () => {
             </Grid>
           )}
         </Box>
-      </Paper>
+      </Box>
     </Container>
   </Box>
-);
+  );
+}
 
 export default SessionAnalytics; 
