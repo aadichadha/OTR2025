@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  TextField, 
-  IconButton, 
-  CircularProgress, 
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  IconButton,
+  CircularProgress,
   Alert,
   FormControl,
   InputLabel,
@@ -751,7 +751,7 @@ function Players() {
                   </Grid>
                   <Grid item xs={12}>
                     <TextField 
-                      label={form.team_type === 'travel_team' ? 'Travel Team Name' : form.team_type === 'little_league' ? 'Little League Team Name' : 'Team Name'} 
+                      label={form.team_type === 'travel_team' ? 'Travel Team Name' : form.team_type === 'little_league' ? 'Little League Team Name' : 'Team Name'}
                       name="team_name" 
                       value={form.team_name} 
                       onChange={handleChange} 
@@ -795,7 +795,7 @@ function Players() {
                   </Grid>
                   <Grid item xs={12}>
                     <TextField 
-                      label={form.team_type === 'high_school' ? 'High School Name' : form.team_type === 'travel_team' ? 'Travel Team Name' : 'Team Name'} 
+                      label={form.team_type === 'high_school' ? 'High School Name' : form.team_type === 'travel_team' ? 'Travel Team Name' : 'Team Name'}
                       name="team_name" 
                       value={form.team_name} 
                       onChange={handleChange} 
@@ -859,7 +859,7 @@ function Players() {
                   </Grid>
                   <Grid item xs={12}>
                     <TextField 
-                      label={form.team_type === 'indy' ? 'Independent Team Name' : form.team_type === 'affiliate' ? 'Affiliate Team Name' : 'Team Name'} 
+                      label={form.team_type === 'indy' ? 'Independent Team Name' : form.team_type === 'affiliate' ? 'Affiliate Team Name' : 'Team Name'}
                       name="team_name" 
                       value={form.team_name} 
                       onChange={handleChange} 
@@ -948,7 +948,7 @@ function Players() {
                     ))}
                   </Select>
                 </FormControl>
-                              </Grid>
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3, pt: 1 }}>
@@ -966,12 +966,6 @@ function Players() {
             >
               {editPlayer ? 'Update Player' : 'Add Player'}
             </Button>
-            {/* Debug info */}
-            <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: '0.8rem' }}>
-              <Typography variant="caption" color="textSecondary">
-                Debug: Level: "{form.player_level}" | Position: {JSON.stringify(form.position)}
-              </Typography>
-            </Box>
           </DialogActions>
         </Dialog>
       </Box>

@@ -494,7 +494,7 @@ const CoachDashboard = () => {
                         />
                       </TableCell>
                       <TableCell>{player.position || 'N/A'}</TableCell>
-                      <TableCell>{player.total_sessions || 0}</TableCell>
+                      <TableCell sx={{ color: NAVY, fontWeight: 600 }}>{player.total_sessions || 0}</TableCell>
                       <TableCell>{player.total_swings || 0}</TableCell>
                       <TableCell sx={{ fontWeight: 600, color: '#1976d2' }}>
                         {formatPercentage(player.barrel_percentage)}

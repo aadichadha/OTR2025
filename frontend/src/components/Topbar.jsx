@@ -84,6 +84,7 @@ const Topbar = () => {
     if (user?.role === 'coach') {
       baseItems.push({ label: 'Progression', icon: <Assessment />, to: '/progression' });
       baseItems.push({ label: 'Statistics', icon: <Timeline />, to: '/statistics' });
+      baseItems.push({ label: 'Leaderboard', icon: <EmojiEvents />, to: '/leaderboard' });
     }
 
     return baseItems;
