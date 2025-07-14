@@ -190,8 +190,9 @@ const PlayerDashboard = () => {
           Player Dashboard
         </Typography>
         <Grid container spacing={4}>
-          <Grid item xs={12} md={4}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
+          {/* Top Row: Stats & Recent Sessions */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 1 }}>Your Stats</Typography>
                 {loading ? <CircularProgress /> : stats ? (
@@ -219,8 +220,8 @@ const PlayerDashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={8}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700 }}>Recent Sessions</Typography>
@@ -310,10 +311,8 @@ const PlayerDashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-        </Grid>
 
-        {/* New Analytics and Statistics Sections */}
-        <Grid container spacing={4} sx={{ mt: 2 }}>
+          {/* Bottom Row: Analytics Overview & Statistics Dashboard */}
           <Grid item xs={12} md={6}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
               <CardContent>
@@ -342,7 +341,6 @@ const PlayerDashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-          
           <Grid item xs={12} md={6}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
               <CardContent>
@@ -372,33 +370,7 @@ const PlayerDashboard = () => {
             </Card>
           </Grid>
         </Grid>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 5 }}>
-          <Button
-            variant="contained"
-            startIcon={<AssessmentIcon />}
-            sx={{ bgcolor: NAVY, color: '#fff', fontWeight: 700, px: 4, py: 1.5, borderRadius: 3, fontSize: '1.1rem', '&:hover': { bgcolor: '#3a7bd5' } }}
-            onClick={() => navigate('/player/analytics')}
-          >
-            Full Analytics
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AssessmentIcon />}
-            sx={{ bgcolor: NAVY, color: '#fff', fontWeight: 700, px: 4, py: 1.5, borderRadius: 3, fontSize: '1.1rem', '&:hover': { bgcolor: '#3a7bd5' } }}
-            onClick={() => navigate('/player/statistics')}
-          >
-            Statistics
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<EmojiEventsIcon />}
-            sx={{ borderColor: NAVY, color: NAVY, fontWeight: 700, px: 4, py: 1.5, borderRadius: 3, fontSize: '1.1rem', '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
-            onClick={() => navigate('/leaderboard')}
-          >
-            Leaderboard
-          </Button>
-        </Box>
+        {/* Remove the bottom navy buttons */}
       </Box>
 
       {/* Delete Confirmation Dialog */}
