@@ -186,27 +186,26 @@ const PlayerDashboard = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 4, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-      <Box sx={{ width: '100%', maxWidth: 1200, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
+      <Box sx={{ width: '100%', maxWidth: 1200, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 1, sm: 2, md: 4 } }}>
         {/* Welcome Section */}
-        <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+        <Box sx={{ mb: { xs: 2, sm: 4 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 900, color: NAVY, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+            <Typography variant="h5" sx={{ fontWeight: 900, color: NAVY, letterSpacing: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
               Welcome, {user?.name || 'Player'}!
             </Typography>
-            <Typography variant="subtitle1" sx={{ color: '#3a7bd5', fontWeight: 500, mt: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: '#3a7bd5', fontWeight: 500, mt: 1, fontSize: { xs: '0.95rem', sm: '1.1rem' } }}>
               Here is your personalized dashboard.
             </Typography>
           </Box>
         </Box>
-
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           {/* Stats Card */}
           <Grid item xs={12} md={4}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Your Stats</Typography>
-                {loading ? <CircularProgress /> : stats ? (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2, fontSize: { xs: '1rem', sm: '1.2rem' } }}>Your Stats</Typography>
+                {loading ? <CircularProgress size={28} /> : stats ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="body1" sx={{ color: NAVY }}>Max Exit Velocity:</Typography>
                       <Typography variant="body1" sx={{ color: NAVY, fontWeight: 700 }}>{roundNumber(stats.maxExitVelocity)} mph</Typography>
@@ -239,20 +238,20 @@ const PlayerDashboard = () => {
           {/* Quick Actions Card */}
           <Grid item xs={12} md={8}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 3 }}>Quick Actions</Typography>
-                <Grid container spacing={2}>
+              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2, fontSize: { xs: '1rem', sm: '1.2rem' } }}>Quick Actions</Typography>
+                <Grid container spacing={1}>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="contained" startIcon={<Timeline />} onClick={() => navigate('/player/statistics')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>Statistics</Button>
+                    <Button fullWidth variant="contained" size="large" startIcon={<Timeline />} onClick={() => navigate('/player/statistics')} sx={{ bgcolor: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { bgcolor: '#3a7bd5' } }}>Statistics</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="contained" startIcon={<AssessmentIcon />} onClick={() => navigate('/progression')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>Progression</Button>
+                    <Button fullWidth variant="contained" size="large" startIcon={<AssessmentIcon />} onClick={() => navigate('/progression')} sx={{ bgcolor: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { bgcolor: '#3a7bd5' } }}>Progression</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="contained" startIcon={<EmojiEventsIcon />} onClick={() => navigate('/leaderboard')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>Leaderboard</Button>
+                    <Button fullWidth variant="contained" size="large" startIcon={<EmojiEventsIcon />} onClick={() => navigate('/leaderboard')} sx={{ bgcolor: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { bgcolor: '#3a7bd5' } }}>Leaderboard</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="outlined" startIcon={<AssessmentIcon />} onClick={() => navigate('/upload')} sx={{ borderColor: NAVY, color: NAVY, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}>Upload Session</Button>
+                    <Button fullWidth variant="outlined" size="large" startIcon={<AssessmentIcon />} onClick={() => navigate('/upload')} sx={{ borderColor: NAVY, color: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}>Upload</Button>
                   </Grid>
                 </Grid>
               </CardContent>
@@ -261,13 +260,13 @@ const PlayerDashboard = () => {
           {/* Recent Sessions - full width, below */}
           <Grid item xs={12}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 3 }}>Recent Sessions</Typography>
-                {loading ? <CircularProgress /> : (Array.isArray(sessions) && sessions.length > 0) ? (
-                  <Grid container spacing={2}>
+              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2, fontSize: { xs: '1rem', sm: '1.2rem' } }}>Recent Sessions</Typography>
+                {loading ? <CircularProgress size={28} /> : (Array.isArray(sessions) && sessions.length > 0) ? (
+                  <Grid container spacing={1}>
                     {(Array.isArray(sessions) ? sessions.slice(0, 6) : []).map((session) => (
                       <Grid item xs={12} sm={6} md={4} key={session.id}>
-                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#fff', border: '1px solid #e0e3e8', height: '100%', display: 'flex', flexDirection: 'column', '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' } }}>
+                        <Box sx={{ p: { xs: 1, sm: 2 }, borderRadius: 2, bgcolor: '#fff', border: '1px solid #e0e3e8', height: '100%', display: 'flex', flexDirection: 'column', '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' } }}>
                           <Box sx={{ flex: 1 }}>
                             <Typography variant="body1" sx={{ color: NAVY, fontWeight: 600, mb: 1 }}>{formatDate(session.session_date)}</Typography>
                             <Chip label={session.session_type?.toUpperCase() || 'Unknown'} color={getSessionTypeColor(session.session_type)} size="small" sx={{ mb: 2 }} />

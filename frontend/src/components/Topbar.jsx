@@ -12,6 +12,13 @@ import Person from '@mui/icons-material/Person';
 import Timeline from '@mui/icons-material/Timeline';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import MenuIcon from '@mui/icons-material/Menu';
+import Drawer from '@mui/material/Drawer';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 
 const NAVY = '#1c2c4d';
 
@@ -20,6 +27,8 @@ const Topbar = () => {
   const navigate = useNavigate();
   const { user, logout, hasPermission } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -121,12 +130,12 @@ const Topbar = () => {
         borderBottom: '2px solid #3a7bd5'
       }}
     >
-      <Toolbar sx={{ px: 4, py: 1 }}>
+      <Toolbar sx={{ px: { xs: 1, sm: 4 }, py: 1 }}>
         <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
           <img 
             src="/images/otrbaseball-simple.png" 
             alt="OTR Baseball" 
-            style={{ height: 50, marginRight: 12 }} 
+            style={{ height: 40, marginRight: 8 }} 
           />
           <Typography 
             variant="h6" 
@@ -134,140 +143,162 @@ const Topbar = () => {
               color: NAVY, 
               fontWeight: 700, 
               letterSpacing: 1.2,
-              fontSize: '1.4rem'
+              fontSize: { xs: '1.1rem', sm: '1.4rem' }
             }}
           >
             OTR Baseball
           </Typography>
         </Box>
-
-        {/* Navigation Items */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
-          {(Array.isArray(navItems) ? navItems : []).map((item) => {
-            const selected = location.pathname === item.to;
-            return (
-              <Button
-                key={item.label}
-                component={Link}
-                to={item.to}
-                startIcon={item.icon}
-                sx={{
-                  color: selected ? '#fff' : NAVY,
-                  fontWeight: selected ? 700 : 500,
-                  borderRadius: 3,
-                  px: 3,
-                  py: 1.5,
-                  background: selected 
-                    ? NAVY
-                    : 'transparent',
-                  border: selected ? 'none' : '1px solid #e0e3e8',
-                  transition: 'all 0.2s ease',
-                  '& .MuiButton-startIcon, & .MuiSvgIcon-root': {
+        {/* Mobile Hamburger Menu */}
+        {isMobile ? (
+          <>
+            <IconButton onClick={() => setDrawerOpen(true)} sx={{ color: NAVY, ml: 1 }}>
+              <MenuIcon fontSize="large" />
+            </IconButton>
+            <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+              <Box sx={{ width: 250, p: 2 }} role="presentation" onClick={() => setDrawerOpen(false)}>
+                <List>
+                  {navItems.map((item) => (
+                    <ListItem button key={item.label} component={Link} to={item.to}>
+                      <ListItemIcon>{item.icon}</ListItemIcon>
+                      <ListItemText primary={item.label} />
+                    </ListItem>
+                  ))}
+                  <ListItem button onClick={handleProfile}>
+                    <ListItemIcon>{getRoleIcon(user.role)}</ListItemIcon>
+                    <ListItemText primary="Profile Settings" />
+                  </ListItem>
+                  <ListItem button onClick={handleLogout}>
+                    <ListItemIcon><Logout /></ListItemIcon>
+                    <ListItemText primary="Logout" />
+                  </ListItem>
+                </List>
+              </Box>
+            </Drawer>
+          </>
+        ) : (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
+            {navItems.map((item) => {
+              const selected = location.pathname === item.to;
+              return (
+                <Button
+                  key={item.label}
+                  component={Link}
+                  to={item.to}
+                  startIcon={item.icon}
+                  sx={{
                     color: selected ? '#fff' : NAVY,
-                  },
-                  '&:hover': {
-                    background: selected 
-                      ? NAVY
-                      : 'rgba(58,123,213,0.08)',
-                    borderColor: selected ? 'transparent' : '#3a7bd5',
-                    transform: 'translateY(-1px)',
-                    boxShadow: selected 
-                      ? '0 4px 12px rgba(28,44,77,0.18)'
-                      : '0 2px 8px rgba(58,123,213,0.15)',
-                  },
-                  '&:active': {
-                    transform: 'translateY(0)',
-                  },
-                  position: 'relative',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: -2,
-                    left: -2,
-                    right: -2,
-                    bottom: -2,
-                    borderRadius: 4,
+                    fontWeight: selected ? 700 : 500,
+                    borderRadius: 3,
+                    px: 3,
+                    py: 1.5,
                     background: selected 
                       ? NAVY
                       : 'transparent',
-                    zIndex: -1,
-                    opacity: selected ? 0.15 : 0,
-                    transition: 'opacity 0.2s ease',
+                    border: selected ? 'none' : '1px solid #e0e3e8',
+                    transition: 'all 0.2s ease',
+                    '& .MuiButton-startIcon, & .MuiSvgIcon-root': {
+                      color: selected ? '#fff' : NAVY,
+                    },
+                    '&:hover': {
+                      background: selected 
+                        ? NAVY
+                        : 'rgba(58,123,213,0.08)',
+                      borderColor: selected ? 'transparent' : '#3a7bd5',
+                      transform: 'translateY(-1px)',
+                      boxShadow: selected 
+                        ? '0 4px 12px rgba(28,44,77,0.18)'
+                        : '0 2px 8px rgba(58,123,213,0.15)',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0)',
+                    },
+                    position: 'relative',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: -2,
+                      left: -2,
+                      right: -2,
+                      bottom: -2,
+                      borderRadius: 4,
+                      background: selected 
+                        ? NAVY
+                        : 'transparent',
+                      zIndex: -1,
+                      opacity: selected ? 0.15 : 0,
+                      transition: 'opacity 0.2s ease',
+                    },
+                  }}
+                >
+                  {item.label}
+                </Button>
+              );
+            })}
+          </Box>
+        )}
+        {/* User Profile Section (desktop only) */}
+        {!isMobile && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Role Badge */}
+            <Chip
+              icon={getRoleIcon(user.role)}
+              label={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              size="small"
+              sx={{
+                bgcolor: getRoleColor(user.role),
+                color: '#fff',
+                fontWeight: 600,
+                '& .MuiChip-icon': {
+                  color: '#fff',
+                }
+              }}
+            />
+            {/* User Menu */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: NAVY, fontWeight: 600 }}>
+                {user.name}
+              </Typography>
+              <IconButton
+                onClick={handleMenuOpen}
+                sx={{
+                  color: NAVY,
+                  border: '1px solid #e0e3e8',
+                  borderRadius: 2,
+                  '&:hover': {
+                    background: 'rgba(58,123,213,0.08)',
+                    borderColor: '#3a7bd5',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 2px 8px rgba(58,123,213,0.15)',
                   },
+                  transition: 'all 0.2s ease',
                 }}
               >
-                {item.label}
-              </Button>
-            );
-          })}
-        </Box>
-
-        {/* Quick Action Buttons */}
-        {/* Remove quick action buttons for player, as all are now in navItems */}
-
-        {/* User Profile Section */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {/* Role Badge */}
-          <Chip
-            icon={getRoleIcon(user.role)}
-            label={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-            size="small"
-            sx={{
-              bgcolor: getRoleColor(user.role),
-              color: '#fff',
-              fontWeight: 600,
-              '& .MuiChip-icon': {
-                color: '#fff',
-              }
-            }}
-          />
-
-          {/* User Menu */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" sx={{ color: NAVY, fontWeight: 600 }}>
-              {user.name}
-            </Typography>
-            <IconButton
-              onClick={handleMenuOpen}
-              sx={{
+                <Avatar sx={{ width: 32, height: 32, bgcolor: getRoleColor(user.role) }}>
+                  {user.name.charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+            </Box>
+            {/* Logout Button */}
+            <IconButton 
+              onClick={handleLogout} 
+              sx={{ 
                 color: NAVY,
                 border: '1px solid #e0e3e8',
                 borderRadius: 2,
                 '&:hover': {
-                  background: 'rgba(58,123,213,0.08)',
-                  borderColor: '#3a7bd5',
+                  background: 'rgba(244,67,54,0.08)',
+                  borderColor: '#f44336',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 2px 8px rgba(58,123,213,0.15)',
+                  boxShadow: '0 2px 8px rgba(244,67,54,0.15)',
                 },
                 transition: 'all 0.2s ease',
               }}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: getRoleColor(user.role) }}>
-                {user.name.charAt(0).toUpperCase()}
-              </Avatar>
+              <Logout />
             </IconButton>
           </Box>
-
-          {/* Logout Button */}
-          <IconButton 
-            onClick={handleLogout} 
-            sx={{ 
-              color: NAVY,
-              border: '1px solid #e0e3e8',
-              borderRadius: 2,
-              '&:hover': {
-                background: 'rgba(244,67,54,0.08)',
-                borderColor: '#f44336',
-                transform: 'translateY(-1px)',
-                boxShadow: '0 2px 8px rgba(244,67,54,0.15)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Logout />
-          </IconButton>
-        </Box>
-
+        )}
         {/* User Menu Dropdown */}
         <Menu
           anchorEl={anchorEl}
