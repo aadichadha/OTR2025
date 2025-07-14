@@ -45,7 +45,8 @@ const Topbar = () => {
       return [
         { label: 'Home', icon: <Home />, to: '/dashboard' },
         { label: 'Progression', icon: <Assessment />, to: '/progression' },
-        { label: 'Leaderboard', icon: <EmojiEvents />, to: '/leaderboard' }
+        { label: 'Leaderboard', icon: <EmojiEvents />, to: '/leaderboard' },
+        { label: 'Statistics', icon: <Timeline />, to: '/player/statistics' }
       ];
     }
     const baseItems = [

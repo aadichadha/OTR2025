@@ -89,7 +89,7 @@ function AppRoutes() {
             <ProtectedRoute>
               {user?.role === 'admin' && <AdminDashboard />}
               {user?.role === 'coach' && <Home />}
-              {user?.role === 'player' && <PlayerStatistics />}
+              {user?.role === 'player' && <PlayerDashboard />}
             </ProtectedRoute>
           } />
 
@@ -107,10 +107,10 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
 
-          {/* Player routes - restrict to only Home (PlayerStatistics), Leaderboard, and Progression */}
+          {/* Player routes - Home (PlayerDashboard), Leaderboard, Progression, Statistics */}
           <Route path="/player/dashboard" element={
             <ProtectedRoute allowedRoles={['player']}>
-              <PlayerStatistics />
+              <PlayerDashboard />
             </ProtectedRoute>
           } />
 
@@ -123,6 +123,12 @@ function AppRoutes() {
           <Route path="/leaderboard" element={
             <ProtectedRoute allowedRoles={['player']}>
               <Leaderboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/player/statistics" element={
+            <ProtectedRoute allowedRoles={['player']}>
+              <PlayerStatistics />
             </ProtectedRoute>
           } />
 
