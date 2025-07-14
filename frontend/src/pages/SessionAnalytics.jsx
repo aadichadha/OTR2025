@@ -296,7 +296,7 @@ const SessionAnalytics = () => {
             </Button>
           </Box>
           {/* Player Selection */}
-          <Paper sx={{ p: 3, mb: 3, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
+          <Box sx={{ p: 3, mb: 3, bgcolor: '#fff', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
             <Typography variant="h6" fontWeight="bold" mb={2} color="#1c2c4d">
               Select Player
             </Typography>
@@ -332,7 +332,7 @@ const SessionAnalytics = () => {
                 ))}
               </Select>
             </FormControl>
-          </Paper>
+          </Box>
           
           {/* Quick Stats - Only show when player is selected */}
           {selectedPlayerId ? (
@@ -420,7 +420,7 @@ const SessionAnalytics = () => {
 
           {/* Filters */}
           {showFilters && (
-            <Paper sx={{ p: 3, mb: 3 }}>
+            <Box sx={{ p: 3, mb: 3, bgcolor: '#f8f9fa', border: '1.5px solid #e0e3e8', borderRadius: 4 }}>
               <Typography variant="h6" gutterBottom>
                 Advanced Filters
               </Typography>
@@ -500,7 +500,7 @@ const SessionAnalytics = () => {
                   </FormControl>
                 </Grid>
               </Grid>
-            </Paper>
+            </Box>
           )}
 
           {/* Main Content Tabs */}
@@ -793,10 +793,9 @@ const SessionAnalytics = () => {
             </Grid>
           )}
         </Box>
-      </Paper>
-        </>
-      )}
-    </Container>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
