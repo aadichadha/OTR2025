@@ -36,7 +36,6 @@ const columns = [
   { id: 'avgExitVelocity', label: 'Avg EV', minWidth: 90 },
   { id: 'maxBatSpeed', label: 'Max BS', minWidth: 90 },
   { id: 'avgBatSpeed', label: 'Avg BS', minWidth: 90 },
-  { id: 'sessions', label: 'Sessions', minWidth: 80 },
 ];
 
 const levels = ['All', 'High School', 'College', 'Youth', 'Other'];
@@ -302,9 +301,6 @@ const Leaderboard = () => {
                       </TableCell>
                       <TableCell sx={{ color: NAVY }}>
                         {formatValue(player.avgBatSpeed)}
-                      </TableCell>
-                      <TableCell sx={{ color: NAVY }}>
-                        {player.sessionCount}
                       </TableCell>
                     </TableRow>
                   ))
