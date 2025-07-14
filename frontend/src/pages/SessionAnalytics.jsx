@@ -793,10 +793,9 @@ const SessionAnalytics = () => {
             </Grid>
           )}
         </Box>
-        </Paper>
-      </Container>
-    </Box>
-  );
-};
+      </Paper>
+    </Container>
+  </Box>
+);
 
 export default SessionAnalytics; 
