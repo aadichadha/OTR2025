@@ -8,7 +8,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import EmailIcon from '@mui/icons-material/Email';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 import ReportDisplay from '../components/ReportDisplay';
 import SwingLogTable from '../components/SwingLogTable';
 
@@ -185,15 +185,44 @@ const PlayerDashboard = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: NAVY, py: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Box sx={{ width: '100%', maxWidth: 1400, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
-        <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 4, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+      <Box sx={{ width: '100%', maxWidth: 1200, bgcolor: '#fff', borderRadius: 4, boxShadow: '0 4px 32px rgba(28,44,77,0.10)', border: '2px solid #1c2c4d', p: { xs: 2, sm: 4 } }}>
+        <Typography variant="h3" align="center" sx={{ fontWeight: 900, color: NAVY, mb: 2, letterSpacing: 2, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
           Player Dashboard
         </Typography>
-        
+        {/* Top Navigation Bar */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
+          {[
+            { label: 'Home', path: '/player/dashboard' },
+            { label: 'Progression', path: '/player/progression' },
+            { label: 'Leaderboard', path: '/leaderboard' },
+            { label: 'Statistics', path: '/player/statistics' },
+          ].map((nav) => (
+            <NavLink
+              key={nav.label}
+              to={nav.path}
+              style={({ isActive }) => ({
+                textDecoration: 'none',
+                fontWeight: 700,
+                color: isActive ? '#fff' : NAVY,
+                background: isActive ? NAVY : '#f8f9fa',
+                border: `2px solid ${NAVY}`,
+                borderRadius: 24,
+                padding: '8px 24px',
+                fontSize: '1.1rem',
+                transition: 'all 0.2s',
+                boxShadow: isActive ? '0 2px 8px rgba(28,44,77,0.10)' : 'none',
+                marginRight: 8,
+              })}
+            >
+              {nav.label}
+            </NavLink>
+          ))}
+        </Box>
+        {/* Dashboard Grid */}
         <Grid container spacing={3}>
-          {/* Stats Card - Takes up top left */}
-          <Grid item xs={12} lg={4}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: 'fit-content' }}>
+          {/* Stats Card */}
+          <Grid item xs={12} md={4}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 2 }}>Your Stats</Typography>
                 {loading ? <CircularProgress /> : stats ? (
@@ -227,144 +256,51 @@ const PlayerDashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-
-          {/* Quick Actions Card - Takes up top right */}
-          <Grid item xs={12} lg={8}>
-            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: 'fit-content' }}>
+          {/* Quick Actions Card */}
+          <Grid item xs={12} md={8}>
+            <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3, height: '100%' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700, mb: 3 }}>Quick Actions</Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<AssessmentIcon />}
-                      onClick={() => navigate('/analytics')}
-                      sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}
-                    >
-                      View Analytics
-                    </Button>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Button fullWidth variant="contained" startIcon={<AssessmentIcon />} onClick={() => navigate('/analytics')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>View Analytics</Button>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<EmojiEventsIcon />}
-                      onClick={() => navigate('/leaderboard')}
-                      sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}
-                    >
-                      View Leaderboard
-                    </Button>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Button fullWidth variant="contained" startIcon={<EmojiEventsIcon />} onClick={() => navigate('/leaderboard')} sx={{ bgcolor: NAVY, py: 1.5, '&:hover': { bgcolor: '#3a7bd5' } }}>View Leaderboard</Button>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      startIcon={<AssessmentIcon />}
-                      onClick={() => navigate('/player/statistics')}
-                      sx={{ borderColor: NAVY, color: NAVY, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
-                    >
-                      View Statistics
-                    </Button>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Button fullWidth variant="outlined" startIcon={<AssessmentIcon />} onClick={() => navigate('/player/statistics')} sx={{ borderColor: NAVY, color: NAVY, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}>View Statistics</Button>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      startIcon={<AssessmentIcon />}
-                      onClick={() => navigate('/upload')}
-                      sx={{ borderColor: NAVY, color: NAVY, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
-                    >
-                      Upload Session
-                    </Button>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Button fullWidth variant="outlined" startIcon={<AssessmentIcon />} onClick={() => navigate('/upload')} sx={{ borderColor: NAVY, color: NAVY, py: 1.5, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}>Upload Session</Button>
                   </Grid>
                 </Grid>
               </CardContent>
             </Card>
           </Grid>
-
-          {/* Recent Sessions - Takes up full width below */}
+          {/* Recent Sessions - full width, below */}
           <Grid item xs={12}>
             <Card sx={{ bgcolor: '#f8f9fa', border: '1.5px solid #1c2c4d', borderRadius: 3 }}>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Typography variant="h6" sx={{ color: NAVY, fontWeight: 700 }}>Recent Sessions</Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<AssessmentIcon />}
-                    sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }}
-                    onClick={handleViewAnalytics}
-                  >
-                    View All Analytics
-                  </Button>
+                  <Button variant="outlined" size="small" startIcon={<AssessmentIcon />} sx={{ borderColor: NAVY, color: NAVY, '&:hover': { borderColor: '#3a7bd5', color: '#3a7bd5' } }} onClick={handleViewAnalytics}>View All Analytics</Button>
                 </Box>
                 {loading ? <CircularProgress /> : (Array.isArray(sessions) && sessions.length > 0) ? (
                   <Grid container spacing={2}>
                     {(Array.isArray(sessions) ? sessions.slice(0, 6) : []).map((session) => (
                       <Grid item xs={12} sm={6} md={4} key={session.id}>
-                        <Box sx={{ 
-                          p: 2, 
-                          borderRadius: 2, 
-                          bgcolor: '#fff', 
-                          border: '1px solid #e0e3e8',
-                          height: '100%',
-                          display: 'flex', 
-                          flexDirection: 'column',
-                          '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }
-                        }}>
+                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#fff', border: '1px solid #e0e3e8', height: '100%', display: 'flex', flexDirection: 'column', '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' } }}>
                           <Box sx={{ flex: 1 }}>
-                            <Typography variant="body1" sx={{ color: NAVY, fontWeight: 600, mb: 1 }}>
-                              {formatDate(session.session_date)}
-                            </Typography>
-                            <Chip 
-                              label={session.session_type?.toUpperCase() || 'Unknown'} 
-                              color={getSessionTypeColor(session.session_type)}
-                              size="small" 
-                              sx={{ mb: 2 }}
-                            />
+                            <Typography variant="body1" sx={{ color: NAVY, fontWeight: 600, mb: 1 }}>{formatDate(session.session_date)}</Typography>
+                            <Chip label={session.session_type?.toUpperCase() || 'Unknown'} color={getSessionTypeColor(session.session_type)} size="small" sx={{ mb: 2 }} />
                           </Box>
                           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleOpenSwingLog(session.id)}
-                              sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
-                              title="View Swings"
-                            >
-                              <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleOpenReport(session.id)}
-                              sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
-                              title="View Report"
-                            >
-                              📊
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDownloadReport(session.id)}
-                              sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
-                              title="Download Report"
-                            >
-                              <DownloadIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEmailReport(session.id)}
-                              sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }}
-                              title="Email Report"
-                            >
-                              <EmailIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteSession(session)}
-                              sx={{ color: '#d32f2f', '&:hover': { bgcolor: '#ffebee' } }}
-                              title="Delete Session"
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
+                            <IconButton size="small" onClick={() => handleOpenSwingLog(session.id)} sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }} title="View Swings"><VisibilityIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => handleOpenReport(session.id)} sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }} title="View Report">📊</IconButton>
+                            <IconButton size="small" onClick={() => handleDownloadReport(session.id)} sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }} title="Download Report"><DownloadIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => handleEmailReport(session.id)} sx={{ color: NAVY, '&:hover': { bgcolor: '#e3f2fd' } }} title="Email Report"><EmailIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => handleDeleteSession(session)} sx={{ color: '#d32f2f', '&:hover': { bgcolor: '#ffebee' } }} title="Delete Session"><DeleteIcon fontSize="small" /></IconButton>
                           </Box>
                         </Box>
                       </Grid>
