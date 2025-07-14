@@ -107,22 +107,48 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
 
-          {/* Player routes - Home (PlayerDashboard), Leaderboard, Progression, Statistics */}
-          <Route path="/player/dashboard" element={
-            <ProtectedRoute allowedRoles={['player']}>
-              <PlayerDashboard />
-            </ProtectedRoute>
-          } />
-
+          {/* Shared routes for coaches and players */}
           <Route path="/progression" element={
-            <ProtectedRoute allowedRoles={['player']}>
+            <ProtectedRoute allowedRoles={['player', 'coach']}>
               <SessionAnalytics />
             </ProtectedRoute>
           } />
 
           <Route path="/leaderboard" element={
-            <ProtectedRoute allowedRoles={['player']}>
+            <ProtectedRoute allowedRoles={['player', 'coach']}>
               <Leaderboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Coach-specific routes */}
+          <Route path="/statistics" element={
+            <ProtectedRoute allowedRoles={['coach']}>
+              <Statistics />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/analytics" element={
+            <ProtectedRoute allowedRoles={['coach']}>
+              <AnalyticsHome />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/upload" element={
+            <ProtectedRoute allowedRoles={['coach']}>
+              <Upload />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/players" element={
+            <ProtectedRoute allowedRoles={['coach']}>
+              <Players />
+            </ProtectedRoute>
+          } />
+
+          {/* Player-specific routes */}
+          <Route path="/player/dashboard" element={
+            <ProtectedRoute allowedRoles={['player']}>
+              <PlayerDashboard />
             </ProtectedRoute>
           } />
 
