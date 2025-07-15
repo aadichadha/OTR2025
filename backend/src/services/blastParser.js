@@ -8,10 +8,11 @@ const { calculateMean, calculateQuantile, grade, getBenchmarksForLevel } = requi
  */
 function parseBlastCSV(csvBuffer) {
   try {
-    // Convert buffer to string and skip first 8 lines (device header noise)
+    // Convert buffer to string and skip first 9 lines (device header noise)
+    // Data starts at row 10 (index 9)
     const csvString = csvBuffer.toString('utf-8');
     const lines = csvString.split('\n');
-    const dataLines = lines.slice(8); // Skip first 8 lines
+    const dataLines = lines.slice(9); // Skip first 9 rows, start from row 10
     const csvData = dataLines.join('\n');
 
     // Parse CSV
@@ -27,19 +28,19 @@ function parseBlastCSV(csvBuffer) {
     const timeToContactData = [];
 
     records.forEach(row => {
-      // Column 7: batSpeed_mph
+      // Column H (index 7): batSpeed_mph
       const batSpeed = parseFloat(row[7]);
       if (!isNaN(batSpeed) && batSpeed > 0) {
         batSpeedData.push(batSpeed);
       }
 
-      // Column 10: attackAngle_deg
+      // Column K (index 10): attackAngle_deg
       const attackAngle = parseFloat(row[10]);
       if (!isNaN(attackAngle)) {
         attackAngleData.push(attackAngle);
       }
 
-      // Column 15: timeToContact_s
+      // Column P (index 15): timeToContact_s
       const timeToContact = parseFloat(row[15]);
       if (!isNaN(timeToContact) && timeToContact > 0) {
         timeToContactData.push(timeToContact);

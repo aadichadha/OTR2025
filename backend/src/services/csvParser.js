@@ -19,51 +19,40 @@ class CSVParser {
       console.log('First 10 lines:', lines.slice(0, 10));
       
       const results = [];
-      let dataStartRow = -1;
       
-      // Find where actual data starts (look for first row with mostly numbers)
-      for (let i = 0; i < Math.min(lines.length, 20); i++) {
-        const columns = lines[i].split(',');
-        let numericCount = 0;
-        
-        // Check columns 7, 10, and 14 for numeric values
-        if (columns.length >= 15) {
-          if (!isNaN(parseFloat(columns[7]))) numericCount++;
-          if (!isNaN(parseFloat(columns[10]))) numericCount++;
-          if (!isNaN(parseFloat(columns[14]))) numericCount++;
-          
-          if (numericCount >= 2) {
-            dataStartRow = i;
-            console.log(`Data starts at row ${i + 1}`);
-            break;
-          }
-        }
+      // Blast CSV data starts at row 10 (index 9) - skip first 9 rows
+      const dataStartRow = 9;
+      
+      if (dataStartRow >= lines.length) {
+        throw new Error('Blast CSV file too short - no data rows found');
       }
       
-      if (dataStartRow === -1) {
-        throw new Error('Could not find data rows in Blast CSV');
-      }
+      console.log(`Data starts at row ${dataStartRow + 1} (index ${dataStartRow})`);
       
-      // Process data rows
+      // Process data rows starting from row 10
       for (let i = dataStartRow; i < lines.length; i++) {
         const columns = lines[i].split(',').map(col => col.trim());
         
-        if (columns.length < 15) {
-          console.log(`Skipping row ${i + 1}: insufficient columns (${columns.length})`);
+        if (columns.length < 16) {
+          console.log(`Skipping row ${i + 1}: insufficient columns (${columns.length}, need at least 16)`);
           continue;
         }
         
+        // Column H (index 7): Bat Speed
         const batSpeed = parseFloat(columns[7]);
+        // Column K (index 10): Attack Angle  
         const attackAngle = parseFloat(columns[10]);
+        // Column P (index 15): Time to Contact
         const timeToContact = parseFloat(columns[15]);
         
-        console.log(`Row ${i + 1}: BatSpeed=${columns[7]}, AttackAngle=${columns[10]}, TimeToContact=${columns[15]}`);
+        console.log(`Row ${i + 1}: BatSpeed=${columns[7]} (col H), AttackAngle=${columns[10]} (col K), TimeToContact=${columns[15]} (col P)`);
         
-        if (!isNaN(batSpeed) && !isNaN(attackAngle) && !isNaN(timeToContact)) {
+        // Only require bat speed to be valid (other fields can be null)
+        if (!isNaN(batSpeed) && batSpeed > 0) {
           const dataRow = {
             bat_speed: batSpeed,
-            attack_angle: attackAngle,
-            time_to_contact: timeToContact
+            attack_angle: isNaN(attackAngle) ? null : attackAngle,
+            time_to_contact: isNaN(timeToContact) ? null : timeToContact
           };
           
           // Add session_id if provided
@@ -73,7 +62,7 @@ class CSVParser {
           
           results.push(dataRow);
         } else {
-          console.log(`Skipping row ${i + 1}: invalid numeric values`);
+          console.log(`Skipping row ${i + 1}: invalid bat speed value (${columns[7]})`);
         }
       }
       
@@ -83,14 +72,27 @@ class CSVParser {
         
         // Only save to database if sessionId is provided
         if (sessionId && results.length > 0) {
+          console.log(`🔍 DEBUG: About to save ${results.length} Blast records to database`);
+          console.log(`🔍 DEBUG: First 5 records:`, JSON.stringify(results.slice(0, 5), null, 2));
+          
           const chunkSize = 300;
           for (let i = 0; i < results.length; i += chunkSize) {
             const chunk = results.slice(i, i + chunkSize);
-            await BatSpeedData.bulkCreate(chunk, {
-              transaction,
-              validate: true
-            });
+            console.log(`🔍 DEBUG: Processing chunk ${Math.floor(i/chunkSize) + 1}, size: ${chunk.length}`);
+            
+            try {
+              const inserted = await BatSpeedData.bulkCreate(chunk, {
+                transaction,
+                validate: false,
+                logging: console.log
+              });
+              console.log(`🔍 DEBUG: Successfully inserted ${inserted.length} Blast records in this chunk`);
+            } catch (error) {
+              console.error(`🔍 DEBUG: Error inserting Blast chunk:`, error);
+              throw error;
+            }
           }
+          console.log(`🔍 DEBUG: Total Blast records processed: ${results.length}`);
         }
       }
       
