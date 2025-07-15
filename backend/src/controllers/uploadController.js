@@ -18,13 +18,13 @@ class UploadController {
       
       if (type === 'blast') {
         // For Blast CSV, find the first data row (after header noise)
+        // Data starts at row 11 (index 10), so look for the first row with valid bat speed
         let dataStartRow = -1;
-        for (let i = 0; i < Math.min(lines.length, 20); i++) {
+        for (let i = 10; i < Math.min(lines.length, 20); i++) {
           const columns = lines[i].split(',');
-          if (columns.length >= 15) {
+          if (columns.length >= 16) {
             const batSpeed = parseFloat(columns[7]);
-            const attackAngle = parseFloat(columns[10]);
-            if (!isNaN(batSpeed) && !isNaN(attackAngle)) {
+            if (!isNaN(batSpeed) && batSpeed > 0) {
               dataStartRow = i;
               break;
             }

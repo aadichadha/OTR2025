@@ -8,11 +8,11 @@ const { calculateMean, calculateQuantile, grade, getBenchmarksForLevel } = requi
  */
 function parseBlastCSV(csvBuffer) {
   try {
-    // Convert buffer to string and skip first 9 lines (device header noise)
-    // Data starts at row 10 (index 9)
+    // Convert buffer to string and skip first 10 lines (device header noise + header row)
+    // Data starts at row 11 (index 10)
     const csvString = csvBuffer.toString('utf-8');
     const lines = csvString.split('\n');
-    const dataLines = lines.slice(9); // Skip first 9 rows, start from row 10
+    const dataLines = lines.slice(10); // Skip first 10 rows, start from row 11
     const csvData = dataLines.join('\n');
 
     // Parse CSV
