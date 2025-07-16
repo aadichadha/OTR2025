@@ -20,8 +20,8 @@ class CSVParser {
       
       const results = [];
       
-      // Blast CSV data starts at row 10 (index 9) - skip first 9 rows (headers/empty)
-      const dataStartRow = 9;
+      // Blast CSV data starts at row 11 (index 10) - skip first 10 rows (headers/empty)
+      const dataStartRow = 10;
       
       if (dataStartRow >= lines.length) {
         throw new Error('Blast CSV file too short - no data rows found');
