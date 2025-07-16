@@ -22,10 +22,10 @@ class MetricsCalculator {
         throw new Error('No bat speed data found for this session');
       }
 
-      // Extract arrays of values
-      const batSpeeds = batSpeedData.map(row => row.bat_speed).filter(val => val !== null);
-      const attackAngles = batSpeedData.map(row => row.attack_angle).filter(val => val !== null);
-      const timeToContacts = batSpeedData.map(row => row.time_to_contact).filter(val => val !== null);
+      // Extract arrays of values with more detailed debugging
+      const batSpeeds = batSpeedData.map(row => row.bat_speed).filter(val => val !== null && val > 0);
+      const attackAngles = batSpeedData.map(row => row.attack_angle).filter(val => val !== null && !isNaN(val));
+      const timeToContacts = batSpeedData.map(row => row.time_to_contact).filter(val => val !== null && !isNaN(val));
 
       console.log('[DEBUG] MetricsCalculator data extraction:');
       console.log(`- Total records: ${batSpeedData.length}`);
@@ -43,8 +43,8 @@ class MetricsCalculator {
       // Calculate metrics
       const maxBatSpeed = Math.max(...batSpeeds);
       const avgBatSpeed = this.calculateAverage(batSpeeds);
-      const avgAttackAngle = this.calculateAverage(attackAngles);
-      const avgTimeToContact = this.calculateAverage(timeToContacts);
+      const avgAttackAngle = attackAngles.length > 0 ? this.calculateAverage(attackAngles) : null;
+      const avgTimeToContact = timeToContacts.length > 0 ? this.calculateAverage(timeToContacts) : null;
 
       console.log('[DEBUG] MetricsCalculator calculations:');
       console.log(`- maxBatSpeed: ${maxBatSpeed}`);
@@ -61,14 +61,14 @@ class MetricsCalculator {
       // Evaluate performance
       const maxBatSpeedGrade = this.evaluatePerformance(maxBatSpeed, benchmark['90th% BatSpeed']);
       const avgBatSpeedGrade = this.evaluatePerformance(avgBatSpeed, benchmark['Avg BatSpeed']);
-      const attackAngleGrade = this.evaluatePerformance(avgAttackAngle, benchmark['Avg AttackAngle']);
-      const timeToContactGrade = this.evaluatePerformance(avgTimeToContact, benchmark['Avg TimeToContact'], true);
+      const attackAngleGrade = avgAttackAngle !== null ? this.evaluatePerformance(avgAttackAngle, benchmark['Avg AttackAngle']) : 'Below Average';
+      const timeToContactGrade = avgTimeToContact !== null ? this.evaluatePerformance(avgTimeToContact, benchmark['Avg TimeToContact'], true) : 'Below Average';
 
       const result = {
         maxBatSpeed: parseFloat(maxBatSpeed.toFixed(2)),
         avgBatSpeed: parseFloat(avgBatSpeed.toFixed(2)),
-        avgAttackAngle: parseFloat(avgAttackAngle.toFixed(2)),
-        avgTimeToContact: parseFloat(avgTimeToContact.toFixed(3)),
+        avgAttackAngle: avgAttackAngle !== null ? parseFloat(avgAttackAngle.toFixed(2)) : null,
+        avgTimeToContact: avgTimeToContact !== null ? parseFloat(avgTimeToContact.toFixed(3)) : null,
         benchmark: {
           maxBatSpeed: benchmark['90th% BatSpeed'],
           avgBatSpeed: benchmark['Avg BatSpeed'],
