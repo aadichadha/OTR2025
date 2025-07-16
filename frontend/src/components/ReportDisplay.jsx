@@ -51,19 +51,11 @@ function HotZoneCell({ zone, ev }) {
 function ReportDisplay({ report }) {
   if (!report) return null;
   
-  // Debug logging
-  console.log('[ReportDisplay] Full report:', report);
-  console.log('[ReportDisplay] Metrics:', report.metrics);
-  console.log('[ReportDisplay] BatSpeed metrics:', report.metrics?.batSpeed);
-  console.log('[ReportDisplay] ExitVelocity metrics:', report.metrics?.exitVelocity);
-  
   const metrics = report.metrics?.exitVelocity || report.metrics?.batSpeed;
   const isHittrax = !!report.metrics?.exitVelocity;
+  
   const player = report.player || {};
   const session = report.session || {};
-  
-  console.log('[ReportDisplay] Final metrics object:', metrics);
-  console.log('[ReportDisplay] Is Hittrax:', isHittrax);
 
   // Rectangular strike zone grid: [10, null, 11], [1,2,3], [4,5,6], [7,8,9], [12, null, 13]
   const zoneGrid = [
@@ -148,15 +140,11 @@ function ReportDisplay({ report }) {
 }
 
 function MetricCard({ label, value, unit, grade }) {
-  // Debug logging
-  console.log(`[MetricCard] ${label}:`, { value, unit, grade, type: typeof value });
-  
   // Color for grade
   let gradeColor = grade ? getGradeColor(grade) : '#7ecbff';
   
   // Format the value
   const displayValue = value !== null && value !== undefined ? safeToFixed(value, 1) : 'N/A';
-  console.log(`[MetricCard] ${label} display value:`, displayValue);
   
   return (
     <Grid item xs={12} sm={6} md={4} lg={2}>

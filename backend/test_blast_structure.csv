@@ -1,0 +1,14 @@
+Row,Data,Type,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+1,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+2,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+3,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+4,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+5,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+6,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+7,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+8,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+9,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+10,Header,Data,Info,Col5,Col6,Col7,BatSpeed,Col9,Col10,AttackAngle,Col12,Col13,Col14,Col15,TimeToContact
+11,Data,Real,Info,Col5,Col6,Col7,65.2,Col9,Col10,12.5,Col12,Col13,Col14,Col15,0.165
+12,Data,Real,Info,Col5,Col6,Col7,67.8,Col9,Col10,11.2,Col12,Col13,Col14,Col15,0.158
+13,Data,Real,Info,Col5,Col6,Col7,64.1,Col9,Col10,13.8,Col12,Col13,Col14,Col15,0.172
