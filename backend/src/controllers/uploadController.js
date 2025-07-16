@@ -129,7 +129,6 @@ class UploadController {
 
       // 🔄 Create session and save data in transaction
       let session;
-      let reportData;
       await sequelize.transaction(async t => {
         // Verify player exists in this transaction
         const playerExists = await Player.findByPk(player.id, { transaction: t });
@@ -153,18 +152,19 @@ class UploadController {
         console.log('Parsing Blast CSV with session ID...');
         const fullParseResult = await CSVParser.parseBlastCSV(req.file.path, session.id, t);
         console.log(`Successfully saved ${fullParseResult.parsedRows} records to database`);
-        
-        // Generate report INSIDE transaction with transaction support
-        console.log('📄 Generating report inside transaction...');
-        const { aggregateReportData } = require('../services/reportAggregator');
-        reportData = await aggregateReportData(session.id, { transaction: t });
-        console.log('✅ Report generated successfully');
       });
+
+      // Generate report AFTER transaction is committed
+      console.log('📄 Generating report after transaction commit...');
+      const { aggregateReportData } = require('../services/reportAggregator');
+      const reportData = await aggregateReportData(session.id);
+      console.log('✅ Report generated successfully');
 
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
 
       // After generating the report, log the full metrics object for debugging
+      console.log('[DEBUG] Full report data:', JSON.stringify(reportData, null, 2));
       if (reportData && reportData.metrics && reportData.metrics.batSpeed) {
         console.log('[DEBUG] Final bat speed metrics object:', reportData.metrics.batSpeed);
       }
