@@ -27,6 +27,15 @@ class MetricsCalculator {
       const attackAngles = batSpeedData.map(row => row.attack_angle).filter(val => val !== null);
       const timeToContacts = batSpeedData.map(row => row.time_to_contact).filter(val => val !== null);
 
+      console.log('[DEBUG] MetricsCalculator data extraction:');
+      console.log(`- Total records: ${batSpeedData.length}`);
+      console.log(`- Valid bat speeds: ${batSpeeds.length}`);
+      console.log(`- Valid attack angles: ${attackAngles.length}`);
+      console.log(`- Valid time to contacts: ${timeToContacts.length}`);
+      console.log(`- Sample bat speeds: ${batSpeeds.slice(0, 5)}`);
+      console.log(`- Sample attack angles: ${attackAngles.slice(0, 5)}`);
+      console.log(`- Sample time to contacts: ${timeToContacts.slice(0, 5)}`);
+
       if (batSpeeds.length === 0) {
         throw new Error('No valid bat speed data found');
       }
@@ -36,6 +45,12 @@ class MetricsCalculator {
       const avgBatSpeed = this.calculateAverage(batSpeeds);
       const avgAttackAngle = this.calculateAverage(attackAngles);
       const avgTimeToContact = this.calculateAverage(timeToContacts);
+
+      console.log('[DEBUG] MetricsCalculator calculations:');
+      console.log(`- maxBatSpeed: ${maxBatSpeed}`);
+      console.log(`- avgBatSpeed: ${avgBatSpeed}`);
+      console.log(`- avgAttackAngle: ${avgAttackAngle}`);
+      console.log(`- avgTimeToContact: ${avgTimeToContact}`);
 
       // Get benchmarks
       const benchmark = benchmarks[playerLevel];
@@ -49,7 +64,7 @@ class MetricsCalculator {
       const attackAngleGrade = this.evaluatePerformance(avgAttackAngle, benchmark['Avg AttackAngle']);
       const timeToContactGrade = this.evaluatePerformance(avgTimeToContact, benchmark['Avg TimeToContact'], true);
 
-      return {
+      const result = {
         maxBatSpeed: parseFloat(maxBatSpeed.toFixed(2)),
         avgBatSpeed: parseFloat(avgBatSpeed.toFixed(2)),
         avgAttackAngle: parseFloat(avgAttackAngle.toFixed(2)),
@@ -68,6 +83,11 @@ class MetricsCalculator {
         },
         dataPoints: batSpeeds.length
       };
+
+      console.log('[DEBUG] MetricsCalculator final result:');
+      console.log(JSON.stringify(result, null, 2));
+
+      return result;
     } catch (error) {
       throw new Error(`Bat speed metrics calculation failed: ${error.message}`);
     }
