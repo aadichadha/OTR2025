@@ -68,21 +68,30 @@ async function aggregateReportData(sessionId, options = {}) {
     order: [['session_date', 'ASC']],
     transaction
   });
-  // For each session, aggregate key metrics (reuse logic from playerController)
+  // For each session, aggregate key metrics using MetricsCalculator for consistency
   const sessionHistory = await Promise.all(allSessions.map(async (s) => {
     let avgBatSpeed = null, topBatSpeed = null, avgExitVelocity = null, topExitVelocity = null;
+    
     if (s.session_type === 'blast') {
-      const batSpeeds = await BatSpeedData.findAll({ where: { session_id: s.id } });
-      const batSpeedVals = batSpeeds.map(row => parseFloat(row.bat_speed)).filter(Number.isFinite);
-      avgBatSpeed = batSpeedVals.length ? (batSpeedVals.reduce((a, b) => a + b, 0) / batSpeedVals.length) : null;
-      topBatSpeed = batSpeedVals.length ? Math.max(...batSpeedVals) : null;
+      try {
+        const batSpeedMetrics = await MetricsCalculator.calculateBatSpeedMetrics(s.id, playerLevel, options);
+        avgBatSpeed = batSpeedMetrics.avgBatSpeed;
+        topBatSpeed = batSpeedMetrics.maxBatSpeed;
+      } catch (error) {
+        console.log(`[HISTORY] Could not calculate bat speed metrics for session ${s.id}:`, error.message);
+      }
     }
+    
     if (s.session_type === 'hittrax') {
-      const exitVelocities = await ExitVelocityData.findAll({ where: { session_id: s.id } });
-      const exitVelocityVals = exitVelocities.map(row => parseFloat(row.exit_velocity)).filter(Number.isFinite);
-      avgExitVelocity = exitVelocityVals.length ? (exitVelocityVals.reduce((a, b) => a + b, 0) / exitVelocityVals.length) : null;
-      topExitVelocity = exitVelocityVals.length ? Math.max(...exitVelocityVals) : null;
+      try {
+        const exitVelocityMetrics = await MetricsCalculator.calculateExitVelocityMetrics(s.id, playerLevel, options);
+        avgExitVelocity = exitVelocityMetrics.avgExitVelocity;
+        topExitVelocity = exitVelocityMetrics.maxExitVelocity;
+      } catch (error) {
+        console.log(`[HISTORY] Could not calculate exit velocity metrics for session ${s.id}:`, error.message);
+      }
     }
+    
     return {
       sessionId: s.id,
       sessionDate: s.session_date,
