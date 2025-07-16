@@ -275,8 +275,9 @@ const Statistics = () => {
     
     if (player.college) return 'College';
     if (player.high_school) return 'High School';
-    if (player.travel_team) return 'Travel Team';
-    if (player.indy || player.affiliate) return 'Professional';
+    if (player.travel_team) return 'Youth/Travel';
+    if (player.indy) return 'Independent';
+    if (player.affiliate) return 'Affiliate';
     if (player.little_league) return 'Little League';
     return 'N/A';
   };

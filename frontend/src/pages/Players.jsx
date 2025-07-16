@@ -257,6 +257,14 @@ function Players() {
         email: form.email // Include email
       };
 
+      // Clear all team fields first to ensure proper level assignment
+      playerData.college = null;
+      playerData.high_school = null;
+      playerData.travel_team = null;
+      playerData.indy = null;
+      playerData.affiliate = null;
+      playerData.little_league = null;
+
       // Map team data based on level and type
       if (form.player_level === 'youth') {
         if (form.team_type === 'little_league') {
@@ -350,16 +358,18 @@ function Players() {
 
   // Get level display name
   const getLevelDisplayName = (player) => {
-    if (player.high_school) {
+    if (player.college) {
+      return 'College';
+    } else if (player.high_school) {
       return 'High School';
     } else if (player.travel_team) {
       return 'Youth/Travel';
-    } else if (player.college) {
-      return 'College';
     } else if (player.indy) {
       return 'Independent';
     } else if (player.affiliate) {
       return 'Affiliate';
+    } else if (player.little_league) {
+      return 'Little League';
     }
     return 'N/A';
   };

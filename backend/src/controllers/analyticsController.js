@@ -1,5 +1,6 @@
 const { Session, ExitVelocityData, Player, BatSpeedData } = require('../models');
 const { Op } = require('sequelize');
+const { getPlayerLevel } = require('../utils/playerLevelUtils');
 
 // Get all swings for a specific session
 const getSessionSwings = async (req, res) => {
@@ -837,21 +838,8 @@ const getPlayerStats = async (req, res) => {
           });
         }
 
-        // Infer player level using the same logic as Player Management
-        let inferredLevel = 'N/A';
-        if (player.college) {
-          inferredLevel = 'College';
-        } else if (player.high_school) {
-          inferredLevel = 'High School';
-        } else if (player.travel_team) {
-          inferredLevel = 'Youth/Travel';
-        } else if (player.indy) {
-          inferredLevel = 'Independent';
-        } else if (player.affiliate) {
-          inferredLevel = 'Affiliate';
-        } else if (player.little_league) {
-          inferredLevel = 'Little League';
-        }
+        // Get player level using utility function
+        const inferredLevel = getPlayerLevel(player);
 
         // Calculate aggregated metrics
         let stats = {
@@ -1085,21 +1073,8 @@ const getLeaderboard = async (req, res) => {
       // Skip players with no data
       if (allExitVelocityData.length === 0) continue;
 
-      // Infer player level using the same logic as Player Management
-      let inferredLevel = 'N/A';
-      if (player.college) {
-        inferredLevel = 'College';
-      } else if (player.high_school) {
-        inferredLevel = 'High School';
-      } else if (player.travel_team) {
-        inferredLevel = 'Youth/Travel';
-      } else if (player.indy) {
-        inferredLevel = 'Independent';
-      } else if (player.affiliate) {
-        inferredLevel = 'Affiliate';
-      } else if (player.little_league) {
-        inferredLevel = 'Little League';
-      }
+      // Get player level using utility function
+      const inferredLevel = getPlayerLevel(player);
 
       // Calculate metrics
       const exitVelocities = allExitVelocityData

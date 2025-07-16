@@ -2,6 +2,7 @@ const { Player, Session, BatSpeedData, ExitVelocityData } = require('../models')
 const MetricsCalculator = require('../services/metricsCalculator');
 const { Op } = require('sequelize');
 const User = require('../models').User;
+const { getPlayerLevel } = require('../utils/playerLevelUtils');
 
 class PlayerController {
   /**
@@ -16,6 +17,8 @@ class PlayerController {
         high_school, 
         little_league, 
         college, 
+        indy,
+        affiliate,
         position, 
         graduation_year,
         email // Add email parameter
@@ -92,6 +95,8 @@ class PlayerController {
         high_school,
         little_league,
         college,
+        indy,
+        affiliate,
         position,
         graduation_year,
         player_code: playerCode
@@ -263,6 +268,8 @@ class PlayerController {
         high_school: high_school !== undefined ? high_school : player.high_school,
         little_league: little_league !== undefined ? little_league : player.little_league,
         college: college !== undefined ? college : player.college,
+        indy: req.body.indy !== undefined ? req.body.indy : player.indy,
+        affiliate: req.body.affiliate !== undefined ? req.body.affiliate : player.affiliate,
         position: position !== undefined ? position : player.position,
         graduation_year: graduation_year !== undefined ? graduation_year : player.graduation_year
       });
@@ -582,7 +589,7 @@ class PlayerController {
         leaderboard.push({
           id: player.id,
           name: player.name,
-          level: player.high_school ? 'High School' : player.college ? 'College' : player.little_league ? 'Youth' : 'Other',
+          level: getPlayerLevel(player),
           maxExitVelocity: maxExitVelocity ? Math.round(maxExitVelocity * 10) / 10 : null,
           avgExitVelocity: avgExitVelocity ? Math.round(avgExitVelocity * 10) / 10 : null,
           maxBatSpeed: maxBatSpeed ? Math.round(maxBatSpeed * 10) / 10 : null,
