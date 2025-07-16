@@ -50,10 +50,20 @@ function HotZoneCell({ zone, ev }) {
 
 function ReportDisplay({ report }) {
   if (!report) return null;
+  
+  // Debug logging
+  console.log('[ReportDisplay] Full report:', report);
+  console.log('[ReportDisplay] Metrics:', report.metrics);
+  console.log('[ReportDisplay] BatSpeed metrics:', report.metrics?.batSpeed);
+  console.log('[ReportDisplay] ExitVelocity metrics:', report.metrics?.exitVelocity);
+  
   const metrics = report.metrics?.exitVelocity || report.metrics?.batSpeed;
   const isHittrax = !!report.metrics?.exitVelocity;
   const player = report.player || {};
   const session = report.session || {};
+  
+  console.log('[ReportDisplay] Final metrics object:', metrics);
+  console.log('[ReportDisplay] Is Hittrax:', isHittrax);
 
   // Rectangular strike zone grid: [10, null, 11], [1,2,3], [4,5,6], [7,8,9], [12, null, 13]
   const zoneGrid = [
@@ -103,28 +113,30 @@ function ReportDisplay({ report }) {
             </>
           )}
         </Grid>
-        {/* Strike Zone Grid */}
-        <Box sx={{ bgcolor: NAVY, borderRadius: 4, boxShadow: '0 2px 16px rgba(0,0,0,0.18)', p: 3, mt: 4, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 1 }}>STRIKE ZONE HOT ZONES (Avg EV)</Typography>
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 60px)',
-            gridTemplateRows: 'repeat(5, 60px)',
-            gap: 2,
-            justifyContent: 'center',
-            mx: 'auto',
-            bgcolor: NAVY,
-            borderRadius: 2
-          }}>
-            {(Array.isArray(zoneGrid.flat()) ? zoneGrid.flat() : []).map((zone, idx) => (
-              zone !== null ? (
-                <HotZoneCell key={idx} zone={zone} ev={hotZoneEVs[zone]} />
-              ) : (
-                <Box key={idx} sx={{ width: 60, height: 60, bgcolor: 'transparent' }} />
-              )
-            ))}
+        {/* Strike Zone Grid - Only show for Hittrax reports */}
+        {isHittrax && (
+          <Box sx={{ bgcolor: NAVY, borderRadius: 4, boxShadow: '0 2px 16px rgba(0,0,0,0.18)', p: 3, mt: 4, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 1 }}>STRIKE ZONE HOT ZONES (Avg EV)</Typography>
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 60px)',
+              gridTemplateRows: 'repeat(5, 60px)',
+              gap: 2,
+              justifyContent: 'center',
+              mx: 'auto',
+              bgcolor: NAVY,
+              borderRadius: 2
+            }}>
+              {(Array.isArray(zoneGrid.flat()) ? zoneGrid.flat() : []).map((zone, idx) => (
+                zone !== null ? (
+                  <HotZoneCell key={idx} zone={zone} ev={hotZoneEVs[zone]} />
+                ) : (
+                  <Box key={idx} sx={{ width: 60, height: 60, bgcolor: 'transparent' }} />
+                )
+              ))}
+            </Box>
           </Box>
-        </Box>
+        )}
         {/* Summary/Analysis Section */}
         {/* Removed Detailed Analysis section. Add Download PDF button instead. */}
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
@@ -136,12 +148,20 @@ function ReportDisplay({ report }) {
 }
 
 function MetricCard({ label, value, unit, grade }) {
+  // Debug logging
+  console.log(`[MetricCard] ${label}:`, { value, unit, grade, type: typeof value });
+  
   // Color for grade
   let gradeColor = grade ? getGradeColor(grade) : '#7ecbff';
+  
+  // Format the value
+  const displayValue = value !== null && value !== undefined ? safeToFixed(value, 1) : 'N/A';
+  console.log(`[MetricCard] ${label} display value:`, displayValue);
+  
   return (
     <Grid item xs={12} sm={6} md={4} lg={2}>
       <Card sx={{ p: 2.5, textAlign: 'center', bgcolor: CARD_BG, border: 'none', borderRadius: 4, boxShadow: '0 2px 12px rgba(28,44,77,0.18)', minWidth: 120, minHeight: 80 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, color: CARD_TEXT, mb: 0.5, fontSize: '2.2rem', letterSpacing: 1 }}>{value !== null && value !== undefined ? safeToFixed(value, 1) : 'N/A'}{unit && <span style={{ fontSize: '1.2rem', color: METRIC_UNIT, marginLeft: 4 }}>{unit}</span>}</Typography>
+        <Typography variant="h3" sx={{ fontWeight: 700, color: CARD_TEXT, mb: 0.5, fontSize: '2.2rem', letterSpacing: 1 }}>{displayValue}{unit && <span style={{ fontSize: '1.2rem', color: METRIC_UNIT, marginLeft: 4 }}>{unit}</span>}</Typography>
         <Typography variant="subtitle2" sx={{ color: METRIC_LABEL, fontWeight: 700, fontSize: '1.05rem', letterSpacing: 0.5 }}>{label}</Typography>
         {grade && <Typography variant="caption" sx={{ color: gradeColor, fontWeight: 700, mt: 0.5 }}>{grade}</Typography>}
       </Card>
