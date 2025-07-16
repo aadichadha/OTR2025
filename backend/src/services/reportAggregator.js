@@ -74,21 +74,55 @@ async function aggregateReportData(sessionId, options = {}) {
     
     if (s.session_type === 'blast') {
       try {
-        const batSpeedMetrics = await MetricsCalculator.calculateBatSpeedMetrics(s.id, playerLevel, options);
+        // Use the player's level for this specific session, fallback to current player level
+        const sessionPlayerLevel = s.player?.player_level || playerLevel;
+        const batSpeedMetrics = await MetricsCalculator.calculateBatSpeedMetrics(s.id, sessionPlayerLevel, options);
         avgBatSpeed = batSpeedMetrics.avgBatSpeed;
         topBatSpeed = batSpeedMetrics.maxBatSpeed;
       } catch (error) {
         console.log(`[HISTORY] Could not calculate bat speed metrics for session ${s.id}:`, error.message);
+        // Fallback to simple calculation if MetricsCalculator fails
+        try {
+          const batSpeeds = await BatSpeedData.findAll({ 
+            where: { session_id: s.id },
+            attributes: ['bat_speed'],
+            raw: true
+          });
+          const batSpeedVals = batSpeeds.map(row => parseFloat(row.bat_speed)).filter(val => !isNaN(val) && val > 0);
+          if (batSpeedVals.length > 0) {
+            avgBatSpeed = +(batSpeedVals.reduce((a, b) => a + b, 0) / batSpeedVals.length).toFixed(2);
+            topBatSpeed = Math.max(...batSpeedVals);
+          }
+        } catch (fallbackError) {
+          console.log(`[HISTORY] Fallback calculation also failed for session ${s.id}:`, fallbackError.message);
+        }
       }
     }
     
     if (s.session_type === 'hittrax') {
       try {
-        const exitVelocityMetrics = await MetricsCalculator.calculateExitVelocityMetrics(s.id, playerLevel, options);
+        // Use the player's level for this specific session, fallback to current player level
+        const sessionPlayerLevel = s.player?.player_level || playerLevel;
+        const exitVelocityMetrics = await MetricsCalculator.calculateExitVelocityMetrics(s.id, sessionPlayerLevel, options);
         avgExitVelocity = exitVelocityMetrics.avgExitVelocity;
         topExitVelocity = exitVelocityMetrics.maxExitVelocity;
       } catch (error) {
         console.log(`[HISTORY] Could not calculate exit velocity metrics for session ${s.id}:`, error.message);
+        // Fallback to simple calculation if MetricsCalculator fails
+        try {
+          const exitVelocities = await ExitVelocityData.findAll({ 
+            where: { session_id: s.id },
+            attributes: ['exit_velocity'],
+            raw: true
+          });
+          const exitVelocityVals = exitVelocities.map(row => parseFloat(row.exit_velocity)).filter(val => !isNaN(val) && val > 0);
+          if (exitVelocityVals.length > 0) {
+            avgExitVelocity = +(exitVelocityVals.reduce((a, b) => a + b, 0) / exitVelocityVals.length).toFixed(2);
+            topExitVelocity = Math.max(...exitVelocityVals);
+          }
+        } catch (fallbackError) {
+          console.log(`[HISTORY] Fallback calculation also failed for session ${s.id}:`, fallbackError.message);
+        }
       }
     }
     

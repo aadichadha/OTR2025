@@ -27,14 +27,7 @@ class MetricsCalculator {
       const attackAngles = batSpeedData.map(row => row.attack_angle).filter(val => val !== null && !isNaN(val));
       const timeToContacts = batSpeedData.map(row => row.time_to_contact).filter(val => val !== null && !isNaN(val));
 
-      console.log('[DEBUG] MetricsCalculator data extraction:');
-      console.log(`- Total records: ${batSpeedData.length}`);
-      console.log(`- Valid bat speeds: ${batSpeeds.length}`);
-      console.log(`- Valid attack angles: ${attackAngles.length}`);
-      console.log(`- Valid time to contacts: ${timeToContacts.length}`);
-      console.log(`- Sample bat speeds: ${batSpeeds.slice(0, 5)}`);
-      console.log(`- Sample attack angles: ${attackAngles.slice(0, 5)}`);
-      console.log(`- Sample time to contacts: ${timeToContacts.slice(0, 5)}`);
+      // Debug logging removed for production
 
       if (batSpeeds.length === 0) {
         throw new Error('No valid bat speed data found');
@@ -46,11 +39,7 @@ class MetricsCalculator {
       const avgAttackAngle = attackAngles.length > 0 ? this.calculateAverage(attackAngles) : null;
       const avgTimeToContact = timeToContacts.length > 0 ? this.calculateAverage(timeToContacts) : null;
 
-      console.log('[DEBUG] MetricsCalculator calculations:');
-      console.log(`- maxBatSpeed: ${maxBatSpeed}`);
-      console.log(`- avgBatSpeed: ${avgBatSpeed}`);
-      console.log(`- avgAttackAngle: ${avgAttackAngle}`);
-      console.log(`- avgTimeToContact: ${avgTimeToContact}`);
+      // Debug logging removed for production
 
       // Get benchmarks
       const benchmark = benchmarks[playerLevel];
@@ -84,8 +73,7 @@ class MetricsCalculator {
         dataPoints: batSpeeds.length
       };
 
-      console.log('[DEBUG] MetricsCalculator final result:');
-      console.log(JSON.stringify(result, null, 2));
+      // Debug logging removed for production
 
       return result;
     } catch (error) {
@@ -208,8 +196,7 @@ class MetricsCalculator {
       const laTop5Grade = launchAngleTop5 !== null ? this.evaluatePerformance(launchAngleTop5, benchmark['HHB LA']) : null;
       const laAvgGrade = avgLaunchAngle !== null ? this.evaluatePerformance(avgLaunchAngle, benchmark['Avg LA']) : null;
 
-      // Before returning, log avgDistance and hotZoneEVs for debugging
-      console.log('[DEBUG] calculateExitVelocityMetrics:', { avgDistance, hotZoneEVs, barrels });
+      // Debug logging removed for production
       const result = {
         maxExitVelocity,
         avgExitVelocity,
@@ -233,7 +220,7 @@ class MetricsCalculator {
         },
         dataPoints: exitVelocities.length
       };
-      console.log('[DEBUG] Returning exit velocity metrics:', result);
+      // Debug logging removed for production
       return result;
     } catch (error) {
       throw new Error(`Exit velocity metrics calculation failed: ${error.message}`);
