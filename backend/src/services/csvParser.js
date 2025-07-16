@@ -40,14 +40,14 @@ class CSVParser {
           continue;
         }
         
-        // Column H (index 7): Bat Speed
+        // Column 8 (index 7): Bat Speed
         const batSpeed = parseFloat(columns[7]);
-        // Column K (index 10): Attack Angle  
+        // Column 11 (index 10): Attack Angle  
         const attackAngle = parseFloat(columns[10]);
-        // Column P (index 15): Time to Contact
+        // Column 16 (index 15): Time to Contact
         const timeToContact = parseFloat(columns[15]);
         
-        console.log(`Row ${i + 1}: BatSpeed=${columns[7]} (col H), AttackAngle=${columns[10]} (col K), TimeToContact=${columns[15]} (col P)`);
+        console.log(`Row ${i + 1}: BatSpeed=${columns[7]} (col 8), AttackAngle=${columns[10]} (col 11), TimeToContact=${columns[15]} (col 16)`);
         console.log(`Row ${i + 1} parsed values: batSpeed=${batSpeed}, attackAngle=${attackAngle}, timeToContact=${timeToContact}`);
         console.log(`Row ${i + 1} validation: batSpeed valid=${!isNaN(batSpeed) && batSpeed > 0}, attackAngle valid=${!isNaN(attackAngle)}, timeToContact valid=${!isNaN(timeToContact) && timeToContact > 0}`);
         
