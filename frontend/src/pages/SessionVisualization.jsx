@@ -424,7 +424,7 @@ const SessionVisualization = () => {
 
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Launch Angle (Top 5% EV)
+                    Damage Zone
                   </Typography>
                   <Typography variant="h6">
                     {session.metrics.exitVelocity.launchAngleTop5}°

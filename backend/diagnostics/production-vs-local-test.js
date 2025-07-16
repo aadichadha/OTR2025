@@ -158,7 +158,7 @@ async function runDiagnostics() {
           console.log('✅ Exit Velocity Metrics:');
           console.log(`   - Avg Exit Velocity: ${evMetrics.avgExitVelocity} mph`);
           console.log(`   - Max Exit Velocity: ${evMetrics.maxExitVelocity} mph`);
-          console.log(`   - Launch Angle Top 5: ${evMetrics.launchAngleTop5}°`);
+          console.log(`   - Damage Zone: ${evMetrics.launchAngleTop5}°`);
           console.log(`   - Avg Launch Angle: ${evMetrics.avgLaunchAngle}°`);
           console.log(`   - Avg Distance: ${evMetrics.avgDistance} ft`);
           console.log(`   - Data Points: ${evMetrics.dataPoints}`);

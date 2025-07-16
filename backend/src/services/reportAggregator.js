@@ -54,7 +54,7 @@ async function aggregateReportData(sessionId, options = {}) {
       summaryText += `### Exit Velocity Metrics\n`;
       summaryText += `Max Exit Velocity: ${exitVelocityMetrics.maxExitVelocity ?? 'N/A'} mph (Benchmark: ${exitVelocityMetrics.benchmark.maxEV})\n  - Grade: ${exitVelocityMetrics.grades.maxExitVelocity ?? 'N/A'}\n\n`;
       summaryText += `Average Exit Velocity: ${exitVelocityMetrics.avgExitVelocity ?? 'N/A'} mph (Benchmark: ${exitVelocityMetrics.benchmark.avgEV})\n  - Grade: ${exitVelocityMetrics.grades.avgExitVelocity ?? 'N/A'}\n\n`;
-      summaryText += `Launch Angle of Top 5% EV: ${exitVelocityMetrics.launchAngleTop5 ?? 'N/A'}° (Benchmark: ${exitVelocityMetrics.benchmark.hhbLA}°)\n  - Grade: ${exitVelocityMetrics.grades.launchAngleTop5 ?? 'N/A'}\n\n`;
+      summaryText += `Damage Zone: ${exitVelocityMetrics.launchAngleTop5 ?? 'N/A'}° (Benchmark: ${exitVelocityMetrics.benchmark.hhbLA}°)\n  - Grade: ${exitVelocityMetrics.grades.launchAngleTop5 ?? 'N/A'}\n\n`;
       summaryText += `Average Launch Angle: ${exitVelocityMetrics.avgLaunchAngle ?? 'N/A'}° (Benchmark: ${exitVelocityMetrics.benchmark.avgLA}°)\n  - Grade: ${exitVelocityMetrics.grades.avgLaunchAngle ?? 'N/A'}\n`;
     }
   } catch (err) {

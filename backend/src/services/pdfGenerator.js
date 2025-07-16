@@ -151,7 +151,7 @@ function generateReportPDF(reportData, outputFilePath) {
         row1Metrics = [
           { value: metrics.maxExitVelocity, label: 'MAX EXIT VELOCITY', unit: 'MPH', grade: metrics.grades?.maxExitVelocity },
           { value: metrics.avgExitVelocity, label: 'AVG EXIT VELOCITY', unit: 'MPH', grade: metrics.grades?.avgExitVelocity },
-          { value: metrics.launchAngleTop5, label: 'AVG LA (TOP 5% EV)', unit: '°', grade: metrics.grades?.launchAngleTop5 }
+          { value: metrics.launchAngleTop5, label: 'DAMAGE ZONE', unit: '°', grade: metrics.grades?.launchAngleTop5 }
         ];
         row2Metrics = [
           { value: metrics.avgLaunchAngle, label: 'AVG LAUNCH ANGLE', unit: '°', grade: metrics.grades?.avgLaunchAngle },
