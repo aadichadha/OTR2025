@@ -27,7 +27,20 @@ class MetricsCalculator {
       const attackAngles = batSpeedData.map(row => row.attack_angle).filter(val => val !== null && !isNaN(val));
       const timeToContacts = batSpeedData.map(row => row.time_to_contact).filter(val => val !== null && !isNaN(val));
 
-      // Debug logging removed for production
+      // Temporary debug logging to diagnose the issue
+      console.log('[DEBUG] Bat speed data analysis:');
+      console.log(`- Total records: ${batSpeedData.length}`);
+      console.log(`- Valid bat speeds: ${batSpeeds.length}`);
+      console.log(`- Valid attack angles: ${attackAngles.length}`);
+      console.log(`- Valid time to contacts: ${timeToContacts.length}`);
+      console.log(`- Sample bat speeds: ${batSpeeds.slice(0, 5)}`);
+      console.log(`- Sample attack angles: ${attackAngles.slice(0, 5)}`);
+      console.log(`- Sample time to contacts: ${timeToContacts.slice(0, 5)}`);
+      console.log(`- Raw data sample:`, batSpeedData.slice(0, 3).map(row => ({
+        bat_speed: row.bat_speed,
+        attack_angle: row.attack_angle,
+        time_to_contact: row.time_to_contact
+      })));
 
       if (batSpeeds.length === 0) {
         throw new Error('No valid bat speed data found');
