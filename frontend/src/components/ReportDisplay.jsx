@@ -54,6 +54,19 @@ function ReportDisplay({ report }) {
   const metrics = report.metrics?.exitVelocity || report.metrics?.batSpeed;
   const isHittrax = !!report.metrics?.exitVelocity;
   
+  // Debug logging for blast reports
+  if (session.type === 'blast') {
+    console.log('[ReportDisplay] BLAST REPORT DEBUG:');
+    console.log('- Session type:', session.type);
+    console.log('- isHittrax:', isHittrax);
+    console.log('- metrics object:', metrics);
+    console.log('- maxBatSpeed:', metrics?.maxBatSpeed);
+    console.log('- avgBatSpeed:', metrics?.avgBatSpeed);
+    console.log('- avgAttackAngle:', metrics?.avgAttackAngle);
+    console.log('- avgTimeToContact:', metrics?.avgTimeToContact);
+    console.log('- dataPoints:', metrics?.dataPoints);
+  }
+  
   const player = report.player || {};
   const session = report.session || {};
 
@@ -140,6 +153,11 @@ function ReportDisplay({ report }) {
 }
 
 function MetricCard({ label, value, unit, grade }) {
+  // Debug logging for blast metrics
+  if (label.includes('BAT SPEED') || label.includes('ATTACK ANGLE') || label.includes('TIME TO CONTACT')) {
+    console.log(`[MetricCard] ${label}:`, { value, unit, grade, type: typeof value });
+  }
+  
   // Color for grade
   let gradeColor = grade ? getGradeColor(grade) : '#7ecbff';
   
