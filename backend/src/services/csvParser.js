@@ -28,6 +28,8 @@ class CSVParser {
       }
       
       console.log(`Data starts at row ${dataStartRow + 1} (index ${dataStartRow})`);
+      console.log(`First data row columns: ${lines[dataStartRow]}`);
+      console.log(`First data row parsed: ${lines[dataStartRow].split(',').map(col => col.trim())}`);
       
       // Process data rows starting from row 11
       for (let i = dataStartRow; i < lines.length; i++) {
@@ -46,6 +48,8 @@ class CSVParser {
         const timeToContact = parseFloat(columns[15]);
         
         console.log(`Row ${i + 1}: BatSpeed=${columns[7]} (col H), AttackAngle=${columns[10]} (col K), TimeToContact=${columns[15]} (col P)`);
+        console.log(`Row ${i + 1} parsed values: batSpeed=${batSpeed}, attackAngle=${attackAngle}, timeToContact=${timeToContact}`);
+        console.log(`Row ${i + 1} validation: batSpeed valid=${!isNaN(batSpeed) && batSpeed > 0}, attackAngle valid=${!isNaN(attackAngle)}, timeToContact valid=${!isNaN(timeToContact) && timeToContact > 0}`);
         
         // Only require bat speed to be valid (other fields can be null)
         if (!isNaN(batSpeed) && batSpeed > 0) {
