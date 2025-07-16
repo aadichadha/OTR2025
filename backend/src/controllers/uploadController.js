@@ -142,7 +142,6 @@ class UploadController {
           player_id: player.id,
           session_date: sessionDateVal,
           session_type: 'blast',
-          player_level: playerLevel,
           created_at: sessionTimestamp // This ensures uniqueness
         }, { transaction: t });
 
@@ -259,7 +258,6 @@ class UploadController {
           player_id: player.id,
           session_date: sessionDateVal,
           session_type: 'hittrax',
-          player_level: playerLevel,
           created_at: sessionTimestamp // This ensures uniqueness
         }, { transaction: t });
         

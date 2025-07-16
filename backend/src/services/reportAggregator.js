@@ -28,7 +28,7 @@ async function aggregateReportData(sessionId, options = {}) {
   }
 
   // Get player level for benchmarks
-  const playerLevel = session.player_level || 'High School';
+  const playerLevel = session.player?.player_level || 'High School';
 
   // Calculate detailed metrics using MetricsCalculator
   let batSpeedMetrics = null;
