@@ -93,6 +93,15 @@ function ReportDisplay({ report }) {
               <MetricCard label="TOTAL SWINGS" value={metrics.dataPoints} unit="" grade="Complete" />
             </>
           )}
+          {!isHittrax && metrics && (
+            <>
+              <MetricCard label="MAX BAT SPEED" value={metrics.maxBatSpeed} unit="MPH" grade={metrics.grades?.maxBatSpeed} />
+              <MetricCard label="AVG BAT SPEED" value={metrics.avgBatSpeed} unit="MPH" grade={metrics.grades?.avgBatSpeed} />
+              <MetricCard label="AVG ATTACK ANGLE" value={metrics.avgAttackAngle} unit="°" grade={metrics.grades?.attackAngle} />
+              <MetricCard label="AVG TIME TO CONTACT" value={metrics.avgTimeToContact} unit="SEC" grade={metrics.grades?.timeToContact} />
+              <MetricCard label="TOTAL SWINGS" value={metrics.dataPoints} unit="" grade="Complete" />
+            </>
+          )}
         </Grid>
         {/* Strike Zone Grid */}
         <Box sx={{ bgcolor: NAVY, borderRadius: 4, boxShadow: '0 2px 16px rgba(0,0,0,0.18)', p: 3, mt: 4, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

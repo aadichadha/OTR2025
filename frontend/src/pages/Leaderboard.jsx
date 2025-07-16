@@ -61,7 +61,7 @@ const Leaderboard = () => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/leaderboard');
+        const res = await api.get('/analytics/leaderboard');
         setPlayers(res.data.players || []);
         setFilteredPlayers(res.data.players || []);
       } catch (err) {
