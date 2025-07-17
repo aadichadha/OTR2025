@@ -184,7 +184,6 @@ try {
   app.get('/api/sessions/compare', authenticateToken, AnalyticsController.compareSessions);
   app.get('/api/sessions/:sessionId/swings', authenticateToken, AnalyticsController.getSessionSwings);
   app.put('/api/sessions/:sessionId/category', authenticateToken, AnalyticsController.updateSessionCategory);
-  app.get('/api/players/:playerId/sessions', authenticateToken, AnalyticsController.getPlayerSessions);
   app.get('/api/players/:playerId/swings', authenticateToken, AnalyticsController.getPlayerSwings);
   app.get('/api/players/:playerId/analytics', authenticateToken, AnalyticsController.getPlayerAnalytics);
   app.get('/api/analytics/dashboard-stats', authenticateToken, AnalyticsController.getDashboardStats);
