@@ -184,21 +184,32 @@ const SessionAnalytics = () => {
       // Get the player's stats (should be first in the array since we filtered by playerId)
       const playerStats = Array.isArray(playerStatsData) && playerStatsData.length > 0 ? playerStatsData[0] : null;
 
+      console.log('[DEBUG] Sessions data:', sessionsData);
+      console.log('[DEBUG] Player stats:', playerStats);
+
       setSessions(Array.isArray(sessionsData) ? sessionsData : []);
       setSwings(Array.isArray(swingsData) ? swingsData : []);
       
       // Create trends data from sessions with proper metrics
-      const trendsData = sessionsData.map(session => ({
-        session_id: session.id,
-        session_date: session.session_date,
-        session_category: session.session_category,
-        max_bat_speed: session.analytics?.max_bat_speed || null,
-        avg_bat_speed: session.analytics?.avg_bat_speed || null,
-        max_exit_velocity: session.analytics?.best_exit_velocity || null,
-        avg_exit_velocity: session.analytics?.average_exit_velocity || null,
-        barrel_percentage: session.analytics?.barrel_percentage || null
-      })).filter(trend => trend.max_bat_speed || trend.max_exit_velocity || trend.avg_bat_speed || trend.avg_exit_velocity);
+      const trendsData = sessionsData.map(session => {
+        const trend = {
+          session_id: session.id,
+          session_date: new Date(session.session_date).toLocaleDateString(),
+          session_category: session.session_category,
+          max_bat_speed: session.analytics?.max_bat_speed || null,
+          avg_bat_speed: session.analytics?.avg_bat_speed || null,
+          max_exit_velocity: session.analytics?.best_exit_velocity || null,
+          avg_exit_velocity: session.analytics?.average_exit_velocity || null,
+          barrel_percentage: session.analytics?.barrel_percentage || null
+        };
+        console.log(`[DEBUG] Session ${session.id} trend data:`, trend);
+        return trend;
+      }).filter(trend => trend.max_bat_speed || trend.max_exit_velocity || trend.avg_bat_speed || trend.avg_exit_velocity);
       
+      // Sort by date for proper timeline display
+      trendsData.sort((a, b) => new Date(a.session_date) - new Date(b.session_date));
+      
+      console.log('[DEBUG] Final trends data:', trendsData);
       setTrends(trendsData);
       setBenchmarks(benchmarksData);
       setProgress(playerStats); // Use player stats as progress data
@@ -727,6 +738,16 @@ const SessionAnalytics = () => {
                       }}
                     />
                     <CardContent sx={{ p: 3 }}>
+                      {/* Debug info */}
+                      <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666' }}>
+                          Debug: {trends.length} data points loaded
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#666' }}>
+                          Sample data: {trends.length > 0 ? JSON.stringify(trends[0]) : 'No data'}
+                        </Typography>
+                      </Box>
+                      
                       <ResponsiveContainer width="100%" height={500}>
                         <LineChart data={trends}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
