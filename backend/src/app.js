@@ -207,6 +207,9 @@ try {
   app.get('/api/analytics/sessions/:sessionId/swings', AnalyticsController.getSessionSwings);
   app.put('/api/analytics/sessions/:sessionId/category', AnalyticsController.updateSessionCategory);
   app.post('/api/analytics/compare-sessions', AnalyticsController.compareSessions);
+  
+  // Analytics routes that require authentication
+  app.get('/api/analytics/player-stats', authenticateToken, AnalyticsController.getPlayerStats);
   console.log('✅ All routes loaded successfully');
 
 } catch (error) {
