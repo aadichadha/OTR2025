@@ -70,7 +70,7 @@ class MetricsCalculator {
         maxBatSpeed: parseFloat(maxBatSpeed.toFixed(2)),
         avgBatSpeed: parseFloat(avgBatSpeed.toFixed(2)),
         avgAttackAngle: avgAttackAngle !== null ? parseFloat(avgAttackAngle.toFixed(2)) : null,
-        avgTimeToContact: avgTimeToContact !== null ? parseFloat(avgTimeToContact.toFixed(3)) : null,
+        avgTimeToContact: avgTimeToContact !== null ? parseFloat(avgTimeToContact.toFixed(2)) : null,
         benchmark: {
           maxBatSpeed: benchmark['90th% BatSpeed'],
           avgBatSpeed: benchmark['Avg BatSpeed'],
@@ -283,7 +283,7 @@ class MetricsCalculator {
         maxBatSpeed: parseFloat(maxBatSpeed.toFixed(2)),
         avgBatSpeed: parseFloat(avgBatSpeed.toFixed(2)),
         avgAttackAngle: parseFloat(avgAttackAngle.toFixed(2)),
-        avgTimeToContact: parseFloat(avgTimeToContact.toFixed(3)),
+        avgTimeToContact: parseFloat(avgTimeToContact.toFixed(2)),
         benchmark: {
           maxBatSpeed: benchmark['90th% BatSpeed'],
           avgBatSpeed: benchmark['Avg BatSpeed'],
