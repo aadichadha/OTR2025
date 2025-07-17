@@ -160,14 +160,14 @@ const SessionAnalytics = () => {
       const [
         sessionsRes,
         swingsRes,
-        trendsRes,
+        playerStatsRes,
         benchmarksRes,
         progressRes,
         filterOptionsRes
       ] = await Promise.all([
         api.get(`/players/${selectedPlayerId}/sessions`),
         api.get(`/players/${selectedPlayerId}/swings`),
-        api.get(`/analytics/players/${selectedPlayerId}/trends`),
+        api.get(`/analytics/player-stats?playerId=${selectedPlayerId}`),
         api.get(`/analytics/players/${selectedPlayerId}/benchmarks`),
         api.get(`/analytics/players/${selectedPlayerId}/progress`),
         api.get(`/analytics/players/${selectedPlayerId}/filter-options`)
@@ -176,16 +176,32 @@ const SessionAnalytics = () => {
       // Ensure all data is properly handled as arrays
       const sessionsData = sessionsRes.data.data || [];
       const swingsData = swingsRes.data.data || [];
-      const trendsData = trendsRes.data.data?.trends || trendsRes.data.data || [];
+      const playerStatsData = playerStatsRes.data.players || playerStatsRes.data || [];
       const benchmarksData = benchmarksRes.data.data || {};
       const progressData = progressRes.data.data || {};
       const filterOptionsData = filterOptionsRes.data.data || {};
 
+      // Get the player's stats (should be first in the array since we filtered by playerId)
+      const playerStats = Array.isArray(playerStatsData) && playerStatsData.length > 0 ? playerStatsData[0] : null;
+
       setSessions(Array.isArray(sessionsData) ? sessionsData : []);
       setSwings(Array.isArray(swingsData) ? swingsData : []);
-      setTrends(Array.isArray(trendsData) ? trendsData : []);
+      
+      // Create trends data from sessions with proper metrics
+      const trendsData = sessionsData.map(session => ({
+        session_id: session.id,
+        session_date: session.session_date,
+        session_category: session.session_category,
+        max_bat_speed: session.analytics?.max_bat_speed || null,
+        avg_bat_speed: session.analytics?.avg_bat_speed || null,
+        max_exit_velocity: session.analytics?.best_exit_velocity || null,
+        avg_exit_velocity: session.analytics?.average_exit_velocity || null,
+        barrel_percentage: session.analytics?.barrel_percentage || null
+      })).filter(trend => trend.max_bat_speed || trend.max_exit_velocity || trend.avg_bat_speed || trend.avg_exit_velocity);
+      
+      setTrends(trendsData);
       setBenchmarks(benchmarksData);
-      setProgress(progressData);
+      setProgress(playerStats); // Use player stats as progress data
       setFilterOptions(filterOptionsData);
     } catch (err) {
       console.error('Error loading analytics data:', err);
@@ -655,7 +671,7 @@ const SessionAnalytics = () => {
                         Max Bat Speed
                       </Typography>
                       <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
-                        {trends.length > 0 ? Math.max(...trends.map(t => t.max_bat_speed || 0)) : 'N/A'} mph
+                        {progress?.max_bat_speed || 'N/A'} mph
                       </Typography>
                     </CardContent>
                   </Card>
@@ -667,7 +683,7 @@ const SessionAnalytics = () => {
                         Max Exit Velocity
                       </Typography>
                       <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
-                        {trends.length > 0 ? Math.max(...trends.map(t => t.max_exit_velocity || 0)) : 'N/A'} mph
+                        {progress?.max_exit_velocity || 'N/A'} mph
                       </Typography>
                     </CardContent>
                   </Card>
@@ -679,7 +695,7 @@ const SessionAnalytics = () => {
                         Avg Exit Velocity
                       </Typography>
                       <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
-                        {trends.length > 0 ? (trends.reduce((sum, t) => sum + (t.avg_exit_velocity || 0), 0) / trends.length).toFixed(1) : 'N/A'} mph
+                        {progress?.avg_exit_velocity || 'N/A'} mph
                       </Typography>
                     </CardContent>
                   </Card>
@@ -691,20 +707,19 @@ const SessionAnalytics = () => {
                         Avg Bat Speed
                       </Typography>
                       <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
-                        {trends.length > 0 ? (trends.reduce((sum, t) => sum + (t.avg_bat_speed || 0), 0) / trends.length).toFixed(1) : 'N/A'} mph
+                        {progress?.avg_bat_speed || 'N/A'} mph
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
               </Grid>
 
-              {/* Performance Over Time Graphs */}
+              {/* Combined Performance Over Time Graph */}
               <Grid container spacing={3}>
-                {/* Max Bat Speed Over Time */}
-                <Grid item xs={12} lg={6}>
+                <Grid item xs={12}>
                   <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
                     <CardHeader 
-                      title="Max Bat Speed Over Time" 
+                      title="Performance Over Time" 
                       sx={{ 
                         bgcolor: '#1c2c4d', 
                         color: 'white',
@@ -712,7 +727,7 @@ const SessionAnalytics = () => {
                       }}
                     />
                     <CardContent sx={{ p: 3 }}>
-                      <ResponsiveContainer width="100%" height={350}>
+                      <ResponsiveContainer width="100%" height={500}>
                         <LineChart data={trends}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                           <XAxis 
@@ -738,43 +753,7 @@ const SessionAnalytics = () => {
                             strokeWidth={3}
                             dot={{ fill: '#1c2c4d', strokeWidth: 2, r: 4 }}
                             activeDot={{ r: 6, stroke: '#1c2c4d', strokeWidth: 2 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                {/* Max Exit Velocity Over Time */}
-                <Grid item xs={12} lg={6}>
-                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
-                    <CardHeader 
-                      title="Max Exit Velocity Over Time" 
-                      sx={{ 
-                        bgcolor: '#1c2c4d', 
-                        color: 'white',
-                        '& .MuiCardHeader-title': { fontWeight: 700 }
-                      }}
-                    />
-                    <CardContent sx={{ p: 3 }}>
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trends}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="session_date" 
-                            stroke="#1c2c4d"
-                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
-                          />
-                          <YAxis 
-                            stroke="#1c2c4d"
-                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
-                          />
-                          <RechartsTooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'white', 
-                              border: '2px solid #1c2c4d',
-                              borderRadius: 8
-                            }}
+                            name="Max Bat Speed"
                           />
                           <Line 
                             type="monotone" 
@@ -783,43 +762,7 @@ const SessionAnalytics = () => {
                             strokeWidth={3}
                             dot={{ fill: '#FF6B6B', strokeWidth: 2, r: 4 }}
                             activeDot={{ r: 6, stroke: '#FF6B6B', strokeWidth: 2 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                {/* Average Exit Velocity Over Time */}
-                <Grid item xs={12} lg={6}>
-                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
-                    <CardHeader 
-                      title="Average Exit Velocity Over Time" 
-                      sx={{ 
-                        bgcolor: '#1c2c4d', 
-                        color: 'white',
-                        '& .MuiCardHeader-title': { fontWeight: 700 }
-                      }}
-                    />
-                    <CardContent sx={{ p: 3 }}>
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trends}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="session_date" 
-                            stroke="#1c2c4d"
-                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
-                          />
-                          <YAxis 
-                            stroke="#1c2c4d"
-                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
-                          />
-                          <RechartsTooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'white', 
-                              border: '2px solid #1c2c4d',
-                              borderRadius: 8
-                            }}
+                            name="Max Exit Velocity"
                           />
                           <Line 
                             type="monotone" 
@@ -828,43 +771,7 @@ const SessionAnalytics = () => {
                             strokeWidth={3}
                             dot={{ fill: '#4ECDC4', strokeWidth: 2, r: 4 }}
                             activeDot={{ r: 6, stroke: '#4ECDC4', strokeWidth: 2 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                {/* Average Bat Speed Over Time */}
-                <Grid item xs={12} lg={6}>
-                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
-                    <CardHeader 
-                      title="Average Bat Speed Over Time" 
-                      sx={{ 
-                        bgcolor: '#1c2c4d', 
-                        color: 'white',
-                        '& .MuiCardHeader-title': { fontWeight: 700 }
-                      }}
-                    />
-                    <CardContent sx={{ p: 3 }}>
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trends}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="session_date" 
-                            stroke="#1c2c4d"
-                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
-                          />
-                          <YAxis 
-                            stroke="#1c2c4d"
-                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
-                          />
-                          <RechartsTooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'white', 
-                              border: '2px solid #1c2c4d',
-                              borderRadius: 8
-                            }}
+                            name="Avg Exit Velocity"
                           />
                           <Line 
                             type="monotone" 
@@ -873,6 +780,16 @@ const SessionAnalytics = () => {
                             strokeWidth={3}
                             dot={{ fill: '#45B7D1', strokeWidth: 2, r: 4 }}
                             activeDot={{ r: 6, stroke: '#45B7D1', strokeWidth: 2 }}
+                            name="Avg Bat Speed"
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="barrel_percentage" 
+                            stroke="#FFD93D" 
+                            strokeWidth={3}
+                            dot={{ fill: '#FFD93D', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#FFD93D', strokeWidth: 2 }}
+                            name="Barrel %"
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -887,7 +804,7 @@ const SessionAnalytics = () => {
                   Performance Metrics Legend
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <Box display="flex" alignItems="center">
                       <Box sx={{ width: 20, height: 3, bgcolor: '#1c2c4d', mr: 2 }} />
                       <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
@@ -895,7 +812,7 @@ const SessionAnalytics = () => {
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <Box display="flex" alignItems="center">
                       <Box sx={{ width: 20, height: 3, bgcolor: '#FF6B6B', mr: 2 }} />
                       <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
@@ -903,7 +820,7 @@ const SessionAnalytics = () => {
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <Box display="flex" alignItems="center">
                       <Box sx={{ width: 20, height: 3, bgcolor: '#4ECDC4', mr: 2 }} />
                       <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
@@ -911,11 +828,19 @@ const SessionAnalytics = () => {
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <Box display="flex" alignItems="center">
                       <Box sx={{ width: 20, height: 3, bgcolor: '#45B7D1', mr: 2 }} />
                       <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
                         Avg Bat Speed
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={2.4}>
+                    <Box display="flex" alignItems="center">
+                      <Box sx={{ width: 20, height: 3, bgcolor: '#FFD93D', mr: 2 }} />
+                      <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        Barrel %
                       </Typography>
                     </Box>
                   </Grid>

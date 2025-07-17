@@ -96,7 +96,11 @@ const getPlayerSessions = async (req, res) => {
       }, {
         model: ExitVelocityData,
         as: 'exitVelocityData',
-        attributes: ['exit_velocity', 'launch_angle', 'distance']
+        attributes: ['exit_velocity', 'launch_angle', 'distance', 'pitch_speed']
+      }, {
+        model: BatSpeedData,
+        as: 'batSpeedData',
+        attributes: ['bat_speed', 'attack_angle', 'time_to_contact']
       }],
       order: [['session_date', 'DESC']],
       limit: parseInt(limit),
@@ -108,26 +112,61 @@ const getPlayerSessions = async (req, res) => {
     // Add analytics for each session with proper data type handling
     const sessionsWithAnalytics = sessions.map(session => {
       const sessionData = session.toJSON();
-      const swings = sessionData.exitVelocityData || [];
+      const exitVelocitySwings = sessionData.exitVelocityData || [];
+      const batSpeedSwings = sessionData.batSpeedData || [];
       
-      // Ensure proper data type conversion for calculations
-      const exitVelocities = swings.map(s => {
+      // Calculate exit velocity metrics
+      const exitVelocities = exitVelocitySwings.map(s => {
         const val = parseFloat(s.exit_velocity);
         return isNaN(val) || val <= 0 ? null : val;
       }).filter(v => v !== null);
       
-      const launchAngles = swings.map(s => {
+      const launchAngles = exitVelocitySwings.map(s => {
         const val = parseFloat(s.launch_angle);
         return isNaN(val) || Math.abs(val) <= 0.01 ? null : val;
       }).filter(v => v !== null);
       
-      const distances = swings.map(s => {
+      const distances = exitVelocitySwings.map(s => {
         const val = parseFloat(s.distance);
         return isNaN(val) || val <= 0 ? null : val;
       }).filter(v => v !== null);
 
+      // Calculate bat speed metrics
+      const batSpeeds = batSpeedSwings.map(s => {
+        const val = parseFloat(s.bat_speed);
+        return isNaN(val) || val <= 0 ? null : val;
+      }).filter(v => v !== null);
+      
+      const attackAngles = batSpeedSwings.map(s => {
+        const val = parseFloat(s.attack_angle);
+        return isNaN(val) ? null : val;
+      }).filter(v => v !== null);
+      
+      const timeToContacts = batSpeedSwings.map(s => {
+        const val = parseFloat(s.time_to_contact);
+        return isNaN(val) || val <= 0 ? null : val;
+      }).filter(v => v !== null);
+
+      // Calculate barrel percentage
+      let barrelPercentage = 0;
+      if (exitVelocities.length > 0) {
+        const maxEV = Math.max(...exitVelocities);
+        const barrelThreshold = maxEV * 0.90; // 90% of max EV
+        
+        const barrels = exitVelocitySwings.filter(s => {
+          const ev = parseFloat(s.exit_velocity);
+          const la = parseFloat(s.launch_angle);
+          return !isNaN(ev) && !isNaN(la) && 
+                 ev >= barrelThreshold && 
+                 la >= 8 && la <= 25;
+        }).length;
+        
+        barrelPercentage = exitVelocitySwings.length > 0 ? 
+          Math.round((barrels / exitVelocitySwings.length) * 1000) / 10 : 0;
+      }
+
       // Calculate sweet spot swings with proper type handling
-      const sweetSpotSwings = swings.filter(s => {
+      const sweetSpotSwings = exitVelocitySwings.filter(s => {
         const angle = parseFloat(s.launch_angle);
         const velocity = parseFloat(s.exit_velocity);
         return !isNaN(angle) && !isNaN(velocity) && angle >= 25 && angle <= 35 && velocity >= 90;
@@ -135,7 +174,9 @@ const getPlayerSessions = async (req, res) => {
 
       // Ensure all calculated values are numbers or null
       const analytics = {
-        total_swings: swings.length,
+        total_swings: exitVelocitySwings.length + batSpeedSwings.length,
+        total_exit_velocity_swings: exitVelocitySwings.length,
+        total_bat_speed_swings: batSpeedSwings.length,
         average_exit_velocity: exitVelocities.length > 0 ? 
           parseFloat((exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length).toFixed(2)) : 0,
         average_launch_angle: launchAngles.length > 0 ? 
@@ -143,6 +184,14 @@ const getPlayerSessions = async (req, res) => {
         average_distance: distances.length > 0 ? 
           parseFloat((distances.reduce((a, b) => a + b, 0) / distances.length).toFixed(2)) : 0,
         best_exit_velocity: exitVelocities.length > 0 ? parseFloat(Math.max(...exitVelocities).toFixed(2)) : 0,
+        avg_bat_speed: batSpeeds.length > 0 ? 
+          parseFloat((batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length).toFixed(2)) : 0,
+        max_bat_speed: batSpeeds.length > 0 ? parseFloat(Math.max(...batSpeeds).toFixed(2)) : 0,
+        avg_attack_angle: attackAngles.length > 0 ? 
+          parseFloat((attackAngles.reduce((a, b) => a + b, 0) / attackAngles.length).toFixed(2)) : 0,
+        avg_time_to_contact: timeToContacts.length > 0 ? 
+          parseFloat((timeToContacts.reduce((a, b) => a + b, 0) / timeToContacts.length).toFixed(3)) : 0,
+        barrel_percentage: barrelPercentage,
         sweet_spot_swings: sweetSpotSwings
       };
 
