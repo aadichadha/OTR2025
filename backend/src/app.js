@@ -203,14 +203,10 @@ try {
   app.post('/api/upload/hittrax', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadHittrax);
   console.log('✅ Upload routes loaded');
 
-  // Analytics routes
+  // Public analytics routes (no authentication required)
   app.get('/api/analytics/sessions/:sessionId/swings', AnalyticsController.getSessionSwings);
   app.put('/api/analytics/sessions/:sessionId/category', AnalyticsController.updateSessionCategory);
-  app.get('/api/analytics/players/:playerId/sessions', AnalyticsController.getPlayerSessions);
-  app.get('/api/analytics/players/:playerId/swings', AnalyticsController.getPlayerSwings);
-  app.get('/api/analytics/players/:playerId/analytics', AnalyticsController.getPlayerAnalytics);
   app.post('/api/analytics/compare-sessions', AnalyticsController.compareSessions);
-  app.get('/api/analytics/player-stats', authenticateToken, AnalyticsController.getPlayerStats);
   console.log('✅ All routes loaded successfully');
 
 } catch (error) {
