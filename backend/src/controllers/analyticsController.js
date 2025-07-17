@@ -1071,7 +1071,7 @@ const getLeaderboard = async (req, res) => {
       }
 
       // Skip players with no data
-      if (allExitVelocityData.length === 0) continue;
+      if (allExitVelocityData.length === 0 && allBatSpeedData.length === 0) continue;
 
       // Get player level using utility function
       const inferredLevel = getPlayerLevel(player);

@@ -62,8 +62,8 @@ const Leaderboard = () => {
       setLoading(true);
       try {
         const res = await api.get('/analytics/leaderboard');
-        setPlayers(res.data.players || []);
-        setFilteredPlayers(res.data.players || []);
+        setPlayers(res.data.data || []);
+        setFilteredPlayers(res.data.data || []);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
         setPlayers([]);
