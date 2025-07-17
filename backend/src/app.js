@@ -191,7 +191,10 @@ try {
   app.get('/api/analytics/leaderboard', authenticateToken, AnalyticsController.getLeaderboard);
   console.log('✅ Analytics routes loaded');
 
-  // Advanced analytics routes (protected)
+  // Analytics routes that require authentication (specific routes first)
+  app.get('/api/analytics/player-stats', authenticateToken, AnalyticsController.getPlayerStats);
+  
+  // Advanced analytics routes (protected) - parameterized routes after specific routes
   app.get('/api/analytics/players/:playerId/trends', authenticateToken, AnalyticsController.getPlayerTrends);
   app.get('/api/analytics/players/:playerId/benchmarks', authenticateToken, AnalyticsController.getPlayerBenchmarks);
   app.get('/api/analytics/players/:playerId/progress', authenticateToken, AnalyticsController.getPlayerProgress);
@@ -207,9 +210,6 @@ try {
   app.get('/api/analytics/sessions/:sessionId/swings', AnalyticsController.getSessionSwings);
   app.put('/api/analytics/sessions/:sessionId/category', AnalyticsController.updateSessionCategory);
   app.post('/api/analytics/compare-sessions', AnalyticsController.compareSessions);
-  
-  // Analytics routes that require authentication
-  app.get('/api/analytics/player-stats', authenticateToken, AnalyticsController.getPlayerStats);
   console.log('✅ All routes loaded successfully');
 
 } catch (error) {
