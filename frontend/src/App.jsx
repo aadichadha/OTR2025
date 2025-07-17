@@ -22,6 +22,7 @@ import { Box, CircularProgress } from '@mui/material';
 import PlayerDashboard from './pages/PlayerDashboard';
 import PlayerAnalytics from './pages/PlayerAnalytics';
 import PlayerStatistics from './pages/PlayerStatistics';
+import PlayerProgression from './pages/PlayerProgression';
 import Leaderboard from './pages/Leaderboard';
 import ProfileSettings from './pages/ProfileSettings';
 import SessionReport from './pages/SessionReport';
@@ -111,6 +112,12 @@ function AppRoutes() {
           <Route path="/progression" element={
             <ProtectedRoute allowedRoles={['player', 'coach']}>
               <SessionAnalytics />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/players/:playerId/progression" element={
+            <ProtectedRoute allowedRoles={['player', 'coach']}>
+              <PlayerProgression />
             </ProtectedRoute>
           } />
 

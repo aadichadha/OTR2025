@@ -1,6 +1,7 @@
 const { Session, ExitVelocityData, Player, BatSpeedData } = require('../models');
 const { Op } = require('sequelize');
 const { getPlayerLevel } = require('../utils/playerLevelUtils');
+const Grade20to80 = require('../utils/grade20to80');
 
 // Get all swings for a specific session
 const getSessionSwings = async (req, res) => {
@@ -1206,6 +1207,271 @@ const getLeaderboard = async (req, res) => {
   }
 };
 
+// Get player progression data with 20-80 grades
+const getPlayerProgression = async (req, res) => {
+  try {
+    const { playerId } = req.params;
+    const { days = 365 } = req.query;
+
+    console.log(`[PROGRESSION] Fetching progression data for player ${playerId} over ${days} days`);
+
+    // Get player info
+    const player = await Player.findByPk(playerId);
+    if (!player) {
+      return res.status(404).json({
+        success: false,
+        message: 'Player not found'
+      });
+    }
+
+    const playerLevel = getPlayerLevel(player);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
+
+    // Get all sessions for the player within the date range
+    const sessions = await Session.findAll({
+      where: {
+        player_id: playerId,
+        session_date: {
+          [Op.gte]: cutoffDate
+        }
+      },
+      include: [{
+        model: ExitVelocityData,
+        as: 'exitVelocityData',
+        attributes: ['exit_velocity', 'launch_angle', 'distance', 'pitch_speed']
+      }, {
+        model: BatSpeedData,
+        as: 'batSpeedData',
+        attributes: ['bat_speed', 'attack_angle', 'time_to_contact']
+      }],
+      order: [['session_date', 'ASC']]
+    });
+
+    console.log(`[PROGRESSION] Found ${sessions.length} sessions for analysis`);
+
+    // Calculate level statistics (mean and standard deviation) for each metric
+    const levelStats = await calculateLevelStatistics(playerLevel);
+
+    // Process each session and calculate metrics with grades
+    const progressionData = sessions.map(session => {
+      const sessionData = session.toJSON();
+      const exitVelocitySwings = sessionData.exitVelocityData || [];
+      const batSpeedSwings = sessionData.batSpeedData || [];
+      
+      // Calculate raw metrics
+      const exitVelocities = exitVelocitySwings.map(s => parseFloat(s.exit_velocity)).filter(v => !isNaN(v) && v > 0);
+      const batSpeeds = batSpeedSwings.map(s => parseFloat(s.bat_speed)).filter(v => !isNaN(v) && v > 0);
+      const launchAngles = exitVelocitySwings.map(s => parseFloat(s.launch_angle)).filter(v => !isNaN(v));
+      
+      // Calculate session metrics
+      const avgEv = exitVelocities.length > 0 ? exitVelocities.reduce((a, b) => a + b, 0) / exitVelocities.length : null;
+      const maxEv = exitVelocities.length > 0 ? Math.max(...exitVelocities) : null;
+      const avgBs = batSpeeds.length > 0 ? batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length : null;
+      const maxBs = batSpeeds.length > 0 ? Math.max(...batSpeeds) : null;
+      
+      // Calculate barrel percentage
+      let barrelPct = 0;
+      if (exitVelocities.length > 0 && launchAngles.length > 0) {
+        const maxEV = Math.max(...exitVelocities);
+        const barrelThreshold = maxEV * 0.90;
+        const barrels = exitVelocitySwings.filter(s => {
+          const ev = parseFloat(s.exit_velocity);
+          const la = parseFloat(s.launch_angle);
+          return !isNaN(ev) && !isNaN(la) && ev >= barrelThreshold && la >= 8 && la <= 25;
+        }).length;
+        barrelPct = Math.round((barrels / exitVelocities.length) * 1000) / 10;
+      }
+
+      // Calculate 20-80 grades
+      const grades = {
+        avgEv: avgEv ? Grade20to80.calculateGrade(avgEv, levelStats.avgEv.mean, levelStats.avgEv.sd) : null,
+        maxEv: maxEv ? Grade20to80.calculateGrade(maxEv, levelStats.maxEv.mean, levelStats.maxEv.sd) : null,
+        avgBs: avgBs ? Grade20to80.calculateGrade(avgBs, levelStats.avgBs.mean, levelStats.avgBs.sd) : null,
+        maxBs: maxBs ? Grade20to80.calculateGrade(maxBs, levelStats.maxBs.mean, levelStats.maxBs.sd) : null,
+        barrelPct: barrelPct > 0 ? Grade20to80.calculateGrade(barrelPct, levelStats.barrelPct.mean, levelStats.barrelPct.sd) : null
+      };
+
+      return {
+        sessionId: session.id,
+        sessionDate: session.session_date,
+        sessionType: session.type,
+        metrics: {
+          avgEv: parseFloat(avgEv?.toFixed(2)) || null,
+          maxEv: parseFloat(maxEv?.toFixed(2)) || null,
+          avgBs: parseFloat(avgBs?.toFixed(2)) || null,
+          maxBs: parseFloat(maxBs?.toFixed(2)) || null,
+          barrelPct: barrelPct || null
+        },
+        grades,
+        totalSwings: exitVelocitySwings.length + batSpeedSwings.length
+      };
+    });
+
+    // Calculate trends and changes
+    const trends = calculateTrends(progressionData, levelStats);
+
+    // Get milestones achieved
+    const milestones = calculateMilestones(progressionData, levelStats);
+
+    // Get coaching tips
+    const coachingTips = generateCoachingTips(progressionData, levelStats);
+
+    res.json({
+      success: true,
+      data: {
+        player: {
+          id: player.id,
+          name: player.name,
+          level: playerLevel
+        },
+        progressionData,
+        levelStats,
+        trends,
+        milestones,
+        coachingTips
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching player progression:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch player progression',
+      error: error.message
+    });
+  }
+};
+
+// Helper function to calculate level statistics
+const calculateLevelStatistics = async (playerLevel) => {
+  // This would typically query a large dataset of players at the same level
+  // For now, we'll use estimated values based on the benchmarks
+  const benchmarks = require('../config/benchmarks');
+  const levelBenchmark = benchmarks[playerLevel] || benchmarks['High School'];
+  
+  // Estimate standard deviations (roughly 15-20% of mean for most metrics)
+  return {
+    avgEv: {
+      mean: levelBenchmark['Avg EV'],
+      sd: levelBenchmark['Avg EV'] * 0.15
+    },
+    maxEv: {
+      mean: levelBenchmark['Top 8th EV'],
+      sd: levelBenchmark['Top 8th EV'] * 0.12
+    },
+    avgBs: {
+      mean: levelBenchmark['Avg BatSpeed'],
+      sd: levelBenchmark['Avg BatSpeed'] * 0.12
+    },
+    maxBs: {
+      mean: levelBenchmark['90th% BatSpeed'],
+      sd: levelBenchmark['90th% BatSpeed'] * 0.10
+    },
+    barrelPct: {
+      mean: 15, // Average barrel percentage
+      sd: 8
+    }
+  };
+};
+
+// Helper function to calculate trends
+const calculateTrends = (progressionData, levelStats) => {
+  if (progressionData.length < 2) return {};
+
+  const firstSession = progressionData[0];
+  const lastSession = progressionData[progressionData.length - 1];
+  const recentSessions = progressionData.slice(-4); // Last 4 sessions
+
+  const trends = {};
+  const metrics = ['avgEv', 'maxEv', 'avgBs', 'maxBs', 'barrelPct'];
+
+  metrics.forEach(metric => {
+    if (firstSession.metrics[metric] && lastSession.metrics[metric]) {
+      const firstValue = firstSession.metrics[metric];
+      const lastValue = lastSession.metrics[metric];
+      const change = ((lastValue - firstValue) / firstValue) * 100;
+      
+      // Calculate recent average
+      const recentValues = recentSessions
+        .map(s => s.metrics[metric])
+        .filter(v => v !== null);
+      const recentAvg = recentValues.length > 0 ? 
+        recentValues.reduce((a, b) => a + b, 0) / recentValues.length : null;
+      
+      // Calculate grade changes
+      const gradeChange = Grade20to80.calculateGradeChange(
+        firstValue, lastValue, 
+        levelStats[metric].mean, levelStats[metric].sd
+      );
+
+      trends[metric] = {
+        firstValue,
+        lastValue,
+        percentChange: parseFloat(change.toFixed(1)),
+        recentAverage: recentAvg ? parseFloat(recentAvg.toFixed(2)) : null,
+        gradeChange,
+        direction: change > 0 ? 'up' : change < 0 ? 'down' : 'stable'
+      };
+    }
+  });
+
+  return trends;
+};
+
+// Helper function to calculate milestones
+const calculateMilestones = (progressionData, levelStats) => {
+  const milestones = [];
+  const metrics = ['avgEv', 'maxEv', 'avgBs', 'maxBs', 'barrelPct'];
+
+  metrics.forEach(metric => {
+    const metricMilestones = Grade20to80.getMilestones(metric, levelStats[metric].mean, levelStats[metric].sd);
+    
+    metricMilestones.forEach(milestone => {
+      // Check if player achieved this milestone
+      const achievedSession = progressionData.find(session => 
+        session.metrics[metric] >= milestone.value
+      );
+      
+      if (achievedSession) {
+        milestones.push({
+          ...milestone,
+          metric,
+          achievedDate: achievedSession.sessionDate,
+          sessionId: achievedSession.sessionId
+        });
+      }
+    });
+  });
+
+  return milestones.sort((a, b) => new Date(a.achievedDate) - new Date(b.achievedDate));
+};
+
+// Helper function to generate coaching tips
+const generateCoachingTips = (progressionData, levelStats) => {
+  if (progressionData.length === 0) return [];
+
+  const latestSession = progressionData[progressionData.length - 1];
+  const tips = [];
+  const metrics = ['avgEv', 'maxEv', 'avgBs', 'barrelPct'];
+
+  metrics.forEach(metric => {
+    const currentGrade = latestSession.grades[metric];
+    if (currentGrade && currentGrade < 60) {
+      const targetGrade = Math.min(60, currentGrade + 10);
+      const tip = Grade20to80.getCoachingTip(metric, currentGrade, targetGrade);
+      tips.push({
+        metric,
+        currentGrade,
+        targetGrade,
+        tip
+      });
+    }
+  });
+
+  return tips;
+};
+
 module.exports = {
   getSessionSwings,
   updateSessionCategory,
@@ -1219,5 +1485,6 @@ module.exports = {
   getFilterOptions,
   getPlayerStats,
   getDashboardStats,
-  getLeaderboard
+  getLeaderboard,
+  getPlayerProgression
 }; 

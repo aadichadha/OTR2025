@@ -196,6 +196,7 @@ try {
   app.get('/api/analytics/players/:playerId/benchmarks', authenticateToken, AnalyticsController.getPlayerBenchmarks);
   app.get('/api/analytics/players/:playerId/progress', authenticateToken, AnalyticsController.getPlayerProgress);
   app.get('/api/analytics/players/:playerId/filter-options', authenticateToken, AnalyticsController.getFilterOptions);
+  app.get('/api/players/:playerId/progression', authenticateToken, AnalyticsController.getPlayerProgression);
 
   // Upload routes (protected)
   app.post('/api/upload/blast', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadBlast);
