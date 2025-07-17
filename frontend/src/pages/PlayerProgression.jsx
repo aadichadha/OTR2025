@@ -75,7 +75,7 @@ const useProgressionData = (playerId) => {
 };
 
 // Sparkline component for micro-trends
-const Sparkline = ({ data, color = '#3a7bd5', height = 30 }) => {
+const Sparkline = ({ data, color = '#1c2c4d', height = 30 }) => {
   if (!data || data.length < 2) return null;
 
   return (
@@ -102,9 +102,9 @@ const ProgressRing = ({ progress, size = 60, strokeWidth = 4 }) => {
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   const getColor = (progress) => {
-    if (progress >= 90) return '#4caf50'; // Green
-    if (progress >= 70) return '#ff9800'; // Orange
-    return '#f44336'; // Red
+    if (progress >= 90) return '#43a047'; // Green
+    if (progress >= 70) return '#ffa726'; // Orange
+    return '#e53935'; // Red
   };
 
   return (
@@ -138,7 +138,7 @@ const ProgressRing = ({ progress, size = 60, strokeWidth = 4 }) => {
         transform="translate(-50%, -50%)"
         textAlign="center"
       >
-        <Typography variant="caption" fontWeight="bold">
+        <Typography variant="caption" fontWeight="bold" color="#1c2c4d">
           {Math.round(progress)}%
         </Typography>
       </Box>
@@ -167,35 +167,35 @@ const OverviewTab = ({ data }) => {
   }, [progressionData]);
 
   const metrics = [
-    { key: 'avgEv', label: 'Avg Exit Velocity', unit: 'MPH', color: '#3a7bd5' },
-    { key: 'maxEv', label: 'Max Exit Velocity', unit: 'MPH', color: '#ff6b6b' },
-    { key: 'avgBs', label: 'Avg Bat Speed', unit: 'MPH', color: '#4ecdc4' },
-    { key: 'maxBs', label: 'Max Bat Speed', unit: 'MPH', color: '#45b7d1' },
-    { key: 'barrelPct', label: 'Barrel %', unit: '%', color: '#96ceb4' }
+    { key: 'avgEv', label: 'Avg Exit Velocity', unit: 'MPH', color: '#1c2c4d' },
+    { key: 'maxEv', label: 'Max Exit Velocity', unit: 'MPH', color: '#3a7bd5' },
+    { key: 'avgBs', label: 'Avg Bat Speed', unit: 'MPH', color: '#43a047' },
+    { key: 'maxBs', label: 'Max Bat Speed', unit: 'MPH', color: '#ffa726' },
+    { key: 'barrelPct', label: 'Barrel %', unit: '%', color: '#e53935' }
   ];
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
         Performance Trends
       </Typography>
       
-      <Card sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+              <XAxis dataKey="date" stroke="#1c2c4d" />
+              <YAxis stroke="#1c2c4d" />
               <RechartsTooltip
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <Card sx={{ p: 2, bgcolor: 'background.paper' }}>
-                        <Typography variant="subtitle2">{label}</Typography>
+                      <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
+                        <Typography variant="subtitle2" sx={{ color: '#1c2c4d' }}>{label}</Typography>
                         {payload.map((entry, index) => (
                           <Box key={index} sx={{ mt: 1 }}>
-                            <Typography variant="body2" color={entry.color}>
+                            <Typography variant="body2" sx={{ color: entry.color }}>
                               {entry.name}: {entry.value} {entry.payload[`${entry.dataKey}Grade`] && 
                                 `(${formatGrade(entry.payload[`${entry.dataKey}Grade`])} grade)`
                               }
@@ -208,69 +208,62 @@ const OverviewTab = ({ data }) => {
                   return null;
                 }}
               />
-              {metrics.map((metric) => (
-                <Line
-                  key={metric.key}
-                  type="monotone"
-                  dataKey={metric.key}
-                  stroke={metric.color}
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              ))}
+              <Line type="monotone" dataKey="avgEv" stroke="#1c2c4d" strokeWidth={2} dot={{ fill: '#1c2c4d' }} />
+              <Line type="monotone" dataKey="maxEv" stroke="#3a7bd5" strokeWidth={2} dot={{ fill: '#3a7bd5' }} />
+              <Line type="monotone" dataKey="barrelPct" stroke="#43a047" strokeWidth={2} dot={{ fill: '#43a047' }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         {metrics.map((metric) => {
-          const latestData = progressionData[progressionData.length - 1];
-          const currentValue = latestData?.metrics[metric.key];
-          const currentGrade = latestData?.grades[metric.key];
-          const gradeInfo = currentGrade ? getGradeInfo(currentGrade) : null;
+          const latestValue = chartData[chartData.length - 1]?.[metric.key];
+          const previousValue = chartData[chartData.length - 2]?.[metric.key];
+          const trend = latestValue && previousValue ? latestValue - previousValue : 0;
+          const trendPercent = previousValue ? (trend / previousValue) * 100 : 0;
           
-          // Create sparkline data (last 7 sessions)
-          const sparklineData = progressionData
-            .slice(-7)
-            .map(session => ({
-              value: session.metrics[metric.key] || 0
-            }));
-
           return (
             <Grid item xs={12} sm={6} md={4} key={metric.key}>
-              <Card>
+              <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
                 <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                    <Typography variant="h6" color="textSecondary">
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                    <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
                       {metric.label}
                     </Typography>
-                    {currentGrade && (
-                      <Chip
-                        label={`${formatGrade(currentGrade)} ${getGradeEmoji(currentGrade)}`}
-                        size="small"
-                        sx={{
-                          bgcolor: gradeInfo?.bgColor,
-                          color: gradeInfo?.color,
-                          fontWeight: 'bold'
-                        }}
-                      />
-                    )}
+                    <CheckCircle sx={{ color: '#43a047' }} />
                   </Box>
                   
-                  <Typography variant="h4" fontWeight="bold" mb={1}>
-                    {currentValue ? `${currentValue} ${metric.unit}` : 'N/A'}
+                  <Typography variant="h4" sx={{ color: metric.color, fontWeight: 700, mb: 1 }}>
+                    {latestValue ? `${latestValue} ${metric.unit}` : 'N/A'}
                   </Typography>
                   
                   <Box display="flex" alignItems="center" gap={1}>
-                    <Box flex={1}>
-                      <Sparkline data={sparklineData} color={metric.color} />
-                    </Box>
-                    <Typography variant="caption" color="textSecondary">
-                      30-day trend
+                    {trend > 0 ? (
+                      <TrendingUp sx={{ color: '#43a047', fontSize: 20 }} />
+                    ) : trend < 0 ? (
+                      <TrendingDown sx={{ color: '#e53935', fontSize: 20 }} />
+                    ) : (
+                      <TrendingFlat sx={{ color: '#757575', fontSize: 20 }} />
+                    )}
+                    <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                      {Math.abs(trendPercent).toFixed(1)}% 30-day trend
                     </Typography>
                   </Box>
+                  
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={Math.min(Math.abs(trendPercent) * 10, 100)} 
+                    sx={{ 
+                      mt: 1, 
+                      height: 4, 
+                      borderRadius: 2,
+                      bgcolor: '#e0e0e0',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: trend > 0 ? '#43a047' : trend < 0 ? '#e53935' : '#757575'
+                      }
+                    }} 
+                  />
                 </CardContent>
               </Card>
             </Grid>
@@ -283,19 +276,70 @@ const OverviewTab = ({ data }) => {
 
 // Trends Tab Component
 const TrendsTab = ({ data }) => {
-  const { trends, progressionData } = data;
+  const { progressionData } = data;
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [comparisonSlider, setComparisonSlider] = useState(50);
+
+  // Calculate trends for each metric
+  const trends = useMemo(() => {
+    if (progressionData.length < 2) return {};
+
+    const firstSession = progressionData[0];
+    const lastSession = progressionData[progressionData.length - 1];
+    const recentSessions = progressionData.slice(-3); // Last 3 sessions
+
+    const trendMetrics = [
+      { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
+      { key: 'maxEv', label: 'Maximum Exit Velocity', unit: 'MPH' },
+      { key: 'avgBs', label: 'Average Bat Speed', unit: 'MPH' },
+      { key: 'maxBs', label: 'Maximum Bat Speed', unit: 'MPH' },
+      { key: 'barrelPct', label: 'Barrel Percentage', unit: '%' }
+    ];
+
+    return trendMetrics.reduce((acc, metric) => {
+      const firstValue = firstSession.metrics[metric.key];
+      const lastValue = lastSession.metrics[metric.key];
+      const recentAverage = recentSessions
+        .map(s => s.metrics[metric.key])
+        .filter(Boolean)
+        .reduce((sum, val) => sum + val, 0) / recentSessions.length;
+
+      if (!firstValue || !lastValue) return acc;
+
+      const percentChange = ((lastValue - firstValue) / firstValue) * 100;
+      const direction = percentChange > 0 ? 'up' : percentChange < 0 ? 'down' : 'flat';
+
+      // Calculate grade changes
+      const oldGrade = firstSession.grades[metric.key];
+      const newGrade = lastSession.grades[metric.key];
+
+      acc[metric.key] = {
+        percentChange: Math.round(percentChange * 10) / 10,
+        direction,
+        recentAverage: Math.round(recentAverage * 10) / 10,
+        firstValue: Math.round(firstValue * 10) / 10,
+        lastValue: Math.round(lastValue * 10) / 10,
+        gradeChange: {
+          oldGrade: oldGrade ? formatGrade(oldGrade) : 'N/A',
+          newGrade: newGrade ? formatGrade(newGrade) : 'N/A'
+        }
+      };
+
+      return acc;
+    }, {});
+  }, [progressionData]);
 
   const trendMetrics = [
     { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
-    { key: 'maxEv', label: 'Max Exit Velocity', unit: 'MPH' },
+    { key: 'maxEv', label: 'Maximum Exit Velocity', unit: 'MPH' },
     { key: 'avgBs', label: 'Average Bat Speed', unit: 'MPH' },
-    { key: 'maxBs', label: 'Max Bat Speed', unit: 'MPH' },
+    { key: 'maxBs', label: 'Maximum Bat Speed', unit: 'MPH' },
     { key: 'barrelPct', label: 'Barrel Percentage', unit: '%' }
   ];
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
         Performance Trends & Changes
       </Typography>
 
@@ -310,54 +354,56 @@ const TrendsTab = ({ data }) => {
 
           return (
             <Grid item xs={12} md={6} key={metric.key}>
-              <Card>
+              <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
                 <CardContent>
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Typography variant="h6">{metric.label}</Typography>
+                    <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>{metric.label}</Typography>
                     <Box display="flex" alignItems="center" gap={1}>
-                      {isPositive && <TrendingUp color="success" />}
-                      {isNegative && <TrendingDown color="error" />}
-                      {!isPositive && !isNegative && <TrendingFlat color="action" />}
+                      {isPositive && <TrendingUp sx={{ color: '#43a047' }} />}
+                      {isNegative && <TrendingDown sx={{ color: '#e53935' }} />}
+                      {!isPositive && !isNegative && <TrendingFlat sx={{ color: '#757575' }} />}
                     </Box>
                   </Box>
 
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body2" sx={{ color: '#666' }}>
                         Overall Change
                       </Typography>
                       <Typography 
                         variant="h5" 
-                        color={isPositive ? 'success.main' : isNegative ? 'error.main' : 'text.primary'}
-                        fontWeight="bold"
+                        sx={{ 
+                          color: isPositive ? '#43a047' : isNegative ? '#e53935' : '#1c2c4d',
+                          fontWeight: 700
+                        }}
                       >
                         {percentChange > 0 ? '+' : ''}{percentChange}%
                       </Typography>
                     </Grid>
                     
                     <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body2" sx={{ color: '#666' }}>
                         Grade Change
                       </Typography>
-                      <Typography variant="h5" fontWeight="bold">
+                      <Typography variant="h5" sx={{ color: '#1c2c4d', fontWeight: 700 }}>
                         {gradeChange.oldGrade} → {gradeChange.newGrade}
                       </Typography>
                     </Grid>
 
                     <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body2" sx={{ color: '#666' }}>
                         Recent Average
                       </Typography>
-                      <Typography variant="h6">
+                      <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
                         {recentAverage ? `${recentAverage} ${metric.unit}` : 'N/A'}
                       </Typography>
                     </Grid>
 
                     <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body2" sx={{ color: '#666' }}>
                         First Session
                       </Typography>
-                      <Typography variant="h6">
+                      <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
                         {trend.firstValue} {metric.unit}
                       </Typography>
                     </Grid>
@@ -366,8 +412,15 @@ const TrendsTab = ({ data }) => {
                   <LinearProgress
                     variant="determinate"
                     value={Math.min(Math.abs(percentChange), 100)}
-                    color={isPositive ? 'success' : isNegative ? 'error' : 'primary'}
-                    sx={{ mt: 2 }}
+                    sx={{ 
+                      mt: 2, 
+                      height: 6, 
+                      borderRadius: 3,
+                      bgcolor: '#e0e0e0',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: isPositive ? '#43a047' : isNegative ? '#e53935' : '#1c2c4d'
+                      }
+                    }}
                   />
                 </CardContent>
               </Card>
@@ -391,7 +444,7 @@ const GoalsTab = ({ data }) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
         Goals & Milestones
       </Typography>
 
@@ -404,6 +457,7 @@ const GoalsTab = ({ data }) => {
             />
           }
           label="Show Achieved"
+          sx={{ color: '#1c2c4d' }}
         />
         <FormControlLabel
           control={
@@ -413,30 +467,39 @@ const GoalsTab = ({ data }) => {
             />
           }
           label="Show Upcoming"
+          sx={{ color: '#1c2c4d' }}
         />
       </Box>
 
       <Grid container spacing={3}>
         {/* Milestones */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
             <CardContent>
               <Box display="flex" alignItems="center" gap={1} mb={2}>
-                <EmojiEvents color="primary" />
-                <Typography variant="h6">Milestones</Typography>
+                <EmojiEvents sx={{ color: '#1c2c4d' }} />
+                <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>Milestones</Typography>
               </Box>
 
               <List>
                 {achievedMilestones.map((milestone, index) => (
-                  <ListItem key={index} sx={{ bgcolor: 'success.light', mb: 1, borderRadius: 1 }}>
+                  <ListItem key={index} sx={{ bgcolor: '#e8f5e8', mb: 1, borderRadius: 1, border: '1px solid #43a047' }}>
                     <ListItemIcon>
-                      <CheckCircle color="success" />
+                      <CheckCircle sx={{ color: '#43a047' }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={milestone.description}
                       secondary={`Achieved: ${new Date(milestone.achievedDate).toLocaleDateString()}`}
+                      sx={{ 
+                        '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                        '& .MuiListItemText-secondary': { color: '#666' }
+                      }}
                     />
-                    <Chip label={`${milestone.grade} grade`} size="small" />
+                    <Chip 
+                      label={`${milestone.grade} grade`} 
+                      size="small" 
+                      sx={{ bgcolor: '#43a047', color: 'white', fontWeight: 600 }}
+                    />
                   </ListItem>
                 ))}
 
@@ -445,17 +508,21 @@ const GoalsTab = ({ data }) => {
                   const progress = currentValue ? Math.min((currentValue / milestone.value) * 100, 100) : 0;
 
                   return (
-                    <ListItem key={index} sx={{ mb: 1, borderRadius: 1 }}>
+                    <ListItem key={index} sx={{ mb: 1, borderRadius: 1, border: '1px solid #e0e0e0' }}>
                       <ListItemIcon>
-                        <Star color="action" />
+                        <Star sx={{ color: '#ffa726' }} />
                       </ListItemIcon>
                       <ListItemText
                         primary={milestone.description}
                         secondary={`Target: ${milestone.value}`}
+                        sx={{ 
+                          '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                          '& .MuiListItemText-secondary': { color: '#666' }
+                        }}
                       />
                       <Box display="flex" alignItems="center" gap={1}>
                         <ProgressRing progress={progress} size={40} />
-                        <Typography variant="caption">
+                        <Typography variant="caption" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
                           {Math.round(progress)}%
                         </Typography>
                       </Box>
@@ -469,35 +536,39 @@ const GoalsTab = ({ data }) => {
 
         {/* Coaching Tips */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
             <CardContent>
               <Box display="flex" alignItems="center" gap={1} mb={2}>
-                <Lightbulb color="primary" />
-                <Typography variant="h6">Coaching Tips</Typography>
+                <Lightbulb sx={{ color: '#1c2c4d' }} />
+                <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>Coaching Tips</Typography>
               </Box>
 
               {coachingTips.length > 0 ? (
                 <List>
                   {coachingTips.map((tip, index) => (
-                    <ListItem key={index} sx={{ mb: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                    <ListItem key={index} sx={{ mb: 2, bgcolor: '#e3f2fd', borderRadius: 1, border: '1px solid #1976d2' }}>
                       <ListItemIcon>
-                        <Lightbulb color="info" />
+                        <Lightbulb sx={{ color: '#1976d2' }} />
                       </ListItemIcon>
                       <ListItemText
                         primary={`${tip.metric.toUpperCase()} Improvement`}
                         secondary={tip.tip}
+                        sx={{ 
+                          '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                          '& .MuiListItemText-secondary': { color: '#666' }
+                        }}
                       />
                       <Chip 
                         label={`${tip.currentGrade} → ${tip.targetGrade}`}
                         size="small"
-                        color="primary"
+                        sx={{ bgcolor: '#1976d2', color: 'white', fontWeight: 600 }}
                       />
                     </ListItem>
                   ))}
                 </List>
               ) : (
-                <Alert severity="success">
-                  Great job! All metrics are performing well above average.
+                <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
+                  No coaching tips available at this time.
                 </Alert>
               )}
             </CardContent>
@@ -531,7 +602,7 @@ const SwingAnalysisTab = ({ data }) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
         Swing Analysis & Quality Control
       </Typography>
 
@@ -544,6 +615,7 @@ const SwingAnalysisTab = ({ data }) => {
             />
           }
           label="Quality Filter (Hide poor swings)"
+          sx={{ color: '#1c2c4d' }}
         />
         <FormControlLabel
           control={
@@ -553,13 +625,14 @@ const SwingAnalysisTab = ({ data }) => {
             />
           }
           label="Comparison Mode"
+          sx={{ color: '#1c2c4d' }}
         />
       </Box>
 
       {comparisonMode && (
-        <Card sx={{ mb: 3 }}>
+        <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
           <CardContent>
-            <Typography variant="subtitle1" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
               Compare Progress: First Session vs Latest Session
             </Typography>
             <Slider
@@ -571,6 +644,11 @@ const SwingAnalysisTab = ({ data }) => {
                 { value: 50, label: 'Middle' },
                 { value: 100, label: 'Latest' }
               ]}
+              sx={{
+                '& .MuiSlider-markLabel': { color: '#1c2c4d' },
+                '& .MuiSlider-thumb': { bgcolor: '#1c2c4d' },
+                '& .MuiSlider-track': { bgcolor: '#1c2c4d' }
+              }}
             />
           </CardContent>
         </Card>
@@ -579,9 +657,9 @@ const SwingAnalysisTab = ({ data }) => {
       <Grid container spacing={3}>
         {/* Session Quality Metrics */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
                 Session Quality Metrics
               </Typography>
               
@@ -590,6 +668,10 @@ const SwingAnalysisTab = ({ data }) => {
                   <ListItemText
                     primary="Total Sessions Analyzed"
                     secondary={filteredData.length}
+                    sx={{ 
+                      '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                      '& .MuiListItemText-secondary': { color: '#666' }
+                    }}
                   />
                 </ListItem>
                 <ListItem>
@@ -598,12 +680,20 @@ const SwingAnalysisTab = ({ data }) => {
                     secondary={Math.round(
                       filteredData.reduce((sum, session) => sum + session.totalSwings, 0) / filteredData.length
                     )}
+                    sx={{ 
+                      '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                      '& .MuiListItemText-secondary': { color: '#666' }
+                    }}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
                     primary="Data Quality Score"
                     secondary={`${Math.round((filteredData.length / progressionData.length) * 100)}%`}
+                    sx={{ 
+                      '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                      '& .MuiListItemText-secondary': { color: '#666' }
+                    }}
                   />
                 </ListItem>
               </List>
@@ -613,9 +703,9 @@ const SwingAnalysisTab = ({ data }) => {
 
         {/* Alerts */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
                 Performance Alerts
               </Typography>
               
@@ -633,7 +723,7 @@ const SwingAnalysisTab = ({ data }) => {
                       alerts.push({
                         type: 'warning',
                         message: 'Average Exit Velocity declining over last 3 sessions',
-                        icon: <Warning color="warning" />
+                        icon: <Warning sx={{ color: '#ffa726' }} />
                       });
                     }
                   }
@@ -646,7 +736,7 @@ const SwingAnalysisTab = ({ data }) => {
                     alerts.push({
                       type: 'success',
                       message: `Significant improvement: +${Math.round(improvement)}% in Avg EV`,
-                      icon: <TrendingUp color="success" />
+                      icon: <TrendingUp sx={{ color: '#43a047' }} />
                     });
                   }
                 }
@@ -654,14 +744,26 @@ const SwingAnalysisTab = ({ data }) => {
                 return alerts.length > 0 ? (
                   <List>
                     {alerts.map((alert, index) => (
-                      <ListItem key={index}>
+                      <ListItem key={index} sx={{ 
+                        mb: 1, 
+                        borderRadius: 1, 
+                        bgcolor: alert.type === 'warning' ? '#fff3e0' : '#e8f5e8',
+                        border: alert.type === 'warning' ? '1px solid #ffa726' : '1px solid #43a047'
+                      }}>
                         <ListItemIcon>{alert.icon}</ListItemIcon>
-                        <ListItemText primary={alert.message} />
+                        <ListItemText 
+                          primary={alert.message}
+                          sx={{ 
+                            '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 }
+                          }}
+                        />
                       </ListItem>
                     ))}
                   </List>
                 ) : (
-                  <Alert severity="info">No performance alerts at this time.</Alert>
+                  <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
+                    No performance alerts at this time.
+                  </Alert>
                 );
               })()}
             </CardContent>
@@ -690,15 +792,15 @@ const PlayerProgression = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px" bgcolor="white">
+        <CircularProgress sx={{ color: '#1c2c4d' }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert severity="error" sx={{ m: 2, bgcolor: '#ffebee', color: '#c62828' }}>
         Error loading progression data: {error}
       </Alert>
     );
@@ -706,7 +808,7 @@ const PlayerProgression = () => {
 
   if (!data) {
     return (
-      <Alert severity="info" sx={{ m: 2 }}>
+      <Alert severity="info" sx={{ m: 2, bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
         No progression data available for this player.
       </Alert>
     );
@@ -722,26 +824,51 @@ const PlayerProgression = () => {
   const TabComponent = tabs[tabValue].component;
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, bgcolor: 'white', minHeight: '100vh' }}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 700 }} gutterBottom>
             {data.player.name} - Progression Analysis
           </Typography>
-          <Typography variant="subtitle1" color="textSecondary">
+          <Typography variant="subtitle1" sx={{ color: '#666' }}>
             {data.player.level} • {data.progressionData.length} Sessions
           </Typography>
         </Box>
         <Box display="flex" gap={1}>
-          <Chip label={`${data.player.level}`} color="primary" />
-          <Chip label={`${data.progressionData.length} sessions`} variant="outlined" />
+          <Chip 
+            label={`${data.player.level}`} 
+            sx={{ bgcolor: '#1c2c4d', color: 'white', fontWeight: 600 }}
+          />
+          <Chip 
+            label={`${data.progressionData.length} sessions`} 
+            variant="outlined" 
+            sx={{ borderColor: '#1c2c4d', color: '#1c2c4d', fontWeight: 600 }}
+          />
         </Box>
       </Box>
 
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} aria-label="progression tabs">
+      <Box sx={{ borderBottom: 2, borderColor: '#1c2c4d', mb: 3 }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange} 
+          aria-label="progression tabs"
+          sx={{
+            '& .MuiTab-root': {
+              color: '#666',
+              fontWeight: 600,
+              '&.Mui-selected': {
+                color: '#1c2c4d',
+                fontWeight: 700
+              }
+            },
+            '& .MuiTabs-indicator': {
+              bgcolor: '#1c2c4d',
+              height: 3
+            }
+          }}
+        >
           {tabs.map((tab, index) => (
             <Tab key={index} label={tab.label} />
           ))}
