@@ -30,6 +30,7 @@ import Edit from '@mui/icons-material/Edit';
 import Delete from '@mui/icons-material/Delete';
 import Visibility from '@mui/icons-material/Visibility';
 import Analytics from '@mui/icons-material/Analytics';
+import Timeline from '@mui/icons-material/Timeline';
 import Close from '@mui/icons-material/Close';
 import Refresh from '@mui/icons-material/Refresh';
 import { useNavigate } from 'react-router-dom';
@@ -337,6 +338,10 @@ function Players() {
     navigate(`/analytics?player=${playerId}`);
   };
 
+  const handleProgressionClick = (playerId) => {
+    navigate(`/players/${playerId}/progression`);
+  };
+
   // Get team options based on selected player level
   const getTeamOptions = () => {
     if (!form.player_level) return [];
@@ -558,6 +563,26 @@ function Players() {
                           }}
                         >
                           Analytics
+                        </Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<Timeline />}
+                          onClick={() => handleProgressionClick(player.id)}
+                          sx={{
+                            backgroundColor: '#1c2c4d',
+                            color: '#fff',
+                            fontWeight: 700,
+                            borderRadius: 2,
+                            px: 2,
+                            py: 0.7,
+                            minWidth: 90,
+                            fontSize: '0.95rem',
+                            boxShadow: '0 2px 8px rgba(28,44,77,0.08)',
+                            '&:hover': { backgroundColor: '#3a7bd5' },
+                          }}
+                        >
+                          Progression
                         </Button>
                         <Button
                           variant="contained"
