@@ -195,6 +195,7 @@ try {
   app.get('/api/analytics/player-stats', authenticateToken, AnalyticsController.getPlayerStats);
   
   // Advanced analytics routes (protected) - parameterized routes after specific routes
+  app.get('/api/analytics/players/:playerId/sessions', authenticateToken, AnalyticsController.getPlayerSessions);
   app.get('/api/analytics/players/:playerId/trends', authenticateToken, AnalyticsController.getPlayerTrends);
   app.get('/api/analytics/players/:playerId/benchmarks', authenticateToken, AnalyticsController.getPlayerBenchmarks);
   app.get('/api/analytics/players/:playerId/progress', authenticateToken, AnalyticsController.getPlayerProgress);
