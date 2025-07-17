@@ -22,10 +22,10 @@ class MetricsCalculator {
         throw new Error('No bat speed data found for this session');
       }
 
-      // Extract arrays of values with more detailed debugging
-      const batSpeeds = batSpeedData.map(row => row.bat_speed).filter(val => val !== null && val > 0);
-      const attackAngles = batSpeedData.map(row => row.attack_angle).filter(val => val !== null && !isNaN(val));
-      const timeToContacts = batSpeedData.map(row => row.time_to_contact).filter(val => val !== null && !isNaN(val));
+      // Extract arrays of values with more detailed debugging and explicit number conversion
+      const batSpeeds = batSpeedData.map(row => parseFloat(row.bat_speed)).filter(val => !isNaN(val) && val > 0);
+      const attackAngles = batSpeedData.map(row => parseFloat(row.attack_angle)).filter(val => !isNaN(val));
+      const timeToContacts = batSpeedData.map(row => parseFloat(row.time_to_contact)).filter(val => !isNaN(val) && val > 0);
 
       // Temporary debug logging to diagnose the issue
       console.log('[DEBUG] Bat speed data analysis:');
