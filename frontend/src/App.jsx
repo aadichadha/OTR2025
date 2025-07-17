@@ -23,6 +23,7 @@ import PlayerDashboard from './pages/PlayerDashboard';
 import PlayerAnalytics from './pages/PlayerAnalytics';
 import PlayerStatistics from './pages/PlayerStatistics';
 import PlayerProgression from './pages/PlayerProgression';
+import CoachProgression from './pages/CoachProgression';
 import Leaderboard from './pages/Leaderboard';
 import ProfileSettings from './pages/ProfileSettings';
 import SessionReport from './pages/SessionReport';
@@ -111,7 +112,7 @@ function AppRoutes() {
           {/* Coach-specific progression routes */}
           <Route path="/progression" element={
             <ProtectedRoute allowedRoles={['coach']}>
-              <SessionAnalytics />
+              <CoachProgression />
             </ProtectedRoute>
           } />
 
