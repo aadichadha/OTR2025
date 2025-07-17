@@ -29,13 +29,13 @@ const NAVY = '#1c2c4d';
 
 const columns = [
   { id: 'rank', label: 'Rank', minWidth: 60 },
-  { id: 'name', label: 'Player', minWidth: 120 },
-  { id: 'level', label: 'Level', minWidth: 100 },
-  { id: 'barrelPercentage', label: 'Barrel %', minWidth: 80 },
-  { id: 'maxExitVelocity', label: 'Max EV', minWidth: 90 },
-  { id: 'avgExitVelocity', label: 'Avg EV', minWidth: 90 },
-  { id: 'maxBatSpeed', label: 'Max BS', minWidth: 90 },
-  { id: 'avgBatSpeed', label: 'Avg BS', minWidth: 90 },
+  { id: 'player_name', label: 'Player', minWidth: 120 },
+  { id: 'player_level', label: 'Level', minWidth: 100 },
+  { id: 'barrel_percentage', label: 'Barrel %', minWidth: 80 },
+  { id: 'max_exit_velocity', label: 'Max EV', minWidth: 90 },
+  { id: 'avg_exit_velocity', label: 'Avg EV', minWidth: 90 },
+  { id: 'max_bat_speed', label: 'Max BS', minWidth: 90 },
+  { id: 'avg_bat_speed', label: 'Avg BS', minWidth: 90 },
 ];
 
 const levels = ['All', 'High School', 'College', 'Youth', 'Other'];
@@ -81,7 +81,7 @@ const Leaderboard = () => {
 
     // Apply level filter
     if (levelFilter !== 'All') {
-      filtered = filtered.filter(player => player.level === levelFilter);
+      filtered = filtered.filter(player => player.player_level === levelFilter);
     }
 
     // Apply sorting
@@ -271,36 +271,36 @@ const Leaderboard = () => {
                         {idx + 1}
                       </TableCell>
                       <TableCell sx={{ fontWeight: 600, color: NAVY }}>
-                        {player.name}
+                        {player.player_name}
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={player.level}
-                          color={getLevelColor(player.level)}
+                          label={player.player_level}
+                          color={getLevelColor(player.player_level)}
                           size="small"
                           sx={{
-                            bgcolor: player.level === 'High School' ? '#e3f2fd' :
-                                    player.level === 'College' ? '#f3e5f5' :
-                                    player.level === 'Youth' ? '#e8f5e8' : '#f5f5f5',
+                            bgcolor: player.player_level === 'High School' ? '#e3f2fd' :
+                                    player.player_level === 'College' ? '#f3e5f5' :
+                                    player.player_level === 'Youth' ? '#e8f5e8' : '#f5f5f5',
                             color: NAVY,
                             fontWeight: 600
                           }}
                         />
                       </TableCell>
                       <TableCell sx={{ color: NAVY, fontWeight: 600 }}>
-                        {formatValue(player.barrelPercentage)}%
+                        {formatValue(player.barrel_percentage)}%
                       </TableCell>
                       <TableCell sx={{ color: NAVY }}>
-                        {formatValue(player.maxExitVelocity)}
+                        {formatValue(player.max_exit_velocity)}
                       </TableCell>
                       <TableCell sx={{ color: NAVY }}>
-                        {formatValue(player.avgExitVelocity)}
+                        {formatValue(player.avg_exit_velocity)}
                       </TableCell>
                       <TableCell sx={{ color: NAVY }}>
-                        {formatValue(player.maxBatSpeed)}
+                        {formatValue(player.max_bat_speed)}
                       </TableCell>
                       <TableCell sx={{ color: NAVY }}>
-                        {formatValue(player.avgBatSpeed)}
+                        {formatValue(player.avg_bat_speed)}
                       </TableCell>
                     </TableRow>
                   ))
