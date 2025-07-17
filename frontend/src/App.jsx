@@ -108,15 +108,22 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
 
-          {/* Shared routes for coaches and players */}
+          {/* Coach-specific progression routes */}
           <Route path="/progression" element={
-            <ProtectedRoute allowedRoles={['player', 'coach']}>
+            <ProtectedRoute allowedRoles={['coach']}>
               <SessionAnalytics />
             </ProtectedRoute>
           } />
 
           <Route path="/players/:playerId/progression" element={
-            <ProtectedRoute allowedRoles={['player', 'coach']}>
+            <ProtectedRoute allowedRoles={['coach']}>
+              <PlayerProgression />
+            </ProtectedRoute>
+          } />
+
+          {/* Player-specific progression route - only their own data */}
+          <Route path="/my-progression" element={
+            <ProtectedRoute allowedRoles={['player']}>
               <PlayerProgression />
             </ProtectedRoute>
           } />

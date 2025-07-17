@@ -53,7 +53,7 @@ const Topbar = () => {
     if (user?.role === 'player') {
       return [
         { label: 'Home', icon: <Home />, to: '/dashboard' },
-        { label: 'Progression', icon: <Assessment />, to: '/progression' },
+        { label: 'My Progression', icon: <Assessment />, to: '/my-progression' },
         { label: 'Leaderboard', icon: <EmojiEvents />, to: '/leaderboard' },
         { label: 'Statistics', icon: <Timeline />, to: '/player/statistics' }
       ];

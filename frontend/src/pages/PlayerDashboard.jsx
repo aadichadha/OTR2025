@@ -245,7 +245,7 @@ const PlayerDashboard = () => {
                     <Button fullWidth variant="contained" size="large" startIcon={<Timeline />} onClick={() => navigate('/player/statistics')} sx={{ bgcolor: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { bgcolor: '#3a7bd5' } }}>Statistics</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Button fullWidth variant="contained" size="large" startIcon={<AssessmentIcon />} onClick={() => navigate('/progression')} sx={{ bgcolor: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { bgcolor: '#3a7bd5' } }}>Progression</Button>
+                    <Button fullWidth variant="contained" size="large" startIcon={<AssessmentIcon />} onClick={() => navigate('/my-progression')} sx={{ bgcolor: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { bgcolor: '#3a7bd5' } }}>My Progression</Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Button fullWidth variant="contained" size="large" startIcon={<EmojiEventsIcon />} onClick={() => navigate('/leaderboard')} sx={{ bgcolor: NAVY, py: 1, fontSize: { xs: '0.95rem', sm: '1rem' }, '&:hover': { bgcolor: '#3a7bd5' } }}>Leaderboard</Button>

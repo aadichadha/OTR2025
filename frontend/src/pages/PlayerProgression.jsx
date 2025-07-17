@@ -677,7 +677,12 @@ const PlayerProgression = () => {
   const { playerId } = useParams();
   const { user } = useAuth();
   const [tabValue, setTabValue] = useState(0);
-  const { data, loading, error } = useProgressionData(playerId);
+  
+  // For players, they can only see their own progression data
+  // For coaches, they can see any player's progression data
+  const effectivePlayerId = user?.role === 'player' ? user?.id : playerId;
+  
+  const { data, loading, error } = useProgressionData(effectivePlayerId);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
