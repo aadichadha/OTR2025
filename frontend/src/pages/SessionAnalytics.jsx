@@ -645,45 +645,283 @@ const SessionAnalytics = () => {
           <Box sx={{ p: 3 }}>
           {/* Overview Tab */}
           {activeTab === 0 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} lg={8}>
-                <Card>
-                  <CardHeader title="Performance Over Time" />
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={trends}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="session_date" />
-                        <YAxis />
-                        <RechartsTooltip />
-                        <Line type="monotone" dataKey="average" stroke="#8884d8" strokeWidth={2} />
-                        <Line type="monotone" dataKey="best" stroke="#82ca9d" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+            <Box>
+              {/* Key Metrics Summary */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 700, mb: 1 }}>
+                        Max Bat Speed
+                      </Typography>
+                      <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
+                        {trends.length > 0 ? Math.max(...trends.map(t => t.max_bat_speed || 0)) : 'N/A'} mph
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 700, mb: 1 }}>
+                        Max Exit Velocity
+                      </Typography>
+                      <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
+                        {trends.length > 0 ? Math.max(...trends.map(t => t.max_exit_velocity || 0)) : 'N/A'} mph
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 700, mb: 1 }}>
+                        Avg Exit Velocity
+                      </Typography>
+                      <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
+                        {trends.length > 0 ? (trends.reduce((sum, t) => sum + (t.avg_exit_velocity || 0), 0) / trends.length).toFixed(1) : 'N/A'} mph
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 700, mb: 1 }}>
+                        Avg Bat Speed
+                      </Typography>
+                      <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 900 }}>
+                        {trends.length > 0 ? (trends.reduce((sum, t) => sum + (t.avg_bat_speed || 0), 0) / trends.length).toFixed(1) : 'N/A'} mph
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
               </Grid>
-              <Grid item xs={12} lg={4}>
-                <Card>
-                  <CardHeader title="Recent Sessions" />
-                  <CardContent>
-                    {(Array.isArray(sessions) ? sessions.slice(0, 5) : []).map((session) => (
-                      <Box key={session.id} sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-                        <Typography variant="subtitle2">
-                          {new Date(session.session_date).toLocaleDateString()}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          {session.session_category || 'No category'}
-                        </Typography>
-                        <Typography variant="body2">
-                          {session.exitVelocityData?.length || 0} swings
-                        </Typography>
-                      </Box>
-                    ))}
-                  </CardContent>
-                </Card>
+
+              {/* Performance Over Time Graphs */}
+              <Grid container spacing={3}>
+                {/* Max Bat Speed Over Time */}
+                <Grid item xs={12} lg={6}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardHeader 
+                      title="Max Bat Speed Over Time" 
+                      sx={{ 
+                        bgcolor: '#1c2c4d', 
+                        color: 'white',
+                        '& .MuiCardHeader-title': { fontWeight: 700 }
+                      }}
+                    />
+                    <CardContent sx={{ p: 3 }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trends}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis 
+                            dataKey="session_date" 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <RechartsTooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '2px solid #1c2c4d',
+                              borderRadius: 8
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="max_bat_speed" 
+                            stroke="#1c2c4d" 
+                            strokeWidth={3}
+                            dot={{ fill: '#1c2c4d', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#1c2c4d', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Max Exit Velocity Over Time */}
+                <Grid item xs={12} lg={6}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardHeader 
+                      title="Max Exit Velocity Over Time" 
+                      sx={{ 
+                        bgcolor: '#1c2c4d', 
+                        color: 'white',
+                        '& .MuiCardHeader-title': { fontWeight: 700 }
+                      }}
+                    />
+                    <CardContent sx={{ p: 3 }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trends}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis 
+                            dataKey="session_date" 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <RechartsTooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '2px solid #1c2c4d',
+                              borderRadius: 8
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="max_exit_velocity" 
+                            stroke="#FF6B6B" 
+                            strokeWidth={3}
+                            dot={{ fill: '#FF6B6B', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#FF6B6B', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Average Exit Velocity Over Time */}
+                <Grid item xs={12} lg={6}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardHeader 
+                      title="Average Exit Velocity Over Time" 
+                      sx={{ 
+                        bgcolor: '#1c2c4d', 
+                        color: 'white',
+                        '& .MuiCardHeader-title': { fontWeight: 700 }
+                      }}
+                    />
+                    <CardContent sx={{ p: 3 }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trends}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis 
+                            dataKey="session_date" 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <RechartsTooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '2px solid #1c2c4d',
+                              borderRadius: 8
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="avg_exit_velocity" 
+                            stroke="#4ECDC4" 
+                            strokeWidth={3}
+                            dot={{ fill: '#4ECDC4', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#4ECDC4', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Average Bat Speed Over Time */}
+                <Grid item xs={12} lg={6}>
+                  <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                    <CardHeader 
+                      title="Average Bat Speed Over Time" 
+                      sx={{ 
+                        bgcolor: '#1c2c4d', 
+                        color: 'white',
+                        '& .MuiCardHeader-title': { fontWeight: 700 }
+                      }}
+                    />
+                    <CardContent sx={{ p: 3 }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trends}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis 
+                            dataKey="session_date" 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="#1c2c4d"
+                            tick={{ fill: '#1c2c4d', fontSize: 12 }}
+                          />
+                          <RechartsTooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '2px solid #1c2c4d',
+                              borderRadius: 8
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="avg_bat_speed" 
+                            stroke="#45B7D1" 
+                            strokeWidth={3}
+                            dot={{ fill: '#45B7D1', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#45B7D1', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </Grid>
               </Grid>
-            </Grid>
+
+              {/* Legend */}
+              <Box sx={{ mt: 3, p: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+                <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 700, mb: 2 }}>
+                  Performance Metrics Legend
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box display="flex" alignItems="center">
+                      <Box sx={{ width: 20, height: 3, bgcolor: '#1c2c4d', mr: 2 }} />
+                      <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        Max Bat Speed
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box display="flex" alignItems="center">
+                      <Box sx={{ width: 20, height: 3, bgcolor: '#FF6B6B', mr: 2 }} />
+                      <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        Max Exit Velocity
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box display="flex" alignItems="center">
+                      <Box sx={{ width: 20, height: 3, bgcolor: '#4ECDC4', mr: 2 }} />
+                      <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        Avg Exit Velocity
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box display="flex" alignItems="center">
+                      <Box sx={{ width: 20, height: 3, bgcolor: '#45B7D1', mr: 2 }} />
+                      <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        Avg Bat Speed
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Box>
           )}
 
           {/* Trends Tab */}
