@@ -31,23 +31,23 @@ class CSVParser {
       console.log(`First data row columns: ${lines[dataStartRow]}`);
       console.log(`First data row parsed: ${lines[dataStartRow].split(',').map(col => col.trim())}`);
       
-      // Process data rows starting from row 11
+      // Process data rows starting from row 10
       for (let i = dataStartRow; i < lines.length; i++) {
         const columns = lines[i].split(',').map(col => col.trim());
         
-        if (columns.length < 16) {
-          console.log(`Skipping row ${i + 1}: insufficient columns (${columns.length}, need at least 16)`);
+        if (columns.length < 17) {
+          console.log(`Skipping row ${i + 1}: insufficient columns (${columns.length}, need at least 17)`);
           continue;
         }
         
-        // Column 8 (index 7): Bat Speed
-        const batSpeed = parseFloat(columns[7]);
-        // Column 11 (index 10): Attack Angle  
-        const attackAngle = parseFloat(columns[10]);
-        // Column 16 (index 15): Time to Contact
-        const timeToContact = parseFloat(columns[15]);
+        // Column 9 (index 8): Bat Speed
+        const batSpeed = parseFloat(columns[8]);
+        // Column 12 (index 11): Attack Angle  
+        const attackAngle = parseFloat(columns[11]);
+        // Column 17 (index 16): Time to Contact
+        const timeToContact = parseFloat(columns[16]);
         
-        console.log(`Row ${i + 1}: BatSpeed=${columns[7]} (col 8), AttackAngle=${columns[10]} (col 11), TimeToContact=${columns[15]} (col 16)`);
+        console.log(`Row ${i + 1}: BatSpeed=${columns[8]} (col 9), AttackAngle=${columns[11]} (col 12), TimeToContact=${columns[16]} (col 17)`);
         console.log(`Row ${i + 1} parsed values: batSpeed=${batSpeed}, attackAngle=${attackAngle}, timeToContact=${timeToContact}`);
         console.log(`Row ${i + 1} validation: batSpeed valid=${!isNaN(batSpeed) && batSpeed > 0}, attackAngle valid=${!isNaN(attackAngle)}, timeToContact valid=${!isNaN(timeToContact) && timeToContact > 0}`);
         
