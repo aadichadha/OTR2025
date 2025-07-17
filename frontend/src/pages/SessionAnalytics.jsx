@@ -160,14 +160,12 @@ const SessionAnalytics = () => {
       const [
         sessionsRes,
         swingsRes,
-        playerStatsRes,
         benchmarksRes,
         progressRes,
         filterOptionsRes
       ] = await Promise.all([
-        api.get(`/players/${selectedPlayerId}/sessions`),
+        api.get(`/analytics/players/${selectedPlayerId}/sessions`),
         api.get(`/players/${selectedPlayerId}/swings`),
-        api.get(`/analytics/player-stats?playerId=${selectedPlayerId}`),
         api.get(`/analytics/players/${selectedPlayerId}/benchmarks`),
         api.get(`/analytics/players/${selectedPlayerId}/progress`),
         api.get(`/analytics/players/${selectedPlayerId}/filter-options`)
@@ -176,16 +174,12 @@ const SessionAnalytics = () => {
       // Ensure all data is properly handled as arrays
       const sessionsData = sessionsRes.data.data || [];
       const swingsData = swingsRes.data.data || [];
-      const playerStatsData = playerStatsRes.data.players || playerStatsRes.data || [];
       const benchmarksData = benchmarksRes.data.data || {};
       const progressData = progressRes.data.data || {};
       const filterOptionsData = filterOptionsRes.data.data || {};
 
-      // Get the player's stats (should be first in the array since we filtered by playerId)
-      const playerStats = Array.isArray(playerStatsData) && playerStatsData.length > 0 ? playerStatsData[0] : null;
-
       console.log('[DEBUG] Sessions data:', sessionsData);
-      console.log('[DEBUG] Player stats:', playerStats);
+      console.log('[DEBUG] Number of sessions loaded:', sessionsData.length);
 
       setSessions(Array.isArray(sessionsData) ? sessionsData : []);
       setSwings(Array.isArray(swingsData) ? swingsData : []);
@@ -210,9 +204,13 @@ const SessionAnalytics = () => {
       trendsData.sort((a, b) => new Date(a.session_date) - new Date(b.session_date));
       
       console.log('[DEBUG] Final trends data:', trendsData);
+      console.log('[DEBUG] Number of trends data points:', trendsData.length);
+      if (trendsData.length > 0) {
+        console.log('[DEBUG] Sample trend data point:', trendsData[0]);
+      }
       setTrends(trendsData);
       setBenchmarks(benchmarksData);
-      setProgress(playerStats); // Use player stats as progress data
+      setProgress(progressData);
       setFilterOptions(filterOptionsData);
     } catch (err) {
       console.error('Error loading analytics data:', err);
