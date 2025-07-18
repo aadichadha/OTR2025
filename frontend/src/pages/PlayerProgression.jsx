@@ -821,6 +821,7 @@ const SwingAnalysisTab = ({ data }) => {
                   dataKey="avgLa" 
                   stroke="#1c2c4d" 
                   label={{ value: 'Average Launch Angle (°)', position: 'bottom', offset: 0 }}
+                  domain={[-15, 50]}
                 />
                 <YAxis 
                   stroke="#1c2c4d" 
