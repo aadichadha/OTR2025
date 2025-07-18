@@ -345,7 +345,16 @@ const OverviewTab = ({ data }) => {
                 onChange={(e) => setCustomStartDate(e.target.value)}
                 size="small"
                 InputLabelProps={{ shrink: true }}
-                sx={{ minWidth: 150 }}
+                sx={{ 
+                  minWidth: 150,
+                  '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#1c2c4d' },
+                    '&:hover fieldset': { borderColor: '#1c2c4d' },
+                    '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                  },
+                  '& .MuiInputBase-input': { color: '#1c2c4d' }
+                }}
               />
               <TextField
                 label="End Date"
@@ -354,7 +363,16 @@ const OverviewTab = ({ data }) => {
                 onChange={(e) => setCustomEndDate(e.target.value)}
                 size="small"
                 InputLabelProps={{ shrink: true }}
-                sx={{ minWidth: 150 }}
+                sx={{ 
+                  minWidth: 150,
+                  '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#1c2c4d' },
+                    '&:hover fieldset': { borderColor: '#1c2c4d' },
+                    '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                  },
+                  '& .MuiInputBase-input': { color: '#1c2c4d' }
+                }}
               />
             </Box>
           )}
@@ -590,8 +608,8 @@ const TrendsTab = ({ data }) => {
   ];
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+    <Box sx={{ bgcolor: '#1c2c4d', minHeight: '100vh', p: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 600 }}>
         Performance Trends & Changes
       </Typography>
 
@@ -688,7 +706,16 @@ const TrendsTab = ({ data }) => {
                 onChange={(e) => setCustomStartDate(e.target.value)}
                 size="small"
                 InputLabelProps={{ shrink: true }}
-                sx={{ minWidth: 150 }}
+                sx={{ 
+                  minWidth: 150,
+                  '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#1c2c4d' },
+                    '&:hover fieldset': { borderColor: '#1c2c4d' },
+                    '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                  },
+                  '& .MuiInputBase-input': { color: '#1c2c4d' }
+                }}
               />
               <TextField
                 label="End Date"
@@ -697,7 +724,16 @@ const TrendsTab = ({ data }) => {
                 onChange={(e) => setCustomEndDate(e.target.value)}
                 size="small"
                 InputLabelProps={{ shrink: true }}
-                sx={{ minWidth: 150 }}
+                sx={{ 
+                  minWidth: 150,
+                  '& .MuiInputLabel-root': { color: '#1c2c4d' },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#1c2c4d' },
+                    '&:hover fieldset': { borderColor: '#1c2c4d' },
+                    '&.Mui-focused fieldset': { borderColor: '#1c2c4d' }
+                  },
+                  '& .MuiInputBase-input': { color: '#1c2c4d' }
+                }}
               />
             </Box>
           )}
@@ -1942,25 +1978,29 @@ const PlayerProgression = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px" bgcolor="white">
-        <CircularProgress sx={{ color: '#1c2c4d' }} />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px" bgcolor="#1c2c4d">
+        <CircularProgress sx={{ color: 'white' }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2, bgcolor: '#ffebee', color: '#c62828' }}>
-        Error loading progression data: {error}
-      </Alert>
+      <Box sx={{ p: 3, bgcolor: '#1c2c4d', minHeight: '100vh' }}>
+        <Alert severity="error" sx={{ bgcolor: '#ffebee', color: '#c62828' }}>
+          Error loading progression data: {error}
+        </Alert>
+      </Box>
     );
   }
 
   if (!data) {
     return (
-      <Alert severity="info" sx={{ m: 2, bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
-        No progression data available for this player.
-      </Alert>
+      <Box sx={{ p: 3, bgcolor: '#1c2c4d', minHeight: '100vh' }}>
+        <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
+          No progression data available for this player.
+        </Alert>
+      </Box>
     );
   }
 
@@ -1974,47 +2014,47 @@ const PlayerProgression = () => {
   const TabComponent = tabs[tabValue].component;
 
   return (
-    <Box sx={{ p: 3, bgcolor: 'white', minHeight: '100vh' }}>
+    <Box sx={{ p: 3, bgcolor: '#1c2c4d', minHeight: '100vh' }}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
-          <Typography variant="h4" sx={{ color: '#1c2c4d', fontWeight: 700 }} gutterBottom>
+          <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }} gutterBottom>
             {data.player.name} - Progression Analysis
           </Typography>
-          <Typography variant="subtitle1" sx={{ color: '#666' }}>
+          <Typography variant="subtitle1" sx={{ color: '#e0e0e0' }}>
             {data.player.level} • {data.progressionData.length} Sessions
           </Typography>
         </Box>
         <Box display="flex" gap={1}>
           <Chip 
             label={`${data.player.level}`} 
-            sx={{ bgcolor: '#1c2c4d', color: 'white', fontWeight: 600 }}
+            sx={{ bgcolor: 'white', color: '#1c2c4d', fontWeight: 600 }}
           />
           <Chip 
             label={`${data.progressionData.length} sessions`} 
             variant="outlined" 
-            sx={{ borderColor: '#1c2c4d', color: '#1c2c4d', fontWeight: 600 }}
+            sx={{ borderColor: 'white', color: 'white', fontWeight: 600 }}
           />
         </Box>
       </Box>
 
       {/* Tabs */}
-      <Box sx={{ borderBottom: 2, borderColor: '#1c2c4d', mb: 3 }}>
+      <Box sx={{ borderBottom: 2, borderColor: 'white', mb: 3 }}>
         <Tabs 
           value={tabValue} 
           onChange={handleTabChange} 
           aria-label="progression tabs"
           sx={{
             '& .MuiTab-root': {
-              color: '#666',
+              color: '#e0e0e0',
               fontWeight: 600,
               '&.Mui-selected': {
-                color: '#1c2c4d',
+                color: 'white',
                 fontWeight: 700
               }
             },
             '& .MuiTabs-indicator': {
-              bgcolor: '#1c2c4d',
+              bgcolor: 'white',
               height: 3
             }
           }}
