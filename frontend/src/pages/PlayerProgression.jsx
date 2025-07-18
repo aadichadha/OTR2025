@@ -171,6 +171,7 @@ const OverviewTab = ({ data }) => {
     // Apply time period filter
     const now = new Date();
     let startDate = null;
+    let endDate = null;
 
     switch (timePeriod) {
       case '30d':
@@ -187,16 +188,26 @@ const OverviewTab = ({ data }) => {
           startDate = new Date(customStartDate);
         }
         if (customEndDate) {
-          const endDate = new Date(customEndDate);
-          filtered = filtered.filter(session => new Date(session.sessionDate) <= endDate);
+          endDate = new Date(customEndDate);
         }
         break;
-      default: // 'all'
+      case 'all':
+        // For "all time", use the first session date to the newest session date
+        if (progressionData.length > 0) {
+          startDate = new Date(progressionData[0].sessionDate);
+          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
+        }
+        break;
+      default:
         startDate = null;
     }
 
     if (startDate) {
       filtered = filtered.filter(session => new Date(session.sessionDate) >= startDate);
+    }
+    
+    if (endDate) {
+      filtered = filtered.filter(session => new Date(session.sessionDate) <= endDate);
     }
 
     return filtered;
@@ -406,7 +417,8 @@ const OverviewTab = ({ data }) => {
       
       <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
+          <Box display="flex" justifyContent="center">
+            <ResponsiveContainer width="65%" height={400}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
               <XAxis dataKey="date" stroke="#1c2c4d" />
@@ -437,6 +449,7 @@ const OverviewTab = ({ data }) => {
               <Line type="monotone" dataKey="barrelPct" stroke="#43a047" strokeWidth={2} dot={{ fill: '#43a047' }} />
             </LineChart>
           </ResponsiveContainer>
+          </Box>
         </CardContent>
       </Card>
 
@@ -519,6 +532,7 @@ const TrendsTab = ({ data }) => {
     // Apply time period filter
     const now = new Date();
     let startDate = null;
+    let endDate = null;
 
     switch (timePeriod) {
       case '30d':
@@ -535,16 +549,26 @@ const TrendsTab = ({ data }) => {
           startDate = new Date(customStartDate);
         }
         if (customEndDate) {
-          const endDate = new Date(customEndDate);
-          filtered = filtered.filter(session => new Date(session.sessionDate) <= endDate);
+          endDate = new Date(customEndDate);
         }
         break;
-      default: // 'all'
+      case 'all':
+        // For "all time", use the first session date to the newest session date
+        if (progressionData.length > 0) {
+          startDate = new Date(progressionData[0].sessionDate);
+          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
+        }
+        break;
+      default:
         startDate = null;
     }
 
     if (startDate) {
       filtered = filtered.filter(session => new Date(session.sessionDate) >= startDate);
+    }
+    
+    if (endDate) {
+      filtered = filtered.filter(session => new Date(session.sessionDate) <= endDate);
     }
 
     return filtered;
@@ -1667,7 +1691,8 @@ const SwingAnalysisTab = ({ data }) => {
             Exit Velocity vs Launch Angle Relationship
           </Typography>
           {laEvChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
+            <Box display="flex" justifyContent="center">
+              <ResponsiveContainer width="65%" height={400}>
               <ScatterChart data={laEvChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis 
@@ -1723,6 +1748,7 @@ const SwingAnalysisTab = ({ data }) => {
                 />
               </ScatterChart>
             </ResponsiveContainer>
+            </Box>
           ) : (
             <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
               No launch angle data available for the selected time period.
@@ -1738,7 +1764,8 @@ const SwingAnalysisTab = ({ data }) => {
             Exit Velocity Trends Over Time
           </Typography>
           {evChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
+            <Box display="flex" justifyContent="center">
+              <ResponsiveContainer width="65%" height={400}>
               <LineChart data={evChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis dataKey="date" stroke="#1c2c4d" />
@@ -1780,6 +1807,7 @@ const SwingAnalysisTab = ({ data }) => {
                 />
               </LineChart>
             </ResponsiveContainer>
+            </Box>
           ) : (
             <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
               No exit velocity data available for the selected time period.
