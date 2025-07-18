@@ -585,20 +585,97 @@ const SwingAnalysisTab = ({ data }) => {
   const [qualityFilter, setQualityFilter] = useState(false);
   const [comparisonMode, setComparisonMode] = useState(false);
   const [comparisonSlider, setComparisonSlider] = useState(50);
+  const [selectedSessions, setSelectedSessions] = useState([]);
+  const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
+  // Filter data based on time period
   const filteredData = useMemo(() => {
-    if (!qualityFilter) return progressionData;
+    let filtered = [...progressionData];
 
-    return progressionData.filter(session => {
-      // Filter out sessions with poor quality swings
-      const hasGoodAttackAngles = session.metrics.avgBs && 
-        session.metrics.avgBs > 45; // Minimum bat speed threshold
-      return hasGoodAttackAngles;
-    });
-  }, [progressionData, qualityFilter]);
+    // Apply quality filter
+    if (qualityFilter) {
+      filtered = filtered.filter(session => {
+        const hasGoodAttackAngles = session.metrics.avgBs && 
+          session.metrics.avgBs > 45; // Minimum bat speed threshold
+        return hasGoodAttackAngles;
+      });
+    }
+
+    // Apply time period filter
+    const now = new Date();
+    let startDate = null;
+
+    switch (timePeriod) {
+      case '30d':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '60d':
+        startDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+        break;
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case 'custom':
+        if (customStartDate) {
+          startDate = new Date(customStartDate);
+        }
+        if (customEndDate) {
+          const endDate = new Date(customEndDate);
+          filtered = filtered.filter(session => new Date(session.sessionDate) <= endDate);
+        }
+        break;
+      default: // 'all'
+        startDate = null;
+    }
+
+    if (startDate) {
+      filtered = filtered.filter(session => new Date(session.sessionDate) >= startDate);
+    }
+
+    return filtered;
+  }, [progressionData, qualityFilter, timePeriod, customStartDate, customEndDate]);
+
+  // Prepare chart data for LA vs EV graph
+  const laEvChartData = useMemo(() => {
+    return filteredData
+      .filter(session => session.metrics.avgEv && session.metrics.avgLa)
+      .map(session => ({
+        date: new Date(session.sessionDate).toLocaleDateString(),
+        avgEv: session.metrics.avgEv,
+        avgLa: session.metrics.avgLa,
+        sessionId: session.id
+      }));
+  }, [filteredData]);
+
+  // Prepare chart data for average EV per session
+  const evChartData = useMemo(() => {
+    return filteredData
+      .filter(session => session.metrics.avgEv)
+      .map(session => ({
+        date: new Date(session.sessionDate).toLocaleDateString(),
+        avgEv: session.metrics.avgEv,
+        maxEv: session.metrics.maxEv,
+        sessionId: session.id
+      }));
+  }, [filteredData]);
 
   const firstSession = filteredData[0];
   const lastSession = filteredData[filteredData.length - 1];
+
+  const handleSessionSelection = (sessionId) => {
+    setSelectedSessions(prev => 
+      prev.includes(sessionId) 
+        ? prev.filter(id => id !== sessionId)
+        : [...prev, sessionId]
+    );
+  };
+
+  const getSelectedSessionData = () => {
+    if (selectedSessions.length === 0) return filteredData;
+    return filteredData.filter(session => selectedSessions.includes(session.id));
+  };
 
   return (
     <Box>
@@ -606,29 +683,247 @@ const SwingAnalysisTab = ({ data }) => {
         Swing Analysis & Quality Control
       </Typography>
 
-      <Box display="flex" gap={2} mb={3} flexWrap="wrap">
-        <FormControlLabel
-          control={
-            <Switch
-              checked={qualityFilter}
-              onChange={(e) => setQualityFilter(e.target.checked)}
-            />
-          }
-          label="Quality Filter (Hide poor swings)"
-          sx={{ color: '#1c2c4d' }}
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={comparisonMode}
-              onChange={(e) => setComparisonMode(e.target.checked)}
-            />
-          }
-          label="Comparison Mode"
-          sx={{ color: '#1c2c4d' }}
-        />
-      </Box>
+      {/* Filters Section */}
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="subtitle1" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+            Analysis Filters
+          </Typography>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Box display="flex" gap={2} flexWrap="wrap">
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={qualityFilter}
+                      onChange={(e) => setQualityFilter(e.target.checked)}
+                    />
+                  }
+                  label="Quality Filter (Hide poor swings)"
+                  sx={{ color: '#1c2c4d' }}
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={comparisonMode}
+                      onChange={(e) => setComparisonMode(e.target.checked)}
+                    />
+                  }
+                  label="Comparison Mode"
+                  sx={{ color: '#1c2c4d' }}
+                />
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+                <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                  Time Period:
+                </Typography>
+                <select 
+                  value={timePeriod} 
+                  onChange={(e) => setTimePeriod(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '2px solid #1c2c4d',
+                    borderRadius: '6px',
+                    color: '#1c2c4d',
+                    fontWeight: 600,
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="all">All Time</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="60d">Last 60 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </Box>
+              
+              {timePeriod === 'custom' && (
+                <Box display="flex" gap={2} mt={2} flexWrap="wrap">
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '2px solid #1c2c4d',
+                      borderRadius: '6px',
+                      color: '#1c2c4d',
+                      fontWeight: 600,
+                      backgroundColor: 'white'
+                    }}
+                    placeholder="Start Date"
+                  />
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '2px solid #1c2c4d',
+                      borderRadius: '6px',
+                      color: '#1c2c4d',
+                      fontWeight: 600,
+                      backgroundColor: 'white'
+                    }}
+                    placeholder="End Date"
+                  />
+                </Box>
+              )}
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
+      {/* Session Selection */}
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="subtitle1" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+            Session Selection ({selectedSessions.length} selected)
+          </Typography>
+          <Box display="flex" gap={1} flexWrap="wrap">
+            {filteredData.map((session) => (
+              <Chip
+                key={session.id}
+                label={`${new Date(session.sessionDate).toLocaleDateString()} (${session.metrics.avgEv?.toFixed(1)} EV)`}
+                onClick={() => handleSessionSelection(session.id)}
+                sx={{
+                  bgcolor: selectedSessions.includes(session.id) ? '#1c2c4d' : 'transparent',
+                  color: selectedSessions.includes(session.id) ? 'white' : '#1c2c4d',
+                  border: '2px solid #1c2c4d',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: selectedSessions.includes(session.id) ? '#1c2c4d' : '#f5f5f5'
+                  }
+                }}
+              />
+            ))}
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* LA vs EV Graph */}
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+            Launch Angle vs Exit Velocity
+          </Typography>
+          {laEvChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={laEvChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="date" stroke="#1c2c4d" />
+                <YAxis yAxisId="left" stroke="#1c2c4d" />
+                <YAxis yAxisId="right" orientation="right" stroke="#3a7bd5" />
+                <RechartsTooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
+                          <Typography variant="subtitle2" sx={{ color: '#1c2c4d' }}>{label}</Typography>
+                          {payload.map((entry, index) => (
+                            <Box key={index} sx={{ mt: 1 }}>
+                              <Typography variant="body2" sx={{ color: entry.color }}>
+                                {entry.name}: {entry.value} {entry.dataKey === 'avgEv' ? 'MPH' : '°'}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Card>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Line 
+                  yAxisId="left"
+                  type="monotone" 
+                  dataKey="avgEv" 
+                  stroke="#1c2c4d" 
+                  strokeWidth={2} 
+                  dot={{ fill: '#1c2c4d' }}
+                  name="Avg Exit Velocity"
+                />
+                <Line 
+                  yAxisId="right"
+                  type="monotone" 
+                  dataKey="avgLa" 
+                  stroke="#3a7bd5" 
+                  strokeWidth={2} 
+                  dot={{ fill: '#3a7bd5' }}
+                  name="Avg Launch Angle"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
+              No launch angle data available for the selected time period.
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Average EV per Session Graph */}
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+            Exit Velocity Trends
+          </Typography>
+          {evChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={evChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="date" stroke="#1c2c4d" />
+                <YAxis stroke="#1c2c4d" />
+                <RechartsTooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
+                          <Typography variant="subtitle2" sx={{ color: '#1c2c4d' }}>{label}</Typography>
+                          {payload.map((entry, index) => (
+                            <Box key={index} sx={{ mt: 1 }}>
+                              <Typography variant="body2" sx={{ color: entry.color }}>
+                                {entry.name}: {entry.value} MPH
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Card>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="avgEv" 
+                  stroke="#1c2c4d" 
+                  strokeWidth={3} 
+                  dot={{ fill: '#1c2c4d', r: 4 }}
+                  name="Average Exit Velocity"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="maxEv" 
+                  stroke="#e53935" 
+                  strokeWidth={2} 
+                  dot={{ fill: '#e53935', r: 3 }}
+                  name="Maximum Exit Velocity"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
+              No exit velocity data available for the selected time period.
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Comparison Mode */}
       {comparisonMode && (
         <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
           <CardContent>
@@ -696,6 +991,16 @@ const SwingAnalysisTab = ({ data }) => {
                     }}
                   />
                 </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary="Selected Sessions"
+                    secondary={selectedSessions.length > 0 ? selectedSessions.length : 'All sessions'}
+                    sx={{ 
+                      '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                      '& .MuiListItemText-secondary': { color: '#666' }
+                    }}
+                  />
+                </ListItem>
               </List>
             </CardContent>
           </Card>
@@ -739,6 +1044,21 @@ const SwingAnalysisTab = ({ data }) => {
                       icon: <TrendingUp sx={{ color: '#43a047' }} />
                     });
                   }
+                }
+
+                // Check for optimal launch angle
+                const recentSessions = filteredData.slice(-5);
+                const avgLa = recentSessions
+                  .map(s => s.metrics.avgLa)
+                  .filter(Boolean)
+                  .reduce((sum, la) => sum + la, 0) / recentSessions.length;
+                
+                if (avgLa && (avgLa < 8 || avgLa > 32)) {
+                  alerts.push({
+                    type: 'warning',
+                    message: `Launch angle (${avgLa.toFixed(1)}°) outside optimal range (8-32°)`,
+                    icon: <Warning sx={{ color: '#ffa726' }} />
+                  });
                 }
 
                 return alerts.length > 0 ? (

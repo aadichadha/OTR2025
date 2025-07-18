@@ -1269,6 +1269,7 @@ const getPlayerProgression = async (req, res) => {
       const maxEv = exitVelocities.length > 0 ? Math.max(...exitVelocities) : null;
       const avgBs = batSpeeds.length > 0 ? batSpeeds.reduce((a, b) => a + b, 0) / batSpeeds.length : null;
       const maxBs = batSpeeds.length > 0 ? Math.max(...batSpeeds) : null;
+      const avgLa = launchAngles.length > 0 ? launchAngles.reduce((a, b) => a + b, 0) / launchAngles.length : null;
       
       // Calculate barrel percentage
       let barrelPct = 0;
@@ -1293,6 +1294,7 @@ const getPlayerProgression = async (req, res) => {
       };
 
       return {
+        id: session.id,
         sessionId: session.id,
         sessionDate: session.session_date,
         sessionType: session.type,
@@ -1301,6 +1303,7 @@ const getPlayerProgression = async (req, res) => {
           maxEv: parseFloat(maxEv?.toFixed(2)) || null,
           avgBs: parseFloat(avgBs?.toFixed(2)) || null,
           maxBs: parseFloat(maxBs?.toFixed(2)) || null,
+          avgLa: parseFloat(avgLa?.toFixed(2)) || null,
           barrelPct: barrelPct || null
         },
         grades,
