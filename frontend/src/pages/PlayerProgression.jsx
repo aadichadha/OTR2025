@@ -766,7 +766,7 @@ const TrendsTab = ({ data }) => {
               </Typography>
               <Typography variant="body2" sx={{ color: '#666' }}>
                 Comparing {filteredTrendData[0]?.sessionDate ? new Date(filteredTrendData[0].sessionDate).toLocaleDateString() : 'first session'} 
-                to {filteredTrendData[filteredTrendData.length - 1]?.sessionDate ? new Date(filteredTrendData[filteredTrendData.length - 1].sessionDate).toLocaleDateString() : 'latest session'}
+                {' '}to{' '} {filteredTrendData[filteredTrendData.length - 1]?.sessionDate ? new Date(filteredTrendData[filteredTrendData.length - 1].sessionDate).toLocaleDateString() : 'latest session'}
               </Typography>
             </Box>
           )}
