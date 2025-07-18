@@ -53,7 +53,7 @@ import {
   Fire,
   Add
 } from '@mui/icons-material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Area, AreaChart, ScatterChart, Scatter } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Area, AreaChart, ScatterChart, Scatter, ReferenceLine } from 'recharts';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getGradeInfo, getGradeEmoji, formatGrade } from '../utils/grade20to80';
@@ -550,9 +550,13 @@ const TrendsTab = ({ data }) => {
     return filtered;
   }, [progressionData, timePeriod, customStartDate, customEndDate]);
 
-  // Calculate trends for each metric based on session-to-session averages
+  // Calculate trends for each metric
   const trends = useMemo(() => {
     if (filteredTrendData.length < 2) return {};
+
+    const firstSession = filteredTrendData[0];
+    const lastSession = filteredTrendData[filteredTrendData.length - 1];
+    const recentSessions = filteredTrendData.slice(-3); // Last 3 sessions
 
     const trendMetrics = [
       { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
@@ -563,62 +567,24 @@ const TrendsTab = ({ data }) => {
     ];
 
     return trendMetrics.reduce((acc, metric) => {
-      // Get all valid values for this metric across sessions
-      const values = filteredTrendData
-        .map(session => session.metrics[metric.key])
-        .filter(value => value !== null && value !== undefined);
-
-      if (values.length < 2) return acc;
-
-      // Calculate session-to-session changes
-      const sessionChanges = [];
-      for (let i = 1; i < values.length; i++) {
-        const currentValue = values[i];
-        const previousValue = values[i - 1];
-        if (previousValue > 0) {
-          const change = ((currentValue - previousValue) / previousValue) * 100;
-          sessionChanges.push(change);
-        }
-      }
-
-      if (sessionChanges.length === 0) return acc;
-
-      // Calculate average change per session
-      const averageChangePerSession = sessionChanges.reduce((sum, change) => sum + change, 0) / sessionChanges.length;
-      
-      // Calculate total change from first to last session
-      const firstValue = values[0];
-      const lastValue = values[values.length - 1];
-      const totalPercentChange = ((lastValue - firstValue) / firstValue) * 100;
-      
-      // Calculate recent average (last 3 sessions)
-      const recentSessions = filteredTrendData.slice(-3);
+      const firstValue = firstSession.metrics[metric.key];
+      const lastValue = lastSession.metrics[metric.key];
       const recentAverage = recentSessions
         .map(s => s.metrics[metric.key])
         .filter(Boolean)
         .reduce((sum, val) => sum + val, 0) / recentSessions.length;
 
-      const direction = averageChangePerSession > 0 ? 'up' : averageChangePerSession < 0 ? 'down' : 'flat';
+      if (!firstValue || !lastValue) return acc;
 
-      // Calculate grade changes
-      const firstSession = filteredTrendData[0];
-      const lastSession = filteredTrendData[filteredTrendData.length - 1];
-      const oldGrade = firstSession.grades[metric.key];
-      const newGrade = lastSession.grades[metric.key];
+      const percentChange = ((lastValue - firstValue) / firstValue) * 100;
+      const direction = percentChange > 0 ? 'up' : percentChange < 0 ? 'down' : 'flat';
 
       acc[metric.key] = {
-        percentChange: Math.round(averageChangePerSession * 10) / 10, // Average change per session
-        totalPercentChange: Math.round(totalPercentChange * 10) / 10, // Total change from first to last
+        percentChange: Math.round(percentChange * 10) / 10,
         direction,
         recentAverage: Math.round(recentAverage * 10) / 10,
         firstValue: Math.round(firstValue * 10) / 10,
-        lastValue: Math.round(lastValue * 10) / 10,
-        sessionsAnalyzed: values.length,
-        averageChangePerSession: Math.round(averageChangePerSession * 10) / 10,
-        gradeChange: {
-          oldGrade: oldGrade ? formatGrade(oldGrade) : 'N/A',
-          newGrade: newGrade ? formatGrade(newGrade) : 'N/A'
-        }
+        lastValue: Math.round(lastValue * 10) / 10
       };
 
       return acc;
@@ -768,10 +734,10 @@ const TrendsTab = ({ data }) => {
           {filteredTrendData.length > 0 && (
             <Box mt={2} p={2} bgcolor="white" borderRadius={1} border="1px solid #1c2c4d">
               <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
-                Session-to-Session Trends Analysis ({filteredTrendData.length} sessions):
+                Trends Analysis ({filteredTrendData.length} sessions):
               </Typography>
               <Typography variant="body2" sx={{ color: '#666' }}>
-                Analyzing average changes between consecutive sessions from {filteredTrendData[0]?.sessionDate ? new Date(filteredTrendData[0].sessionDate).toLocaleDateString() : 'first session'} 
+                Comparing {filteredTrendData[0]?.sessionDate ? new Date(filteredTrendData[0].sessionDate).toLocaleDateString() : 'first session'} 
                 to {filteredTrendData[filteredTrendData.length - 1]?.sessionDate ? new Date(filteredTrendData[filteredTrendData.length - 1].sessionDate).toLocaleDateString() : 'latest session'}
               </Typography>
             </Box>
@@ -804,7 +770,7 @@ const TrendsTab = ({ data }) => {
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        Avg Change/Session
+                        Percent Change
                       </Typography>
                       <Typography 
                         variant="h5" 
@@ -819,34 +785,28 @@ const TrendsTab = ({ data }) => {
                     
                     <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        Total Change
-                      </Typography>
-                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                        {trend.totalPercentChange > 0 ? '+' : ''}{trend.totalPercentChange}%
-                      </Typography>
-                    </Grid>
-
-                    <Grid item xs={6}>
-                      <Typography variant="body2" sx={{ color: '#666' }}>
                         Recent Average
                       </Typography>
-                      <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
+                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
                         {recentAverage ? `${recentAverage} ${metric.unit}` : 'N/A'}
                       </Typography>
                     </Grid>
 
                     <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        Sessions Analyzed
+                        Previous Average
                       </Typography>
                       <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
-                        {trend.sessionsAnalyzed}
+                        {trend.firstValue} {metric.unit}
                       </Typography>
                     </Grid>
 
-                    <Grid item xs={12}>
+                    <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        Grade Change: {gradeChange.oldGrade} → {gradeChange.newGrade}
+                        New Average
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
+                        {trend.lastValue} {metric.unit}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -1716,13 +1676,17 @@ const SwingAnalysisTab = ({ data }) => {
                   label={{ value: 'Average Exit Velocity (MPH)', position: 'bottom', offset: 0 }}
                   domain={[60, 100]}
                   type="number"
+                  tick={{ fill: '#1c2c4d' }}
                 />
                 <YAxis 
                   stroke="#1c2c4d" 
                   label={{ value: 'Average Launch Angle (°)', angle: -90, position: 'left' }}
                   domain={[-15, 40]}
                   type="number"
+                  tick={{ fill: '#1c2c4d' }}
                 />
+                <ReferenceLine x={0} stroke="#e0e0e0" strokeDasharray="3 3" />
+                <ReferenceLine y={0} stroke="#e0e0e0" strokeDasharray="3 3" />
                 <RechartsTooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
