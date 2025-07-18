@@ -247,8 +247,8 @@ const OverviewTab = ({ data }) => {
   ];
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+    <Box sx={{ bgcolor: '#1c2c4d', minHeight: '100vh', p: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 600 }}>
         Performance Trends
       </Typography>
 
@@ -379,7 +379,7 @@ const OverviewTab = ({ data }) => {
 
           {/* Period Averages Summary */}
           {Object.keys(periodAverages).length > 0 && (
-            <Box mt={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+            <Box mt={2} p={2} bgcolor="white" borderRadius={1} border="1px solid #1c2c4d">
               <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
                 Period Averages ({filteredData.length} sessions):
               </Typography>
