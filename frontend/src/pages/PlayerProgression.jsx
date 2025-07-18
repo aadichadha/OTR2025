@@ -1750,6 +1750,15 @@ const SwingAnalysisTab = ({ data }) => {
                   r={6}
                   name="Launch Angle vs Exit Velocity"
                 />
+                <Line 
+                  type="monotone" 
+                  dataKey="avgLa" 
+                  stroke="#1c2c4d" 
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  connectNulls={false}
+                />
               </ScatterChart>
             </ResponsiveContainer>
             </Box>
