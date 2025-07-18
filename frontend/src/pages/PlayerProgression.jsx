@@ -259,9 +259,13 @@ const OverviewTab = ({ data }) => {
 
   return (
     <Box sx={{ bgcolor: '#1c2c4d', minHeight: '100vh', p: 3 }}>
-      <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 600 }}>
-        Performance Trends
-      </Typography>
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+            Performance Trends
+          </Typography>
+        </CardContent>
+      </Card>
 
       {/* Time Period Toggle */}
       <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
