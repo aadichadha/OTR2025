@@ -53,7 +53,7 @@ import {
   Fire,
   Add
 } from '@mui/icons-material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Area, AreaChart, ScatterChart, Scatter } from 'recharts';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getGradeInfo, getGradeEmoji, formatGrade } from '../utils/grade20to80';
@@ -1708,17 +1708,20 @@ const SwingAnalysisTab = ({ data }) => {
           </Typography>
           {laEvChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={laEvChartData}>
+              <ScatterChart data={laEvChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis 
-                  dataKey="avgLa" 
+                  dataKey="avgEv" 
                   stroke="#1c2c4d" 
-                  label={{ value: 'Average Launch Angle (°)', position: 'bottom', offset: 0 }}
-                  domain={[-15, 50]}
+                  label={{ value: 'Average Exit Velocity (MPH)', position: 'bottom', offset: 0 }}
+                  domain={[60, 100]}
+                  type="number"
                 />
                 <YAxis 
                   stroke="#1c2c4d" 
-                  label={{ value: 'Average Exit Velocity (MPH)', angle: -90, position: 'left' }}
+                  label={{ value: 'Average Launch Angle (°)', angle: -90, position: 'left' }}
+                  domain={[-15, 40]}
+                  type="number"
                 />
                 <RechartsTooltip
                   content={({ active, payload, label }) => {
@@ -1746,15 +1749,15 @@ const SwingAnalysisTab = ({ data }) => {
                     return null;
                   }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="avgEv" 
+                <Scatter 
+                  dataKey="avgLa" 
+                  fill="#1c2c4d" 
                   stroke="#1c2c4d" 
-                  strokeWidth={0}
-                  dot={{ fill: '#1c2c4d', r: 6, stroke: '#1c2c4d', strokeWidth: 2 }}
-                  name="Exit Velocity vs Launch Angle"
+                  strokeWidth={2}
+                  r={6}
+                  name="Launch Angle vs Exit Velocity"
                 />
-              </LineChart>
+              </ScatterChart>
             </ResponsiveContainer>
           ) : (
             <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
