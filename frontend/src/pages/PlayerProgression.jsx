@@ -550,13 +550,9 @@ const TrendsTab = ({ data }) => {
     return filtered;
   }, [progressionData, timePeriod, customStartDate, customEndDate]);
 
-  // Calculate trends for each metric
+  // Calculate trends for each metric based on session-to-session averages
   const trends = useMemo(() => {
     if (filteredTrendData.length < 2) return {};
-
-    const firstSession = filteredTrendData[0];
-    const lastSession = filteredTrendData[filteredTrendData.length - 1];
-    const recentSessions = filteredTrendData.slice(-3); // Last 3 sessions
 
     const trendMetrics = [
       { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
@@ -567,28 +563,58 @@ const TrendsTab = ({ data }) => {
     ];
 
     return trendMetrics.reduce((acc, metric) => {
-      const firstValue = firstSession.metrics[metric.key];
-      const lastValue = lastSession.metrics[metric.key];
+      // Get all valid values for this metric across sessions
+      const values = filteredTrendData
+        .map(session => session.metrics[metric.key])
+        .filter(value => value !== null && value !== undefined);
+
+      if (values.length < 2) return acc;
+
+      // Calculate session-to-session changes
+      const sessionChanges = [];
+      for (let i = 1; i < values.length; i++) {
+        const currentValue = values[i];
+        const previousValue = values[i - 1];
+        if (previousValue > 0) {
+          const change = ((currentValue - previousValue) / previousValue) * 100;
+          sessionChanges.push(change);
+        }
+      }
+
+      if (sessionChanges.length === 0) return acc;
+
+      // Calculate average change per session
+      const averageChangePerSession = sessionChanges.reduce((sum, change) => sum + change, 0) / sessionChanges.length;
+      
+      // Calculate total change from first to last session
+      const firstValue = values[0];
+      const lastValue = values[values.length - 1];
+      const totalPercentChange = ((lastValue - firstValue) / firstValue) * 100;
+      
+      // Calculate recent average (last 3 sessions)
+      const recentSessions = filteredTrendData.slice(-3);
       const recentAverage = recentSessions
         .map(s => s.metrics[metric.key])
         .filter(Boolean)
         .reduce((sum, val) => sum + val, 0) / recentSessions.length;
 
-      if (!firstValue || !lastValue) return acc;
-
-      const percentChange = ((lastValue - firstValue) / firstValue) * 100;
-      const direction = percentChange > 0 ? 'up' : percentChange < 0 ? 'down' : 'flat';
+      const direction = averageChangePerSession > 0 ? 'up' : averageChangePerSession < 0 ? 'down' : 'flat';
 
       // Calculate grade changes
+      const firstSession = filteredTrendData[0];
+      const lastSession = filteredTrendData[filteredTrendData.length - 1];
       const oldGrade = firstSession.grades[metric.key];
       const newGrade = lastSession.grades[metric.key];
 
       acc[metric.key] = {
-        percentChange: Math.round(percentChange * 10) / 10,
+        percentChange: Math.round(averageChangePerSession * 10) / 10, // Average change per session
+        totalPercentChange: Math.round(totalPercentChange * 10) / 10, // Total change from first to last
         direction,
         recentAverage: Math.round(recentAverage * 10) / 10,
         firstValue: Math.round(firstValue * 10) / 10,
         lastValue: Math.round(lastValue * 10) / 10,
+        sessionsAnalyzed: values.length,
+        averageChangePerSession: Math.round(averageChangePerSession * 10) / 10,
         gradeChange: {
           oldGrade: oldGrade ? formatGrade(oldGrade) : 'N/A',
           newGrade: newGrade ? formatGrade(newGrade) : 'N/A'
@@ -740,12 +766,12 @@ const TrendsTab = ({ data }) => {
 
           {/* Trends Summary */}
           {filteredTrendData.length > 0 && (
-            <Box mt={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+            <Box mt={2} p={2} bgcolor="white" borderRadius={1} border="1px solid #1c2c4d">
               <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
-                Trends Analysis ({filteredTrendData.length} sessions):
+                Session-to-Session Trends Analysis ({filteredTrendData.length} sessions):
               </Typography>
               <Typography variant="body2" sx={{ color: '#666' }}>
-                Comparing {filteredTrendData[0]?.sessionDate ? new Date(filteredTrendData[0].sessionDate).toLocaleDateString() : 'first session'} 
+                Analyzing average changes between consecutive sessions from {filteredTrendData[0]?.sessionDate ? new Date(filteredTrendData[0].sessionDate).toLocaleDateString() : 'first session'} 
                 to {filteredTrendData[filteredTrendData.length - 1]?.sessionDate ? new Date(filteredTrendData[filteredTrendData.length - 1].sessionDate).toLocaleDateString() : 'latest session'}
               </Typography>
             </Box>
@@ -778,7 +804,7 @@ const TrendsTab = ({ data }) => {
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        Overall Change
+                        Avg Change/Session
                       </Typography>
                       <Typography 
                         variant="h5" 
@@ -793,10 +819,10 @@ const TrendsTab = ({ data }) => {
                     
                     <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        Grade Change
+                        Total Change
                       </Typography>
-                      <Typography variant="h5" sx={{ color: '#1c2c4d', fontWeight: 700 }}>
-                        {gradeChange.oldGrade} → {gradeChange.newGrade}
+                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        {trend.totalPercentChange > 0 ? '+' : ''}{trend.totalPercentChange}%
                       </Typography>
                     </Grid>
 
@@ -811,10 +837,16 @@ const TrendsTab = ({ data }) => {
 
                     <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        First Session
+                        Sessions Analyzed
                       </Typography>
                       <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
-                        {trend.firstValue} {metric.unit}
+                        {trend.sessionsAnalyzed}
+                      </Typography>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Typography variant="body2" sx={{ color: '#666' }}>
+                        Grade Change: {gradeChange.oldGrade} → {gradeChange.newGrade}
                       </Typography>
                     </Grid>
                   </Grid>
