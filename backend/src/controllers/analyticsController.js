@@ -1286,11 +1286,11 @@ const getPlayerProgression = async (req, res) => {
 
       // Calculate 20-80 grades
       const grades = {
-        avgEv: avgEv ? Grade20to80.calculateGrade(avgEv, levelStats.avgEv.mean, levelStats.avgEv.sd) : null,
-        maxEv: maxEv ? Grade20to80.calculateGrade(maxEv, levelStats.maxEv.mean, levelStats.maxEv.sd) : null,
-        avgBs: avgBs ? Grade20to80.calculateGrade(avgBs, levelStats.avgBs.mean, levelStats.avgBs.sd) : null,
-        maxBs: maxBs ? Grade20to80.calculateGrade(maxBs, levelStats.maxBs.mean, levelStats.maxBs.sd) : null,
-        barrelPct: barrelPct > 0 ? Grade20to80.calculateGrade(barrelPct, levelStats.barrelPct.mean, levelStats.barrelPct.sd) : null
+        avgEv: avgEv ? Grade20to80.calculateGrade(avgEv, levelStats.avgEv.average, levelStats.avgEv.upper) : null,
+        maxEv: maxEv ? Grade20to80.calculateGrade(maxEv, levelStats.maxEv.average, levelStats.maxEv.upper) : null,
+        avgBs: avgBs ? Grade20to80.calculateGrade(avgBs, levelStats.avgBs.average, levelStats.avgBs.upper) : null,
+        maxBs: maxBs ? Grade20to80.calculateGrade(maxBs, levelStats.maxBs.average, levelStats.maxBs.upper) : null,
+        barrelPct: barrelPct > 0 ? Grade20to80.calculateGrade(barrelPct, levelStats.barrelPct.average, levelStats.barrelPct.upper) : null
       };
 
       return {
@@ -1348,32 +1348,31 @@ const getPlayerProgression = async (req, res) => {
 
 // Helper function to calculate level statistics
 const calculateLevelStatistics = async (playerLevel) => {
-  // This would typically query a large dataset of players at the same level
-  // For now, we'll use estimated values based on the benchmarks
+  // Get benchmarks for the player's level
   const benchmarks = require('../config/benchmarks');
   const levelBenchmark = benchmarks[playerLevel] || benchmarks['High School'];
   
-  // Estimate standard deviations (roughly 15-20% of mean for most metrics)
+  // Return benchmark values for the new grading system
   return {
     avgEv: {
-      mean: levelBenchmark['Avg EV'],
-      sd: levelBenchmark['Avg EV'] * 0.15
+      average: levelBenchmark['Avg EV'],
+      upper: levelBenchmark['Top 8th EV']
     },
     maxEv: {
-      mean: levelBenchmark['Top 8th EV'],
-      sd: levelBenchmark['Top 8th EV'] * 0.12
+      average: levelBenchmark['Avg EV'],
+      upper: levelBenchmark['Top 8th EV']
     },
     avgBs: {
-      mean: levelBenchmark['Avg BatSpeed'],
-      sd: levelBenchmark['Avg BatSpeed'] * 0.12
+      average: levelBenchmark['Avg BatSpeed'],
+      upper: levelBenchmark['90th% BatSpeed']
     },
     maxBs: {
-      mean: levelBenchmark['90th% BatSpeed'],
-      sd: levelBenchmark['90th% BatSpeed'] * 0.10
+      average: levelBenchmark['Avg BatSpeed'],
+      upper: levelBenchmark['90th% BatSpeed']
     },
     barrelPct: {
-      mean: 15, // Average barrel percentage
-      sd: 8
+      average: 15, // Average barrel percentage
+      upper: 25    // Upper barrel percentage benchmark
     }
   };
 };
@@ -1405,7 +1404,7 @@ const calculateTrends = (progressionData, levelStats) => {
       // Calculate grade changes
       const gradeChange = Grade20to80.calculateGradeChange(
         firstValue, lastValue, 
-        levelStats[metric].mean, levelStats[metric].sd
+        levelStats[metric].average, levelStats[metric].upper
       );
 
       trends[metric] = {
@@ -1428,7 +1427,7 @@ const calculateMilestones = (progressionData, levelStats) => {
   const metrics = ['avgEv', 'maxEv', 'avgBs', 'maxBs', 'barrelPct'];
 
   metrics.forEach(metric => {
-    const metricMilestones = Grade20to80.getMilestones(metric, levelStats[metric].mean, levelStats[metric].sd);
+    const metricMilestones = Grade20to80.getMilestones(metric, levelStats[metric].average, levelStats[metric].upper);
     
     metricMilestones.forEach(milestone => {
       // Check if player achieved this milestone

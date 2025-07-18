@@ -1,29 +1,31 @@
 /**
  * 20-80 Baseball Scouting Grade System
- * Converts raw metrics to standardized baseball scouting grades using z-scores
+ * True baseball scouting method using level-specific benchmarks
+ * Based on MLB scouting standards
  */
 
 class Grade20to80 {
   /**
-   * Convert a raw metric value to a 20-80 grade using z-score
+   * Convert a raw metric value to a 20-80 grade using true baseball scouting method
    * @param {number} value - The raw metric value
-   * @param {number} mean - The mean for the player's level
-   * @param {number} sd - The standard deviation for the player's level
+   * @param {number} average - Level-specific average benchmark (A)
+   * @param {number} upper - Level-specific upper benchmark (U)
    * @returns {number} - Grade between 20-80
    */
-  static calculateGrade(value, mean, sd) {
-    if (!value || !mean || !sd || sd === 0) {
+  static calculateGrade(value, average, upper) {
+    // Validate inputs
+    if (!value || average === null || upper === null || upper <= average) {
       return 50; // Default to average if insufficient data
     }
 
-    // Calculate z-score
-    const zScore = (value - mean) / sd;
+    // Calculate increment: one third of the gap between average and upper
+    const inc = (upper - average) / 3.0;
     
-    // Convert to grade: grade = 50 + 10 * z
-    let grade = 50 + (10 * zScore);
+    // Calculate step: how many increments above/below average
+    const step = Math.round((value - average) / inc);
     
-    // Clamp between 20-80
-    grade = Math.min(80, Math.max(20, grade));
+    // Convert step to grade: 50 + 10*step, clamped between 20-80
+    const grade = Math.max(20, Math.min(80, 50 + (10 * step)));
     
     return Math.round(grade);
   }
@@ -38,52 +40,81 @@ class Grade20to80 {
       return {
         label: 'Well Below Average',
         description: 'Significantly below level standard',
-        color: '#ff4444'
+        color: '#ff4444',
+        bgColor: '#ffebee'
       };
     } else if (grade <= 40) {
       return {
         label: 'Below Average',
         description: 'Below level standard',
-        color: '#ff8c00'
+        color: '#ff8c00',
+        bgColor: '#fff3e0'
       };
     } else if (grade <= 50) {
       return {
         label: 'Average',
         description: 'At level standard',
-        color: '#ffd700'
+        color: '#ffd700',
+        bgColor: '#fffbf0'
       };
     } else if (grade <= 60) {
       return {
         label: 'Above Average',
         description: 'Above level standard',
-        color: '#90ee90'
+        color: '#90ee90',
+        bgColor: '#f1f8e9'
       };
     } else if (grade <= 70) {
       return {
         label: 'Well Above Average',
         description: 'Significantly above level standard',
-        color: '#32cd32'
+        color: '#32cd32',
+        bgColor: '#e8f5e8'
       };
     } else {
       return {
         label: 'Elite',
         description: 'Elite level performance',
-        color: '#00ff00'
+        color: '#00ff00',
+        bgColor: '#e8f5e8'
       };
     }
+  }
+
+  /**
+   * Get grade emoji for visual representation
+   * @param {number} grade - The 20-80 grade
+   * @returns {string} - Emoji representation
+   */
+  static getGradeEmoji(grade) {
+    if (grade <= 30) return '🔴';
+    if (grade <= 40) return '🟠';
+    if (grade <= 50) return '🟡';
+    if (grade <= 60) return '🟢';
+    if (grade <= 70) return '🔵';
+    return '⭐';
+  }
+
+  /**
+   * Format grade for display
+   * @param {number} grade - The 20-80 grade
+   * @returns {string} - Formatted grade string
+   */
+  static formatGrade(grade) {
+    return `${grade}`;
   }
 
   /**
    * Calculate grade change between two values
    * @param {number} oldValue - Previous value
    * @param {number} newValue - Current value
-   * @param {number} mean - Level mean
-   * @param {number} sd - Level standard deviation
+   * @param {number} average - Level average benchmark
+   * @param {number} upper - Level upper benchmark
    * @returns {Object} - Grade change information
    */
-  static calculateGradeChange(oldValue, newValue, mean, sd) {
-    const oldGrade = this.calculateGrade(oldValue, mean, sd);
-    const newGrade = this.calculateGrade(newValue, mean, sd);
+  static calculateGradeChange(oldValue, newValue, average, upper) {
+    const oldGrade = this.calculateGrade(oldValue, average, upper);
+    const newGrade = this.calculateGrade(newValue, average, upper);
     const change = newGrade - oldGrade;
     
     return {
@@ -140,11 +171,11 @@ class Grade20to80 {
   /**
    * Calculate milestone thresholds for a metric
    * @param {string} metric - The metric name
-   * @param {number} mean - Level mean
-   * @param {number} sd - Level standard deviation
+   * @param {number} average - Level average benchmark
+   * @param {number} upper - Level upper benchmark
    * @returns {Array} - Array of milestone objects
    */
-  static getMilestones(metric, mean, sd) {
+  static getMilestones(metric, average, upper) {
     const milestones = [
       { grade: 40, label: 'Below Average' },
       { grade: 50, label: 'Average' },
@@ -154,13 +185,51 @@ class Grade20to80 {
     ];
 
     return milestones.map(milestone => {
-      const value = mean + ((milestone.grade - 50) / 10) * sd;
+      // Calculate the value needed for this grade
+      const step = (milestone.grade - 50) / 10;
+      const inc = (upper - average) / 3.0;
+      const value = average + (step * inc);
+      
       return {
         ...milestone,
         value: Math.round(value * 10) / 10,
-        description: `Reached ${milestone.label} ${metric}`
+        description: `Reach ${milestone.label} ${metric}`
       };
     });
+  }
+
+  /**
+   * Get benchmark values for a specific level and metric
+   * @param {string} level - Player level (e.g., 'College', 'High School')
+   * @param {string} metric - Metric name (e.g., 'avgEv', 'maxEv', 'avgBs')
+   * @returns {Object} - Average and upper benchmark values
+   */
+  static getBenchmarks(level, metric) {
+    const benchmarks = require('../config/benchmarks');
+    const levelBenchmarks = benchmarks[level] || benchmarks['High School'];
+    
+    // Map metric names to benchmark keys
+    const metricMap = {
+      'avgEv': { average: 'Avg EV', upper: 'Top 8th EV' },
+      'maxEv': { average: 'Avg EV', upper: 'Top 8th EV' },
+      'avgBs': { average: 'Avg BatSpeed', upper: '90th% BatSpeed' },
+      'maxBs': { average: 'Avg BatSpeed', upper: '90th% BatSpeed' },
+      'barrelPct': { average: 15, upper: 25 } // Default barrel percentage benchmarks
+    };
+    
+    const mapping = metricMap[metric];
+    if (!mapping) {
+      return { average: null, upper: null };
+    }
+    
+    if (typeof mapping.average === 'number') {
+      return { average: mapping.average, upper: mapping.upper };
+    }
+    
+    return {
+      average: levelBenchmarks[mapping.average],
+      upper: levelBenchmarks[mapping.upper]
+    };
   }
 }
 
