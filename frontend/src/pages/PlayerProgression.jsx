@@ -487,17 +487,58 @@ const OverviewTab = ({ data }) => {
 
 // Trends Tab Component
 const TrendsTab = ({ data }) => {
-  const { progressionData } = data;
+  const { progressionData, trends: dataTrends } = data;
   const [comparisonMode, setComparisonMode] = useState(false);
   const [comparisonSlider, setComparisonSlider] = useState(50);
+  const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+
+  // Filter data based on time period for trends
+  const filteredTrendData = useMemo(() => {
+    let filtered = [...progressionData];
+
+    // Apply time period filter
+    const now = new Date();
+    let startDate = null;
+
+    switch (timePeriod) {
+      case '30d':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '60d':
+        startDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+        break;
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case 'custom':
+        if (customStartDate) {
+          startDate = new Date(customStartDate);
+        }
+        if (customEndDate) {
+          const endDate = new Date(customEndDate);
+          filtered = filtered.filter(session => new Date(session.sessionDate) <= endDate);
+        }
+        break;
+      default: // 'all'
+        startDate = null;
+    }
+
+    if (startDate) {
+      filtered = filtered.filter(session => new Date(session.sessionDate) >= startDate);
+    }
+
+    return filtered;
+  }, [progressionData, timePeriod, customStartDate, customEndDate]);
 
   // Calculate trends for each metric
   const trends = useMemo(() => {
-    if (progressionData.length < 2) return {};
+    if (filteredTrendData.length < 2) return {};
 
-    const firstSession = progressionData[0];
-    const lastSession = progressionData[progressionData.length - 1];
-    const recentSessions = progressionData.slice(-3); // Last 3 sessions
+    const firstSession = filteredTrendData[0];
+    const lastSession = filteredTrendData[filteredTrendData.length - 1];
+    const recentSessions = filteredTrendData.slice(-3); // Last 3 sessions
 
     const trendMetrics = [
       { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
@@ -538,7 +579,7 @@ const TrendsTab = ({ data }) => {
 
       return acc;
     }, {});
-  }, [progressionData]);
+  }, [filteredTrendData]);
 
   const trendMetrics = [
     { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
@@ -553,6 +594,128 @@ const TrendsTab = ({ data }) => {
       <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
         Performance Trends & Changes
       </Typography>
+
+      {/* Time Period Toggle for Trends */}
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="subtitle1" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2 }}>
+            Analysis Period: {timePeriod === 'all' ? 'All Time' : 
+                             timePeriod === '30d' ? 'Last 30 Days' :
+                             timePeriod === '60d' ? 'Last 60 Days' :
+                             timePeriod === '90d' ? 'Last 90 Days' : 'Custom Range'}
+          </Typography>
+          
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+            <Button
+              variant={timePeriod === 'all' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('all')}
+              sx={{ 
+                bgcolor: timePeriod === 'all' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === 'all' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === 'all' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              All Time
+            </Button>
+            <Button
+              variant={timePeriod === '30d' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('30d')}
+              sx={{ 
+                bgcolor: timePeriod === '30d' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === '30d' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === '30d' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              30 Days
+            </Button>
+            <Button
+              variant={timePeriod === '60d' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('60d')}
+              sx={{ 
+                bgcolor: timePeriod === '60d' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === '60d' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === '60d' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              60 Days
+            </Button>
+            <Button
+              variant={timePeriod === '90d' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('90d')}
+              sx={{ 
+                bgcolor: timePeriod === '90d' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === '90d' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === '90d' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              90 Days
+            </Button>
+            <Button
+              variant={timePeriod === 'custom' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('custom')}
+              sx={{ 
+                bgcolor: timePeriod === 'custom' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === 'custom' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === 'custom' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              Custom
+            </Button>
+          </Box>
+
+          {/* Custom Date Range Inputs */}
+          {timePeriod === 'custom' && (
+            <Box display="flex" gap={2} mt={2} alignItems="center" flexWrap="wrap">
+              <TextField
+                label="Start Date"
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+              />
+              <TextField
+                label="End Date"
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+              />
+            </Box>
+          )}
+
+          {/* Trends Summary */}
+          {filteredTrendData.length > 0 && (
+            <Box mt={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+              <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                Trends Analysis ({filteredTrendData.length} sessions):
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                Comparing {filteredTrendData[0]?.sessionDate ? new Date(filteredTrendData[0].sessionDate).toLocaleDateString() : 'first session'} 
+                to {filteredTrendData[filteredTrendData.length - 1]?.sessionDate ? new Date(filteredTrendData[filteredTrendData.length - 1].sessionDate).toLocaleDateString() : 'latest session'}
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
 
       <Grid container spacing={3}>
         {trendMetrics.map((metric) => {
@@ -639,6 +802,101 @@ const TrendsTab = ({ data }) => {
           );
         })}
       </Grid>
+
+      {/* Additional Trend Insights */}
+      {Object.keys(trends).length > 0 && (
+        <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2 }}>
+              Trend Insights
+            </Typography>
+            
+            <Grid container spacing={2}>
+              {/* Most Improved Metric */}
+              <Grid item xs={12} md={6}>
+                <Box p={2} bgcolor="#e8f5e8" borderRadius={1} border="1px solid #43a047">
+                  <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                    Most Improved
+                  </Typography>
+                  {(() => {
+                    const mostImproved = Object.entries(trends)
+                      .filter(([_, trend]) => trend.direction === 'up')
+                      .sort(([_, a], [__, b]) => b.percentChange - a.percentChange)[0];
+                    
+                    if (mostImproved) {
+                      const [metric, trend] = mostImproved;
+                      return (
+                        <Typography variant="body1" sx={{ color: '#43a047', fontWeight: 600 }}>
+                          {metric === 'avgEv' ? 'Average Exit Velocity' :
+                           metric === 'maxEv' ? 'Maximum Exit Velocity' :
+                           metric === 'avgBs' ? 'Average Bat Speed' :
+                           metric === 'maxBs' ? 'Maximum Bat Speed' :
+                           metric === 'barrelPct' ? 'Barrel Percentage' : metric}: +{trend.percentChange}%
+                        </Typography>
+                      );
+                    }
+                    return <Typography variant="body2" sx={{ color: '#666' }}>No improvements detected</Typography>;
+                  })()}
+                </Box>
+              </Grid>
+
+              {/* Areas for Improvement */}
+              <Grid item xs={12} md={6}>
+                <Box p={2} bgcolor="#ffebee" borderRadius={1} border="1px solid #e53935">
+                  <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                    Areas for Focus
+                  </Typography>
+                  {(() => {
+                    const needsImprovement = Object.entries(trends)
+                      .filter(([_, trend]) => trend.direction === 'down')
+                      .sort(([_, a], [__, b]) => a.percentChange - b.percentChange)[0];
+                    
+                    if (needsImprovement) {
+                      const [metric, trend] = needsImprovement;
+                      return (
+                        <Typography variant="body1" sx={{ color: '#e53935', fontWeight: 600 }}>
+                          {metric === 'avgEv' ? 'Average Exit Velocity' :
+                           metric === 'maxEv' ? 'Maximum Exit Velocity' :
+                           metric === 'avgBs' ? 'Average Bat Speed' :
+                           metric === 'maxBs' ? 'Maximum Bat Speed' :
+                           metric === 'barrelPct' ? 'Barrel Percentage' : metric}: {trend.percentChange}%
+                        </Typography>
+                      );
+                    }
+                    return <Typography variant="body2" sx={{ color: '#666' }}>All metrics trending positively</Typography>;
+                  })()}
+                </Box>
+              </Grid>
+
+              {/* Consistency Score */}
+              <Grid item xs={12}>
+                <Box p={2} bgcolor="#e3f2fd" borderRadius={1} border="1px solid #1976d2">
+                  <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                    Performance Consistency
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666' }}>
+                    {(() => {
+                      const positiveTrends = Object.values(trends).filter(t => t.direction === 'up').length;
+                      const totalTrends = Object.keys(trends).length;
+                      const consistencyScore = Math.round((positiveTrends / totalTrends) * 100);
+                      
+                      if (consistencyScore >= 80) {
+                        return `Excellent consistency: ${consistencyScore}% of metrics are improving`;
+                      } else if (consistencyScore >= 60) {
+                        return `Good consistency: ${consistencyScore}% of metrics are improving`;
+                      } else if (consistencyScore >= 40) {
+                        return `Moderate consistency: ${consistencyScore}% of metrics are improving`;
+                      } else {
+                        return `Needs attention: Only ${consistencyScore}% of metrics are improving`;
+                      }
+                    })()}
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
     </Box>
   );
 };
@@ -949,16 +1207,47 @@ const GoalsTab = ({ data }) => {
 
       {/* Create Goal Dialog */}
       {showCreateGoal && (
-        <Dialog open={showCreateGoal} onClose={() => setShowCreateGoal(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Create New Goal</DialogTitle>
-          <DialogContent>
-            <Box sx={{ pt: 2 }}>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Goal Type</InputLabel>
+        <Dialog 
+          open={showCreateGoal} 
+          onClose={() => setShowCreateGoal(false)} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              bgcolor: 'white',
+              border: '2px solid #1c2c4d',
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(28, 44, 77, 0.1)'
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            color: '#1c2c4d', 
+            fontWeight: 600, 
+            borderBottom: '1px solid #e0e0e0',
+            bgcolor: '#f8f9fa'
+          }}>
+            Create New Goal
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Box>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel sx={{ color: '#1c2c4d', fontWeight: 500 }}>Goal Type</InputLabel>
                 <Select
                   value={createGoalData.goalType}
                   onChange={(e) => setCreateGoalData({...createGoalData, goalType: e.target.value})}
                   label="Goal Type"
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#1c2c4d',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#1c2c4d',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#1c2c4d',
+                    }
+                  }}
                 >
                   <MenuItem value="avg_ev">Average Exit Velocity</MenuItem>
                   <MenuItem value="max_ev">Maximum Exit Velocity</MenuItem>
@@ -973,7 +1262,25 @@ const GoalsTab = ({ data }) => {
                 type="number"
                 value={createGoalData.targetValue}
                 onChange={(e) => setCreateGoalData({...createGoalData, targetValue: e.target.value})}
-                sx={{ mb: 2 }}
+                sx={{ 
+                  mb: 3,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                    fontWeight: 500
+                  },
+                  '& .MuiFormHelperText-root': {
+                    color: '#666'
+                  }
+                }}
                 helperText={`Target ${createGoalData.goalType.includes('ev') ? 'exit velocity' : 'bat speed'} in mph`}
               />
 
@@ -983,7 +1290,22 @@ const GoalsTab = ({ data }) => {
                 type="date"
                 value={createGoalData.startDate}
                 onChange={(e) => setCreateGoalData({...createGoalData, startDate: e.target.value})}
-                sx={{ mb: 2 }}
+                sx={{ 
+                  mb: 3,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                    fontWeight: 500
+                  }
+                }}
                 InputLabelProps={{ shrink: true }}
               />
 
@@ -993,7 +1315,22 @@ const GoalsTab = ({ data }) => {
                 type="date"
                 value={createGoalData.endDate}
                 onChange={(e) => setCreateGoalData({...createGoalData, endDate: e.target.value})}
-                sx={{ mb: 2 }}
+                sx={{ 
+                  mb: 3,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                    fontWeight: 500
+                  }
+                }}
                 InputLabelProps={{ shrink: true }}
               />
 
@@ -1004,15 +1341,59 @@ const GoalsTab = ({ data }) => {
                 rows={3}
                 value={createGoalData.notes}
                 onChange={(e) => setCreateGoalData({...createGoalData, notes: e.target.value})}
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1c2c4d',
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#1c2c4d',
+                    fontWeight: 500
+                  }
+                }}
               />
             </Box>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowCreateGoal(false)}>Cancel</Button>
+          <DialogActions sx={{ 
+            p: 3, 
+            borderTop: '1px solid #e0e0e0',
+            bgcolor: '#f8f9fa'
+          }}>
+            <Button 
+              onClick={() => setShowCreateGoal(false)}
+              sx={{ 
+                color: '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: '#f0f0f0',
+                  borderColor: '#1c2c4d'
+                }
+              }}
+              variant="outlined"
+            >
+              Cancel
+            </Button>
             <Button 
               onClick={handleCreateGoal} 
               variant="contained"
               disabled={!createGoalData.targetValue || !createGoalData.startDate || !createGoalData.endDate}
+              sx={{ 
+                bgcolor: '#1c2c4d',
+                color: 'white',
+                fontWeight: 600,
+                '&:hover': {
+                  bgcolor: '#0f1a2e'
+                },
+                '&:disabled': {
+                  bgcolor: '#ccc',
+                  color: '#666'
+                }
+              }}
             >
               Create Goal
             </Button>
