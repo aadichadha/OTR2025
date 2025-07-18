@@ -1,4 +1,4 @@
-const { Session, ExitVelocityData, Player, BatSpeedData } = require('../models');
+const { Session, ExitVelocityData, Player, BatSpeedData, PlayerGoal } = require('../models');
 const { Op } = require('sequelize');
 const { getPlayerLevel } = require('../utils/playerLevelUtils');
 const Grade20to80 = require('../utils/grade20to80');
@@ -1320,6 +1320,21 @@ const getPlayerProgression = async (req, res) => {
     // Get coaching tips
     const coachingTips = generateCoachingTips(progressionData, levelStats);
 
+    // Get player goals
+    const goals = await PlayerGoal.findAll({
+      where: { player_id: playerId },
+      include: [{
+        model: require('../models').User,
+        as: 'coach',
+        attributes: ['id', 'name', 'email']
+      }, {
+        model: Session,
+        as: 'achievedSession',
+        attributes: ['id', 'session_date', 'session_type']
+      }],
+      order: [['created_at', 'DESC']]
+    });
+
     res.json({
       success: true,
       data: {
@@ -1332,7 +1347,8 @@ const getPlayerProgression = async (req, res) => {
         levelStats,
         trends,
         milestones,
-        coachingTips
+        coachingTips,
+        goals
       }
     });
 

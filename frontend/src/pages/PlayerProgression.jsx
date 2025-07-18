@@ -24,7 +24,17 @@ import {
   ListItemText,
   ListItemIcon,
   Avatar,
-  Paper
+  Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField
 } from '@mui/material';
 import {
   TrendingUp,
@@ -40,7 +50,8 @@ import {
   Warning,
   CheckCircle,
   Star,
-  Fire
+  Fire,
+  Add
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import api from '../services/api';
@@ -149,9 +160,50 @@ const ProgressRing = ({ progress, size = 60, strokeWidth = 4 }) => {
 // Overview Tab Component
 const OverviewTab = ({ data }) => {
   const { progressionData, levelStats } = data;
+  const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+
+  // Filter data based on time period
+  const filteredData = useMemo(() => {
+    let filtered = [...progressionData];
+
+    // Apply time period filter
+    const now = new Date();
+    let startDate = null;
+
+    switch (timePeriod) {
+      case '30d':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '60d':
+        startDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+        break;
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case 'custom':
+        if (customStartDate) {
+          startDate = new Date(customStartDate);
+        }
+        if (customEndDate) {
+          const endDate = new Date(customEndDate);
+          filtered = filtered.filter(session => new Date(session.sessionDate) <= endDate);
+        }
+        break;
+      default: // 'all'
+        startDate = null;
+    }
+
+    if (startDate) {
+      filtered = filtered.filter(session => new Date(session.sessionDate) >= startDate);
+    }
+
+    return filtered;
+  }, [progressionData, timePeriod, customStartDate, customEndDate]);
 
   const chartData = useMemo(() => {
-    return progressionData.map(session => ({
+    return filteredData.map(session => ({
       date: new Date(session.sessionDate).toLocaleDateString(),
       avgEv: session.metrics.avgEv,
       maxEv: session.metrics.maxEv,
@@ -164,7 +216,27 @@ const OverviewTab = ({ data }) => {
       maxBsGrade: session.grades.maxBs,
       barrelPctGrade: session.grades.barrelPct
     }));
-  }, [progressionData]);
+  }, [filteredData]);
+
+  // Calculate averages over the selected time period
+  const periodAverages = useMemo(() => {
+    if (filteredData.length === 0) return {};
+
+    const metrics = ['avgEv', 'maxEv', 'avgBs', 'maxBs', 'barrelPct'];
+    const averages = {};
+
+    metrics.forEach(metric => {
+      const values = filteredData
+        .map(session => session.metrics[metric])
+        .filter(value => value !== null && value !== undefined);
+      
+      if (values.length > 0) {
+        averages[metric] = values.reduce((sum, val) => sum + val, 0) / values.length;
+      }
+    });
+
+    return averages;
+  }, [filteredData]);
 
   const metrics = [
     { key: 'avgEv', label: 'Avg Exit Velocity', unit: 'MPH', color: '#1c2c4d' },
@@ -179,6 +251,140 @@ const OverviewTab = ({ data }) => {
       <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
         Performance Trends
       </Typography>
+
+      {/* Time Period Toggle */}
+      <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="subtitle1" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2 }}>
+            Time Period: {timePeriod === 'all' ? 'All Time' : 
+                         timePeriod === '30d' ? 'Last 30 Days' :
+                         timePeriod === '60d' ? 'Last 60 Days' :
+                         timePeriod === '90d' ? 'Last 90 Days' : 'Custom Range'}
+          </Typography>
+          
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+            <Button
+              variant={timePeriod === 'all' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('all')}
+              sx={{ 
+                bgcolor: timePeriod === 'all' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === 'all' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === 'all' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              All Time
+            </Button>
+            <Button
+              variant={timePeriod === '30d' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('30d')}
+              sx={{ 
+                bgcolor: timePeriod === '30d' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === '30d' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === '30d' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              30 Days
+            </Button>
+            <Button
+              variant={timePeriod === '60d' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('60d')}
+              sx={{ 
+                bgcolor: timePeriod === '60d' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === '60d' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === '60d' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              60 Days
+            </Button>
+            <Button
+              variant={timePeriod === '90d' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('90d')}
+              sx={{ 
+                bgcolor: timePeriod === '90d' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === '90d' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === '90d' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              90 Days
+            </Button>
+            <Button
+              variant={timePeriod === 'custom' ? 'contained' : 'outlined'}
+              onClick={() => setTimePeriod('custom')}
+              sx={{ 
+                bgcolor: timePeriod === 'custom' ? '#1c2c4d' : 'transparent',
+                color: timePeriod === 'custom' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: timePeriod === 'custom' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              Custom
+            </Button>
+          </Box>
+
+          {/* Custom Date Range Inputs */}
+          {timePeriod === 'custom' && (
+            <Box display="flex" gap={2} mt={2} alignItems="center" flexWrap="wrap">
+              <TextField
+                label="Start Date"
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+              />
+              <TextField
+                label="End Date"
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+              />
+            </Box>
+          )}
+
+          {/* Period Averages Summary */}
+          {Object.keys(periodAverages).length > 0 && (
+            <Box mt={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+              <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                Period Averages ({filteredData.length} sessions):
+              </Typography>
+              <Box display="flex" gap={3} flexWrap="wrap">
+                {Object.entries(periodAverages).map(([metric, average]) => (
+                  <Box key={metric}>
+                    <Typography variant="body2" sx={{ color: '#666' }}>
+                      {metric === 'avgEv' ? 'Avg EV' :
+                       metric === 'maxEv' ? 'Max EV' :
+                       metric === 'avgBs' ? 'Avg BS' :
+                       metric === 'maxBs' ? 'Max BS' :
+                       metric === 'barrelPct' ? 'Barrel %' : metric}:
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                      {average.toFixed(1)} {metric.includes('Ev') || metric.includes('Bs') ? 'mph' : '%'}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
       
       <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
         <CardContent>
@@ -219,6 +425,7 @@ const OverviewTab = ({ data }) => {
       <Grid container spacing={3}>
         {metrics.map((metric) => {
           const latestValue = chartData[chartData.length - 1]?.[metric.key];
+          const periodAverage = periodAverages[metric.key];
           const previousValue = chartData[chartData.length - 2]?.[metric.key];
           const trend = latestValue && previousValue ? latestValue - previousValue : 0;
           const trendPercent = previousValue ? (trend / previousValue) * 100 : 0;
@@ -235,7 +442,11 @@ const OverviewTab = ({ data }) => {
                   </Box>
                   
                   <Typography variant="h4" sx={{ color: metric.color, fontWeight: 700, mb: 1 }}>
-                    {latestValue ? `${latestValue} ${metric.unit}` : 'N/A'}
+                    {periodAverage ? `${periodAverage.toFixed(1)} ${metric.unit}` : 'N/A'}
+                  </Typography>
+                  
+                  <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                    Period Average • {filteredData.length} sessions
                   </Typography>
                   
                   <Box display="flex" alignItems="center" gap={1}>
@@ -247,7 +458,7 @@ const OverviewTab = ({ data }) => {
                       <TrendingFlat sx={{ color: '#757575', fontSize: 20 }} />
                     )}
                     <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                      {Math.abs(trendPercent).toFixed(1)}% 30-day trend
+                      {Math.abs(trendPercent).toFixed(1)}% recent trend
                     </Typography>
                   </Box>
                   
@@ -434,21 +645,127 @@ const TrendsTab = ({ data }) => {
 
 // Goals Tab Component
 const GoalsTab = ({ data }) => {
-  const { milestones, coachingTips, progressionData } = data;
+  const { goals, coachingTips, progressionData } = data;
+  const { user } = useAuth();
   const [showAchieved, setShowAchieved] = useState(true);
-  const [showUpcoming, setShowUpcoming] = useState(true);
+  const [showActive, setShowActive] = useState(true);
+  const [showCreateGoal, setShowCreateGoal] = useState(false);
+  const [createGoalData, setCreateGoalData] = useState({
+    goalType: 'avg_ev',
+    targetValue: '',
+    startDate: '',
+    endDate: '',
+    notes: ''
+  });
 
   const latestSession = progressionData[progressionData.length - 1];
-  const achievedMilestones = milestones.filter(m => m.achievedDate);
-  const upcomingMilestones = milestones.filter(m => !m.achievedDate);
+  const activeGoals = goals.filter(g => g.status === 'active');
+  const achievedGoals = goals.filter(g => g.status === 'achieved');
+  const missedGoals = goals.filter(g => g.status === 'missed');
+
+  const isCoach = user?.role === 'coach' || user?.role === 'admin';
+
+  const handleCreateGoal = async () => {
+    try {
+      const response = await api.post(`/players/${data.player.id}/goals`, createGoalData);
+      if (response.data.success) {
+        setShowCreateGoal(false);
+        setCreateGoalData({
+          goalType: 'avg_ev',
+          targetValue: '',
+          startDate: '',
+          endDate: '',
+          notes: ''
+        });
+        // Refresh the page to get updated goals
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      alert('Failed to create goal: ' + error.response?.data?.message || error.message);
+    }
+  };
+
+  const handleAwardMilestone = async (goalId) => {
+    try {
+      const response = await api.post(`/goals/${goalId}/award-milestone`);
+      if (response.data.success) {
+        // Refresh the page to get updated goals
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error awarding milestone:', error);
+      alert('Failed to award milestone: ' + error.response?.data?.message || error.message);
+    }
+  };
+
+  const getGoalTypeLabel = (goalType) => {
+    switch (goalType) {
+      case 'avg_ev': return 'Average Exit Velocity';
+      case 'max_ev': return 'Maximum Exit Velocity';
+      case 'avg_bs': return 'Average Bat Speed';
+      case 'max_bs': return 'Maximum Bat Speed';
+      default: return goalType;
+    }
+  };
+
+  const getGoalProgress = (goal) => {
+    if (goal.status === 'achieved') return 100;
+    
+    const currentValue = latestSession?.metrics[goal.goal_type];
+    if (!currentValue) return 0;
+    
+    const progress = (currentValue / goal.target_value) * 100;
+    return Math.min(progress, 100);
+  };
+
+  const getGoalStatusColor = (status) => {
+    switch (status) {
+      case 'active': return '#1976d2';
+      case 'achieved': return '#43a047';
+      case 'missed': return '#d32f2f';
+      default: return '#666';
+    }
+  };
+
+  const getGoalStatusIcon = (status) => {
+    switch (status) {
+      case 'active': return <Timeline />;
+      case 'achieved': return <CheckCircle />;
+      case 'missed': return <Warning />;
+      default: return <Star />;
+    }
+  };
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-        Goals & Milestones
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+          Goals & Milestones
+        </Typography>
+        {isCoach && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setShowCreateGoal(true)}
+            sx={{ bgcolor: '#1c2c4d', '&:hover': { bgcolor: '#0f1a2e' } }}
+          >
+            Create Goal
+          </Button>
+        )}
+      </Box>
 
       <Box display="flex" gap={2} mb={3}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showActive}
+              onChange={(e) => setShowActive(e.target.checked)}
+            />
+          }
+          label="Show Active"
+          sx={{ color: '#1c2c4d' }}
+        />
         <FormControlLabel
           control={
             <Switch
@@ -459,80 +776,134 @@ const GoalsTab = ({ data }) => {
           label="Show Achieved"
           sx={{ color: '#1c2c4d' }}
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showUpcoming}
-              onChange={(e) => setShowUpcoming(e.target.checked)}
-            />
-          }
-          label="Show Upcoming"
-          sx={{ color: '#1c2c4d' }}
-        />
       </Box>
 
       <Grid container spacing={3}>
-        {/* Milestones */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
-                <EmojiEvents sx={{ color: '#1c2c4d' }} />
-                <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>Milestones</Typography>
-              </Box>
+        {/* Active Goals */}
+        {showActive && activeGoals.length > 0 && (
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: 'white', border: '2px solid #1976d2', borderRadius: 3 }}>
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                  <Timeline sx={{ color: '#1976d2' }} />
+                  <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                    Active Goals
+                  </Typography>
+                </Box>
 
-              <List>
-                {achievedMilestones.map((milestone, index) => (
-                  <ListItem key={index} sx={{ bgcolor: '#e8f5e8', mb: 1, borderRadius: 1, border: '1px solid #43a047' }}>
-                    <ListItemIcon>
-                      <CheckCircle sx={{ color: '#43a047' }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={milestone.description}
-                      secondary={`Achieved: ${new Date(milestone.achievedDate).toLocaleDateString()}`}
-                      sx={{ 
-                        '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
-                        '& .MuiListItemText-secondary': { color: '#666' }
-                      }}
-                    />
-                    <Chip 
-                      label={`${milestone.grade} grade`} 
-                      size="small" 
-                      sx={{ bgcolor: '#43a047', color: 'white', fontWeight: 600 }}
-                    />
-                  </ListItem>
-                ))}
+                <List>
+                  {activeGoals.map((goal) => {
+                    const progress = getGoalProgress(goal);
+                    const daysLeft = Math.ceil((new Date(goal.end_date) - new Date()) / (1000 * 60 * 60 * 24));
 
-                {upcomingMilestones.map((milestone, index) => {
-                  const currentValue = latestSession?.metrics[milestone.metric];
-                  const progress = currentValue ? Math.min((currentValue / milestone.value) * 100, 100) : 0;
+                    return (
+                      <ListItem key={goal.id} sx={{ mb: 2, bgcolor: '#e3f2fd', borderRadius: 1, border: '1px solid #1976d2' }}>
+                        <ListItemIcon>
+                          <Timeline sx={{ color: '#1976d2' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={getGoalTypeLabel(goal.goal_type)}
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" sx={{ color: '#666' }}>
+                                Target: {goal.target_value} {goal.goal_type.includes('ev') ? 'mph' : 'mph'}
+                              </Typography>
+                              <Typography variant="body2" sx={{ color: '#666' }}>
+                                Due: {new Date(goal.end_date).toLocaleDateString()} ({daysLeft} days left)
+                              </Typography>
+                              {goal.notes && (
+                                <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
+                                  {goal.notes}
+                                </Typography>
+                              )}
+                            </Box>
+                          }
+                          sx={{ 
+                            '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
+                            '& .MuiListItemText-secondary': { color: '#666' }
+                          }}
+                        />
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <ProgressRing progress={progress} size={40} />
+                          <Typography variant="caption" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                            {Math.round(progress)}%
+                          </Typography>
+                        </Box>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
 
-                  return (
-                    <ListItem key={index} sx={{ mb: 1, borderRadius: 1, border: '1px solid #e0e0e0' }}>
+        {/* Achieved Goals */}
+        {showAchieved && achievedGoals.length > 0 && (
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: 'white', border: '2px solid #43a047', borderRadius: 3 }}>
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                  <EmojiEvents sx={{ color: '#43a047' }} />
+                  <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                    Achieved Goals
+                  </Typography>
+                </Box>
+
+                <List>
+                  {achievedGoals.map((goal) => (
+                    <ListItem key={goal.id} sx={{ mb: 2, bgcolor: '#e8f5e8', borderRadius: 1, border: '1px solid #43a047' }}>
                       <ListItemIcon>
-                        <Star sx={{ color: '#ffa726' }} />
+                        <CheckCircle sx={{ color: '#43a047' }} />
                       </ListItemIcon>
                       <ListItemText
-                        primary={milestone.description}
-                        secondary={`Target: ${milestone.value}`}
+                        primary={getGoalTypeLabel(goal.goal_type)}
+                        secondary={
+                          <Box>
+                            <Typography variant="body2" sx={{ color: '#666' }}>
+                              Achieved: {new Date(goal.achieved_date).toLocaleDateString()}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#666' }}>
+                              Target: {goal.target_value} {goal.goal_type.includes('ev') ? 'mph' : 'mph'}
+                            </Typography>
+                            {goal.notes && (
+                              <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
+                                {goal.notes}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
                         sx={{ 
                           '& .MuiListItemText-primary': { color: '#1c2c4d', fontWeight: 600 },
                           '& .MuiListItemText-secondary': { color: '#666' }
                         }}
                       />
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <ProgressRing progress={progress} size={40} />
-                        <Typography variant="caption" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                          {Math.round(progress)}%
-                        </Typography>
+                      <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                        {!goal.milestone_awarded && isCoach && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleAwardMilestone(goal.id)}
+                            sx={{ borderColor: '#43a047', color: '#43a047' }}
+                          >
+                            Award Milestone
+                          </Button>
+                        )}
+                        {goal.milestone_awarded && (
+                          <Chip 
+                            label="Milestone Awarded" 
+                            size="small" 
+                            sx={{ bgcolor: '#43a047', color: 'white', fontWeight: 600 }}
+                          />
+                        )}
                       </Box>
                     </ListItem>
-                  );
-                })}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
 
         {/* Coaching Tips */}
         <Grid item xs={12} md={6}>
@@ -575,6 +946,79 @@ const GoalsTab = ({ data }) => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Create Goal Dialog */}
+      {showCreateGoal && (
+        <Dialog open={showCreateGoal} onClose={() => setShowCreateGoal(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Create New Goal</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Goal Type</InputLabel>
+                <Select
+                  value={createGoalData.goalType}
+                  onChange={(e) => setCreateGoalData({...createGoalData, goalType: e.target.value})}
+                  label="Goal Type"
+                >
+                  <MenuItem value="avg_ev">Average Exit Velocity</MenuItem>
+                  <MenuItem value="max_ev">Maximum Exit Velocity</MenuItem>
+                  <MenuItem value="avg_bs">Average Bat Speed</MenuItem>
+                  <MenuItem value="max_bs">Maximum Bat Speed</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                fullWidth
+                label="Target Value"
+                type="number"
+                value={createGoalData.targetValue}
+                onChange={(e) => setCreateGoalData({...createGoalData, targetValue: e.target.value})}
+                sx={{ mb: 2 }}
+                helperText={`Target ${createGoalData.goalType.includes('ev') ? 'exit velocity' : 'bat speed'} in mph`}
+              />
+
+              <TextField
+                fullWidth
+                label="Start Date"
+                type="date"
+                value={createGoalData.startDate}
+                onChange={(e) => setCreateGoalData({...createGoalData, startDate: e.target.value})}
+                sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <TextField
+                fullWidth
+                label="End Date"
+                type="date"
+                value={createGoalData.endDate}
+                onChange={(e) => setCreateGoalData({...createGoalData, endDate: e.target.value})}
+                sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <TextField
+                fullWidth
+                label="Notes (Optional)"
+                multiline
+                rows={3}
+                value={createGoalData.notes}
+                onChange={(e) => setCreateGoalData({...createGoalData, notes: e.target.value})}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowCreateGoal(false)}>Cancel</Button>
+            <Button 
+              onClick={handleCreateGoal} 
+              variant="contained"
+              disabled={!createGoalData.targetValue || !createGoalData.startDate || !createGoalData.endDate}
+            >
+              Create Goal
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 };

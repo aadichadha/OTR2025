@@ -1,6 +1,7 @@
 const CSVParser = require('../services/csvParser');
 const { Session, Player, BatSpeedData, ExitVelocityData } = require('../models');
 const { sequelize } = require('../config/database');
+const { checkGoalProgress } = require('./goalController');
 const path = require('path');
 const fs = require('fs');
 
@@ -162,6 +163,10 @@ class UploadController {
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
 
+      // Check goal progress after successful upload
+      console.log('🎯 Checking goal progress...');
+      await checkGoalProgress(player.id, session.id);
+
       // After generating the report, log the full metrics object for debugging
       console.log('[DEBUG] Full report data:', JSON.stringify(reportData, null, 2));
       if (reportData && reportData.metrics && reportData.metrics.batSpeed) {
@@ -288,6 +293,10 @@ class UploadController {
       
       console.log('🧹 Cleaning up uploaded file...');
       fs.unlinkSync(req.file.path);
+      
+      // Check goal progress after successful upload
+      console.log('🎯 Checking goal progress...');
+      await checkGoalProgress(player.id, session.id);
       
       // After generating the report, log the full metrics object for debugging
       if (reportData && reportData.metrics && reportData.metrics.exitVelocity) {

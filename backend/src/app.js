@@ -11,6 +11,7 @@ const authRouter = require('./controllers/authController');
 const PlayerController = require('./controllers/playerController');
 const SessionController = require('./controllers/sessionController');
 const AnalyticsController = require('./controllers/analyticsController');
+const GoalController = require('./controllers/goalController');
 require('dotenv').config();
 const { sequelize } = require('./config/database');
 
@@ -200,6 +201,14 @@ try {
   app.get('/api/analytics/players/:playerId/progress', authenticateToken, AnalyticsController.getPlayerProgress);
   app.get('/api/analytics/players/:playerId/filter-options', authenticateToken, AnalyticsController.getFilterOptions);
   app.get('/api/players/:playerId/progression', authenticateToken, AnalyticsController.getPlayerProgression);
+
+  // Goal management routes (protected)
+  app.post('/api/players/:playerId/goals', authenticateToken, GoalController.createPlayerGoal);
+  app.get('/api/players/:playerId/goals', authenticateToken, GoalController.getPlayerGoals);
+  app.put('/api/goals/:goalId', authenticateToken, GoalController.updatePlayerGoal);
+  app.delete('/api/goals/:goalId', authenticateToken, GoalController.deletePlayerGoal);
+  app.post('/api/goals/:goalId/award-milestone', authenticateToken, GoalController.awardMilestone);
+  console.log('✅ Goal routes loaded');
 
   // Upload routes (protected)
   app.post('/api/upload/blast', authenticateToken, upload.single('file'), validateCsvParams, UploadController.uploadBlast);
