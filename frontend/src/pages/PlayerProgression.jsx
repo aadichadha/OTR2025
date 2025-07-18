@@ -637,19 +637,20 @@ const SwingAnalysisTab = ({ data }) => {
     return filtered;
   }, [progressionData, qualityFilter, timePeriod, customStartDate, customEndDate]);
 
-  // Prepare chart data for LA vs EV graph
+  // Prepare chart data for LA vs EV scatter plot
   const laEvChartData = useMemo(() => {
     return filteredData
       .filter(session => session.metrics.avgEv && session.metrics.avgLa)
       .map(session => ({
-        date: new Date(session.sessionDate).toLocaleDateString(),
         avgEv: session.metrics.avgEv,
         avgLa: session.metrics.avgLa,
-        sessionId: session.id
+        sessionId: session.id,
+        sessionDate: new Date(session.sessionDate).toLocaleDateString(),
+        avgBs: session.metrics.avgBs
       }));
   }, [filteredData]);
 
-  // Prepare chart data for average EV per session
+  // Prepare chart data for average EV per session (time series)
   const evChartData = useMemo(() => {
     return filteredData
       .filter(session => session.metrics.avgEv)
@@ -806,32 +807,45 @@ const SwingAnalysisTab = ({ data }) => {
         </CardContent>
       </Card>
 
-      {/* LA vs EV Graph */}
+      {/* LA vs EV Scatter Plot */}
       <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-            Launch Angle vs Exit Velocity
+            Exit Velocity vs Launch Angle Relationship
           </Typography>
           {laEvChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={laEvChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="date" stroke="#1c2c4d" />
-                <YAxis yAxisId="left" stroke="#1c2c4d" />
-                <YAxis yAxisId="right" orientation="right" stroke="#3a7bd5" />
+                <XAxis 
+                  dataKey="avgLa" 
+                  stroke="#1c2c4d" 
+                  label={{ value: 'Average Launch Angle (°)', position: 'bottom', offset: 0 }}
+                />
+                <YAxis 
+                  stroke="#1c2c4d" 
+                  label={{ value: 'Average Exit Velocity (MPH)', angle: -90, position: 'left' }}
+                />
                 <RechartsTooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
+                      const data = payload[0].payload;
                       return (
                         <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
-                          <Typography variant="subtitle2" sx={{ color: '#1c2c4d' }}>{label}</Typography>
-                          {payload.map((entry, index) => (
-                            <Box key={index} sx={{ mt: 1 }}>
-                              <Typography variant="body2" sx={{ color: entry.color }}>
-                                {entry.name}: {entry.value} {entry.dataKey === 'avgEv' ? 'MPH' : '°'}
-                              </Typography>
-                            </Box>
-                          ))}
+                          <Typography variant="subtitle2" sx={{ color: '#1c2c4d' }}>
+                            Session: {data.sessionDate}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                            Exit Velocity: {data.avgEv} MPH
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                            Launch Angle: {data.avgLa}°
+                          </Typography>
+                          {data.avgBs && (
+                            <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                              Bat Speed: {data.avgBs} MPH
+                            </Typography>
+                          )}
                         </Card>
                       );
                     }
@@ -839,22 +853,12 @@ const SwingAnalysisTab = ({ data }) => {
                   }}
                 />
                 <Line 
-                  yAxisId="left"
                   type="monotone" 
                   dataKey="avgEv" 
                   stroke="#1c2c4d" 
-                  strokeWidth={2} 
-                  dot={{ fill: '#1c2c4d' }}
-                  name="Avg Exit Velocity"
-                />
-                <Line 
-                  yAxisId="right"
-                  type="monotone" 
-                  dataKey="avgLa" 
-                  stroke="#3a7bd5" 
-                  strokeWidth={2} 
-                  dot={{ fill: '#3a7bd5' }}
-                  name="Avg Launch Angle"
+                  strokeWidth={0}
+                  dot={{ fill: '#1c2c4d', r: 6, stroke: '#1c2c4d', strokeWidth: 2 }}
+                  name="Exit Velocity vs Launch Angle"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -870,7 +874,7 @@ const SwingAnalysisTab = ({ data }) => {
       <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-            Exit Velocity Trends
+            Exit Velocity Trends Over Time
           </Typography>
           {evChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
