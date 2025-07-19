@@ -18,28 +18,22 @@ class UploadController {
       const lines = fileContent.split('\n').filter(line => line.trim());
       
       if (type === 'blast') {
-        // For Blast CSV, find the first data row (after header noise)
-        // Data starts at row 11 (index 10), so look for the first row with valid bat speed
-        let dataStartRow = -1;
-        for (let i = 10; i < Math.min(lines.length, 20); i++) {
-          const columns = lines[i].split(',');
-          if (columns.length >= 16) {
-            const batSpeed = parseFloat(columns[7]);
-            if (!isNaN(batSpeed) && batSpeed > 0) {
-              dataStartRow = i;
-              break;
-            }
-          }
-        }
-        
-        if (dataStartRow !== -1) {
-          const columns = lines[dataStartRow].split(',').map(col => col.trim());
+        // For Blast CSV, date is in the second column (index 1) at the 6th row (index 5) - box 6B
+        // Format: "Nov 08, 2024 01:35:57 pm" - but comma splits it across columns
+        if (lines.length > 5) {
+          const columns = lines[5].split(',').map(col => col.trim());
           if (columns.length >= 3) {
-            const dateString = columns[2]; // Column C (0-indexed)
-            console.log(`📅 Extracted session date from Blast CSV Column C: ${dateString}`);
+            // The date is split across columns 2 and 3 due to the comma
+            const datePart1 = columns[1]; // "Nov 08"
+            const datePart2 = columns[2]; // "2024 01:35:57 pm"
             
-            // Parse the date string (format: 3/3/2025 21:23:22.144)
-            const dateMatch = dateString.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+            // Combine them to get the full date string
+            const fullDateString = `${datePart1}, ${datePart2}`;
+            console.log(`📅 Extracted session date from Blast CSV row 6, columns 2-3 (box 6B): ${fullDateString}`);
+            
+            // Parse the date string (format: "Nov 08, 2024 01:35:57 pm")
+            // Extract just the date part: "Nov 08, 2024"
+            const dateMatch = fullDateString.match(/([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/);
             if (dateMatch) {
               const parsedDate = new Date(dateMatch[1]);
               if (!isNaN(parsedDate.getTime())) {
