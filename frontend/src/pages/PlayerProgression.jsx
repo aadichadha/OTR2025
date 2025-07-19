@@ -580,11 +580,6 @@ const TrendsTab = ({ data }) => {
 
   // Calculate trends for each metric (first session vs last session)
   const trends = useMemo(() => {
-    if (filteredTrendData.length < 2) return {};
-
-    const firstSession = filteredTrendData[0];
-    const lastSession = filteredTrendData[filteredTrendData.length - 1];
-
     const trendMetrics = [
       { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
       { key: 'maxEv', label: 'Maximum Exit Velocity', unit: 'MPH' },
@@ -593,11 +588,26 @@ const TrendsTab = ({ data }) => {
       { key: 'barrelPct', label: 'Barrel Percentage', unit: '%' }
     ];
 
+    // Always return all metrics, even if no data
     return trendMetrics.reduce((acc, metric) => {
+      // Check if we have enough data to calculate trends
+      if (filteredTrendData.length < 2) {
+        acc[metric.key] = {
+          percentChange: null,
+          direction: 'flat',
+          firstValue: null,
+          lastValue: null,
+          hasData: false
+        };
+        return acc;
+      }
+
+      const firstSession = filteredTrendData[0];
+      const lastSession = filteredTrendData[filteredTrendData.length - 1];
       const firstValue = firstSession.metrics[metric.key];
       const lastValue = lastSession.metrics[metric.key];
 
-      // Only calculate trend if both values exist
+      // Only calculate trend if both values exist and are valid
       if (firstValue && lastValue && firstValue > 0 && lastValue > 0) {
         const percentChange = ((lastValue - firstValue) / firstValue) * 100;
         const direction = percentChange > 0 ? 'up' : percentChange < 0 ? 'down' : 'flat';
@@ -606,7 +616,8 @@ const TrendsTab = ({ data }) => {
           percentChange: Math.round(percentChange * 10) / 10,
           direction,
           firstValue: Math.round(firstValue * 10) / 10,
-          lastValue: Math.round(lastValue * 10) / 10
+          lastValue: Math.round(lastValue * 10) / 10,
+          hasData: true
         };
       } else {
         // Show N/A when no data
@@ -614,7 +625,8 @@ const TrendsTab = ({ data }) => {
           percentChange: null,
           direction: 'flat',
           firstValue: null,
-          lastValue: null
+          lastValue: null,
+          hasData: false
         };
       }
 
@@ -764,7 +776,7 @@ const TrendsTab = ({ data }) => {
           )}
 
           {/* Trends Summary */}
-          {filteredTrendData.length > 0 && (
+          {filteredTrendData.length > 0 ? (
             <Box mt={2} p={2} bgcolor="white" borderRadius={1} border="1px solid #1c2c4d">
               <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
                 Trends Analysis ({filteredTrendData.length} sessions):
@@ -774,6 +786,15 @@ const TrendsTab = ({ data }) => {
                 {' '}to{' '} {filteredTrendData[filteredTrendData.length - 1]?.sessionDate ? new Date(filteredTrendData[filteredTrendData.length - 1].sessionDate).toLocaleDateString() : 'latest session'}
               </Typography>
             </Box>
+          ) : (
+            <Box mt={2} p={2} bgcolor="white" borderRadius={1} border="1px solid #1c2c4d">
+              <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                No Session Data Available
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                Need at least 2 sessions to calculate trends. Upload more data to see progression analysis.
+              </Typography>
+            </Box>
           )}
         </CardContent>
       </Card>
@@ -781,9 +802,8 @@ const TrendsTab = ({ data }) => {
       <Grid container spacing={3}>
         {trendMetrics.map((metric) => {
           const trend = trends[metric.key];
-          if (!trend) return null;
-
-          const { percentChange, gradeChange, direction, recentAverage } = trend;
+          // Always show the metric card, even if no data
+          const { percentChange, direction, firstValue, lastValue, hasData } = trend || {};
           const isPositive = direction === 'up';
           const isNegative = direction === 'down';
 
@@ -794,9 +814,10 @@ const TrendsTab = ({ data }) => {
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>{metric.label}</Typography>
                     <Box display="flex" alignItems="center" gap={1}>
-                      {isPositive && <TrendingUp sx={{ color: '#43a047' }} />}
-                      {isNegative && <TrendingDown sx={{ color: '#e53935' }} />}
-                      {!isPositive && !isNegative && <TrendingFlat sx={{ color: '#757575' }} />}
+                      {hasData && isPositive && <TrendingUp sx={{ color: '#43a047' }} />}
+                      {hasData && isNegative && <TrendingDown sx={{ color: '#e53935' }} />}
+                      {hasData && !isPositive && !isNegative && <TrendingFlat sx={{ color: '#757575' }} />}
+                      {!hasData && <TrendingFlat sx={{ color: '#999' }} />}
                     </Box>
                   </Box>
 
@@ -837,14 +858,14 @@ const TrendsTab = ({ data }) => {
 
                   <LinearProgress
                     variant="determinate"
-                    value={trend.percentChange !== null ? Math.min(Math.abs(trend.percentChange), 100) : 0}
+                    value={hasData && trend.percentChange !== null ? Math.min(Math.abs(trend.percentChange), 100) : 0}
                     sx={{ 
                       mt: 2, 
                       height: 6, 
                       borderRadius: 3,
                       bgcolor: '#e0e0e0',
                       '& .MuiLinearProgress-bar': {
-                        bgcolor: isPositive ? '#43a047' : isNegative ? '#e53935' : '#1c2c4d'
+                        bgcolor: hasData ? (isPositive ? '#43a047' : isNegative ? '#e53935' : '#1c2c4d') : '#999'
                       }
                     }}
                   />
@@ -872,7 +893,7 @@ const TrendsTab = ({ data }) => {
                   </Typography>
                   {(() => {
                     const mostImproved = Object.entries(trends)
-                      .filter(([_, trend]) => trend.direction === 'up')
+                      .filter(([_, trend]) => trend.hasData && trend.direction === 'up')
                       .sort(([_, a], [__, b]) => b.percentChange - a.percentChange)[0];
                     
                     if (mostImproved) {
@@ -900,7 +921,7 @@ const TrendsTab = ({ data }) => {
                   </Typography>
                   {(() => {
                     const needsImprovement = Object.entries(trends)
-                      .filter(([_, trend]) => trend.direction === 'down')
+                      .filter(([_, trend]) => trend.hasData && trend.direction === 'down')
                       .sort(([_, a], [__, b]) => a.percentChange - b.percentChange)[0];
                     
                     if (needsImprovement) {
@@ -928,8 +949,13 @@ const TrendsTab = ({ data }) => {
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#666' }}>
                     {(() => {
-                      const positiveTrends = Object.values(trends).filter(t => t.direction === 'up').length;
-                      const totalTrends = Object.keys(trends).length;
+                      const trendsWithData = Object.values(trends).filter(t => t.hasData);
+                      if (trendsWithData.length === 0) {
+                        return 'No trend data available - need at least 2 sessions to calculate trends';
+                      }
+                      
+                      const positiveTrends = trendsWithData.filter(t => t.direction === 'up').length;
+                      const totalTrends = trendsWithData.length;
                       const consistencyScore = Math.round((positiveTrends / totalTrends) * 100);
                       
                       if (consistencyScore >= 80) {
