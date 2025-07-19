@@ -524,12 +524,14 @@ const OverviewTab = ({ data }) => {
 
 // Trends Tab Component
 const TrendsTab = ({ data }) => {
-  const { progressionData, trends: dataTrends } = data;
+  const { progressionData, trends: dataTrends, milestones, coachingTips, levelStats } = data;
   const [comparisonMode, setComparisonMode] = useState(false);
   const [comparisonSlider, setComparisonSlider] = useState(50);
   const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [showMilestones, setShowMilestones] = useState(true);
+  const [showCoachingTips, setShowCoachingTips] = useState(true);
 
   // Filter data based on time period for trends
   const filteredTrendData = useMemo(() => {
@@ -1009,6 +1011,232 @@ const TrendsTab = ({ data }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Milestones Section */}
+      {showMilestones && milestones && milestones.length > 0 && (
+        <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                🏆 Achieved Milestones
+              </Typography>
+              <Chip 
+                label={`${milestones.length} milestones`}
+                color="primary"
+                variant="outlined"
+                sx={{ borderColor: '#1c2c4d', color: '#1c2c4d' }}
+              />
+            </Box>
+            
+            <Grid container spacing={2}>
+              {milestones.slice(0, 6).map((milestone, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Paper sx={{ p: 2, bgcolor: '#f8f9fa', border: '1px solid #e0e3e8' }}>
+                    <Box display="flex" alignItems="center" gap={1} mb={1}>
+                      <EmojiEvents sx={{ color: '#ffd700', fontSize: 20 }} />
+                      <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        {milestone.label}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                      {milestone.description}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                      {milestone.value} {milestone.metric === 'barrelPct' ? '%' : 'MPH'}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#999' }}>
+                      Achieved: {new Date(milestone.achievedDate).toLocaleDateString()}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+            
+            {milestones.length > 6 && (
+              <Box mt={2} textAlign="center">
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                  +{milestones.length - 6} more milestones achieved
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Coaching Tips Section */}
+      {showCoachingTips && coachingTips && coachingTips.length > 0 && (
+        <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                💡 Coaching Tips
+              </Typography>
+              <Chip 
+                label={`${coachingTips.length} tips`}
+                color="primary"
+                variant="outlined"
+                sx={{ borderColor: '#1c2c4d', color: '#1c2c4d' }}
+              />
+            </Box>
+            
+            <Grid container spacing={2}>
+              {coachingTips.map((tip, index) => (
+                <Grid item xs={12} md={6} key={index}>
+                  <Paper sx={{ p: 2, bgcolor: '#e3f2fd', border: '1px solid #bbdefb' }}>
+                    <Box display="flex" alignItems="center" gap={1} mb={1}>
+                      <Lightbulb sx={{ color: '#1976d2', fontSize: 20 }} />
+                      <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        {tip.metric === 'avgEv' ? 'Average Exit Velocity' :
+                         tip.metric === 'maxEv' ? 'Maximum Exit Velocity' :
+                         tip.metric === 'avgBs' ? 'Average Bat Speed' :
+                         tip.metric === 'maxBs' ? 'Maximum Bat Speed' :
+                         tip.metric === 'barrelPct' ? 'Barrel Percentage' : tip.metric}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                      Current Grade: {tip.currentGrade} → Target: {tip.targetGrade}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                      {tip.tip}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Grade Changes Section */}
+      {filteredTrendData.length > 0 && (
+        <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2 }}>
+              📊 Grade Changes
+            </Typography>
+            
+            <Grid container spacing={2}>
+              {trendMetrics.map((metric) => {
+                const trend = trends[metric.key];
+                const gradeChange = trend?.gradeChange;
+                
+                if (!gradeChange || !gradeChange.hasData) return null;
+                
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={metric.key}>
+                    <Paper sx={{ p: 2, bgcolor: '#f8f9fa', border: '1px solid #e0e3e8' }}>
+                      <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                        {metric.label}
+                      </Typography>
+                      <Box display="flex" alignItems="center" gap={1} mb={1}>
+                        <Typography variant="body2" sx={{ color: '#666' }}>
+                          {gradeChange.oldGrade} → {gradeChange.newGrade}
+                        </Typography>
+                        {gradeChange.change > 0 && <TrendingUp sx={{ color: '#43a047', fontSize: 16 }} />}
+                        {gradeChange.change < 0 && <TrendingDown sx={{ color: '#e53935', fontSize: 16 }} />}
+                        {gradeChange.change === 0 && <TrendingFlat sx={{ color: '#757575', fontSize: 16 }} />}
+                      </Box>
+                      <Typography variant="body2" sx={{ 
+                        color: gradeChange.change > 0 ? '#43a047' : gradeChange.change < 0 ? '#e53935' : '#757575',
+                        fontWeight: 600
+                      }}>
+                        {gradeChange.change > 0 ? '+' : ''}{gradeChange.change} grade points
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Performance Section */}
+      {filteredTrendData.length > 0 && (
+        <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2 }}>
+              📈 Recent Performance (Last 4 Sessions)
+            </Typography>
+            
+            <Grid container spacing={2}>
+              {trendMetrics.map((metric) => {
+                const trend = trends[metric.key];
+                const recentAvg = trend?.recentAverage;
+                
+                if (!recentAvg) return null;
+                
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={metric.key}>
+                    <Paper sx={{ p: 2, bgcolor: '#f8f9fa', border: '1px solid #e0e3e8' }}>
+                      <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 1 }}>
+                        {metric.label}
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 700 }}>
+                        {recentAvg} {metric.unit}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#666' }}>
+                        Recent average
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Toggle Controls */}
+      <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600, mb: 2 }}>
+            Display Options
+          </Typography>
+          <Box display="flex" gap={3} flexWrap="wrap">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showMilestones}
+                  onChange={(e) => setShowMilestones(e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#1c2c4d',
+                      '&:hover': {
+                        backgroundColor: 'rgba(28, 44, 77, 0.08)',
+                      },
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#1c2c4d',
+                    },
+                  }}
+                />
+              }
+              label="Show Milestones"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showCoachingTips}
+                  onChange={(e) => setShowCoachingTips(e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#1c2c4d',
+                      '&:hover': {
+                        backgroundColor: 'rgba(28, 44, 77, 0.08)',
+                      },
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#1c2c4d',
+                    },
+                  }}
+                />
+              }
+              label="Show Coaching Tips"
+            />
+          </Box>
+        </CardContent>
+      </Card>
     </Box>
   );
 };
