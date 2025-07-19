@@ -1823,6 +1823,26 @@ const SwingAnalysisTab = ({ data }) => {
     }));
   }, [filteredData]);
 
+  // Prepare chart data for EV vs LA consistency over time (session progression)
+  const evLaConsistencyData = useMemo(() => {
+    const sortedData = filteredData
+      .filter(session => session.metrics.avgEv && session.metrics.avgLa)
+      .sort((a, b) => new Date(a.sessionDate) - new Date(b.sessionDate));
+    
+    return sortedData.map((session, index) => ({
+      session: `Session ${index + 1}`,
+      sessionNumber: index + 1,
+      sessionDate: new Date(session.sessionDate).toLocaleDateString(),
+      avgEv: session.metrics.avgEv,
+      avgLa: session.metrics.avgLa,
+      sessionId: session.id,
+      avgBs: session.metrics.avgBs,
+      // Calculate consistency score (how close to ideal EV/LA ratio)
+      consistencyScore: Math.abs(session.metrics.avgLa - 15), // Ideal LA around 15°
+      totalSessions: sortedData.length
+    }));
+  }, [filteredData]);
+
   // Prepare chart data for average EV per session (time series)
   const evChartData = useMemo(() => {
     return filteredData
@@ -1981,53 +2001,39 @@ const SwingAnalysisTab = ({ data }) => {
         </CardContent>
       </Card>
 
-      {/* LA vs EV Scatter Plot */}
+      {/* EV vs LA Consistency Over Time */}
       <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-            Exit Velocity vs Launch Angle Relationship Over Time
+            EV vs LA Consistency Over Time
           </Typography>
-          {laEvChartData.length > 0 ? (
+          {evLaConsistencyData.length > 0 ? (
             <Box>
-              {/* Legend */}
-              <Box display="flex" justifyContent="center" mb={2}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Box sx={{ width: 12, height: 12, bgcolor: '#1c2c4d', opacity: 0.3, borderRadius: '50%' }} />
-                    <Typography variant="body2" sx={{ color: '#666' }}>Earlier Sessions</Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Box sx={{ width: 12, height: 12, bgcolor: '#1c2c4d', opacity: 0.7, borderRadius: '50%' }} />
-                    <Typography variant="body2" sx={{ color: '#666' }}>Middle Sessions</Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Box sx={{ width: 12, height: 12, bgcolor: '#1c2c4d', borderRadius: '50%' }} />
-                    <Typography variant="body2" sx={{ color: '#666' }}>Recent Sessions</Typography>
-                  </Box>
-                </Box>
-              </Box>
-              
               <Box display="flex" justifyContent="center">
-                <ResponsiveContainer width="65%" height={400}>
-                <ScatterChart data={laEvChartData}>
+                <ResponsiveContainer width="80%" height={400}>
+                <LineChart data={evLaConsistencyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis 
-                    dataKey="avgEv" 
-                    stroke="#1c2c4d" 
-                    label={{ value: 'Average Exit Velocity (MPH)', position: 'bottom', offset: 0 }}
-                    domain={[60, 100]}
-                    type="number"
-                    tick={{ fill: '#1c2c4d' }}
+                    dataKey="session" 
+                    stroke="#1c2c4d"
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    tick={{ fontSize: 12 }}
                   />
                   <YAxis 
-                    stroke="#1c2c4d" 
-                    label={{ value: 'Average Launch Angle (°)', angle: -90, position: 'left' }}
-                    domain={[-15, 40]}
-                    type="number"
-                    tick={{ fill: '#1c2c4d' }}
+                    yAxisId="left"
+                    stroke="#1c2c4d"
+                    label={{ value: 'Exit Velocity (MPH)', angle: -90, position: 'insideLeft' }}
+                    domain={[60, 100]}
                   />
-                  <ReferenceLine x={0} stroke="#e0e0e0" strokeDasharray="3 3" />
-                  <ReferenceLine y={0} stroke="#e0e0e0" strokeDasharray="3 3" />
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#e53935"
+                    label={{ value: 'Launch Angle (°)', angle: 90, position: 'insideRight' }}
+                    domain={[-15, 40]}
+                  />
                   <RechartsTooltip
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
@@ -2035,24 +2041,20 @@ const SwingAnalysisTab = ({ data }) => {
                         return (
                           <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
                             <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                              Session {data.sessionNumber} of {data.totalSessions}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
                               {data.sessionDate}
                             </Typography>
-                            <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                              Exit Velocity: {data.avgEv} MPH
+                            <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                              Session {data.sessionNumber} of {data.totalSessions}
                             </Typography>
-                            <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                              Launch Angle: {data.avgLa}°
-                            </Typography>
-                            {data.avgBs && (
-                              <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                                Bat Speed: {data.avgBs} MPH
-                              </Typography>
-                            )}
+                            {payload.map((entry, index) => (
+                              <Box key={index} sx={{ mt: 1 }}>
+                                <Typography variant="body2" sx={{ color: entry.color, fontWeight: 600 }}>
+                                  {entry.name}: {entry.value} {entry.name.includes('EV') ? 'MPH' : '°'}
+                                </Typography>
+                              </Box>
+                            ))}
                             <Typography variant="caption" sx={{ color: '#999', fontStyle: 'italic' }}>
-                              {data.timeProgression} in chronological order
+                              Consistency: {data.consistencyScore.toFixed(1)}° from ideal LA
                             </Typography>
                           </Card>
                         );
@@ -2060,38 +2062,35 @@ const SwingAnalysisTab = ({ data }) => {
                       return null;
                     }}
                   />
-                  {/* Connection line showing progression */}
                   <Line 
+                    yAxisId="left"
+                    type="monotone" 
+                    dataKey="avgEv" 
+                    stroke="#1c2c4d" 
+                    strokeWidth={3} 
+                    dot={{ fill: '#1c2c4d', r: 6, strokeWidth: 2, stroke: '#fff' }}
+                    name="Average Exit Velocity"
+                    connectNulls={true}
+                  />
+                  <Line 
+                    yAxisId="right"
                     type="monotone" 
                     dataKey="avgLa" 
-                    stroke="#1c2c4d" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
+                    stroke="#e53935" 
+                    strokeWidth={3} 
+                    dot={{ fill: '#e53935', r: 6, strokeWidth: 2, stroke: '#fff' }}
+                    name="Average Launch Angle"
                     connectNulls={true}
-                    name="Progression Path"
                   />
-                  {/* Scatter points with color intensity based on time */}
-                  <Scatter 
-                    dataKey="avgLa" 
-                    fill={(entry) => {
-                      const intensity = entry.colorIntensity;
-                      return `rgba(28, 44, 77, ${0.3 + (intensity / 255) * 0.7})`;
-                    }}
-                    stroke="#1c2c4d" 
-                    strokeWidth={2}
-                    r={8}
-                    name="Launch Angle vs Exit Velocity"
-                  />
-                </ScatterChart>
+                </LineChart>
               </ResponsiveContainer>
               </Box>
               
-              {/* Progression Summary */}
+              {/* Consistency Analysis */}
               <Box mt={2} p={2} bgcolor="#f8f9fa" borderRadius={1} border="1px solid #e0e3e8">
                 <Typography variant="body2" sx={{ color: '#666', textAlign: 'center' }}>
-                  <strong>Progression Analysis:</strong> Shows {laEvChartData.length} sessions from {laEvChartData[0]?.sessionDate} to {laEvChartData[laEvChartData.length - 1]?.sessionDate}. 
-                  Points are connected chronologically to show your swing development over time.
+                  <strong>Consistency Analysis:</strong> Shows {evLaConsistencyData.length} sessions from {evLaConsistencyData[0]?.sessionDate} to {evLaConsistencyData[evLaConsistencyData.length - 1]?.sessionDate}. 
+                  Blue line = Exit Velocity, Red line = Launch Angle. Track your consistency and progression over time.
                 </Typography>
               </Box>
             </Box>
