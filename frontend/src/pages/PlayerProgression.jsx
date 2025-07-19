@@ -530,7 +530,6 @@ const TrendsTab = ({ data }) => {
   const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [showMilestones, setShowMilestones] = useState(true);
   const [showCoachingTips, setShowCoachingTips] = useState(true);
 
   // Filter data based on time period for trends
@@ -1012,56 +1011,7 @@ const TrendsTab = ({ data }) => {
         </Card>
       )}
 
-      {/* Milestones Section */}
-      {showMilestones && milestones && milestones.length > 0 && (
-        <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                🏆 Achieved Milestones
-              </Typography>
-              <Chip 
-                label={`${milestones.length} milestones`}
-                color="primary"
-                variant="outlined"
-                sx={{ borderColor: '#1c2c4d', color: '#1c2c4d' }}
-              />
-            </Box>
-            
-            <Grid container spacing={2}>
-              {milestones.slice(0, 6).map((milestone, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Paper sx={{ p: 2, bgcolor: '#f8f9fa', border: '1px solid #e0e3e8' }}>
-                    <Box display="flex" alignItems="center" gap={1} mb={1}>
-                      <EmojiEvents sx={{ color: '#ffd700', fontSize: 20 }} />
-                      <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                        {milestone.label}
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
-                      {milestone.description}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                      {milestone.value} {milestone.metric === 'barrelPct' ? '%' : 'MPH'}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#999' }}>
-                      Achieved: {new Date(milestone.achievedDate).toLocaleDateString()}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-            
-            {milestones.length > 6 && (
-              <Box mt={2} textAlign="center">
-                <Typography variant="body2" sx={{ color: '#666' }}>
-                  +{milestones.length - 6} more milestones achieved
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Coaching Tips Section */}
       {showCoachingTips && coachingTips && coachingTips.length > 0 && (
@@ -1197,26 +1147,6 @@ const TrendsTab = ({ data }) => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={showMilestones}
-                  onChange={(e) => setShowMilestones(e.target.checked)}
-                  sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#1c2c4d',
-                      '&:hover': {
-                        backgroundColor: 'rgba(28, 44, 77, 0.08)',
-                      },
-                    },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#1c2c4d',
-                    },
-                  }}
-                />
-              }
-              label="Show Milestones"
-            />
-            <FormControlLabel
-              control={
-                <Switch
                   checked={showCoachingTips}
                   onChange={(e) => setShowCoachingTips(e.target.checked)}
                   sx={{
@@ -1243,7 +1173,7 @@ const TrendsTab = ({ data }) => {
 
 // Goals Tab Component
 const GoalsTab = ({ data }) => {
-  const { goals, coachingTips, progressionData } = data;
+  const { goals, coachingTips, progressionData, milestones } = data;
   const { user } = useAuth();
   const [showAchieved, setShowAchieved] = useState(true);
   const [showActive, setShowActive] = useState(true);
@@ -1544,6 +1474,57 @@ const GoalsTab = ({ data }) => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Achieved Milestones Section */}
+      {milestones && milestones.length > 0 && (
+        <Card sx={{ mt: 3, bgcolor: 'white', border: '2px solid #ffd700', borderRadius: 3 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                🏆 Achieved Milestones
+              </Typography>
+              <Chip 
+                label={`${milestones.length} milestones`}
+                color="primary"
+                variant="outlined"
+                sx={{ borderColor: '#ffd700', color: '#1c2c4d', bgcolor: '#fffbf0' }}
+              />
+            </Box>
+            
+            <Grid container spacing={2}>
+              {milestones.slice(0, 6).map((milestone, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Paper sx={{ p: 2, bgcolor: '#fffbf0', border: '1px solid #ffd700' }}>
+                    <Box display="flex" alignItems="center" gap={1} mb={1}>
+                      <EmojiEvents sx={{ color: '#ffd700', fontSize: 20 }} />
+                      <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                        {milestone.label}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                      {milestone.description}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                      {milestone.value} {milestone.metric === 'barrelPct' ? '%' : 'MPH'}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#999' }}>
+                      Achieved: {new Date(milestone.achievedDate).toLocaleDateString()}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+            
+            {milestones.length > 6 && (
+              <Box mt={2} textAlign="center">
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                  +{milestones.length - 6} more milestones achieved
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Create Goal Dialog */}
       {showCreateGoal && (
