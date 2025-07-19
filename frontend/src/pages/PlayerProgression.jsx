@@ -192,11 +192,9 @@ const OverviewTab = ({ data }) => {
         }
         break;
       case 'all':
-        // For "all time", use the first session date to the newest session date
-        if (progressionData.length > 0) {
-          startDate = new Date(progressionData[0].sessionDate);
-          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
-        }
+        // For "all time", don't set any date filters - return all data
+        startDate = null;
+        endDate = null;
         break;
       default:
         startDate = null;
@@ -561,11 +559,9 @@ const TrendsTab = ({ data }) => {
         }
         break;
       case 'all':
-        // For "all time", use the first session date to the newest session date
-        if (progressionData.length > 0) {
-          startDate = new Date(progressionData[0].sessionDate);
-          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
-        }
+        // For "all time", don't set any date filters - return all data
+        startDate = null;
+        endDate = null;
         break;
       default:
         startDate = null;
