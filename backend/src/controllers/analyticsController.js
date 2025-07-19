@@ -1403,13 +1403,11 @@ const calculateLevelStatistics = async (playerLevel) => {
 
 // Helper function to calculate trends
 const calculateTrends = (progressionData, levelStats) => {
-  console.log(`[TRENDS] Calculating trends for ${progressionData.length} sessions`);
   const trends = {};
   const metrics = ['avgEv', 'maxEv', 'avgBs', 'maxBs', 'barrelPct'];
 
   // Always return all metrics, even if no data
   metrics.forEach(metric => {
-    console.log(`[TRENDS] Processing metric: ${metric}`);
     // Check if we have enough data to calculate trends
     if (progressionData.length < 2) {
       trends[metric] = {
@@ -1429,8 +1427,6 @@ const calculateTrends = (progressionData, levelStats) => {
     const sessionsWithMetric = progressionData.filter(session => 
       session.metrics[metric] !== null && session.metrics[metric] !== undefined && session.metrics[metric] > 0
     );
-    
-    console.log(`[TRENDS] ${metric}: Found ${sessionsWithMetric.length} sessions with valid data`);
     
     if (sessionsWithMetric.length >= 2) {
       const firstSessionWithMetric = sessionsWithMetric[0];
@@ -1454,8 +1450,6 @@ const calculateTrends = (progressionData, levelStats) => {
         levelStats[metric].average, levelStats[metric].upper
       );
 
-      console.log(`[TRENDS] ${metric}: Calculating trend from ${firstValue} to ${lastValue} (${change.toFixed(1)}%)`);
-      
       trends[metric] = {
         firstValue,
         lastValue,
@@ -1470,7 +1464,6 @@ const calculateTrends = (progressionData, levelStats) => {
     } else if (sessionsWithMetric.length === 1) {
       // Only one session with this metric
       const session = sessionsWithMetric[0];
-      console.log(`[TRENDS] ${metric}: Only 1 session with data (${session.sessionType} on ${session.sessionDate})`);
       trends[metric] = {
         firstValue: session.metrics[metric],
         lastValue: session.metrics[metric],
@@ -1486,16 +1479,6 @@ const calculateTrends = (progressionData, levelStats) => {
       // No sessions with this metric
       const sessionTypes = [...new Set(progressionData.map(s => s.sessionType))];
       const metricType = metric.includes('Ev') || metric.includes('barrel') ? 'Hittrax' : 'Blast';
-      console.log(`[TRENDS] ${metric}: No sessions with data. Available types: ${sessionTypes.join(', ')}`);
-      
-      // Debug: Show all sessions for this metric
-      const allSessionsForMetric = progressionData.map(s => ({
-        date: s.sessionDate,
-        type: s.sessionType,
-        value: s.metrics[metric]
-      }));
-      console.log(`[TRENDS] ${metric}: All sessions:`, allSessionsForMetric);
-      
       trends[metric] = {
         firstValue: null,
         lastValue: null,

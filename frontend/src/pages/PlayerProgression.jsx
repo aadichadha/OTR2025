@@ -602,13 +602,17 @@ const TrendsTab = ({ data }) => {
         return acc;
       }
 
-      const firstSession = filteredTrendData[0];
-      const lastSession = filteredTrendData[filteredTrendData.length - 1];
-      const firstValue = firstSession.metrics[metric.key];
-      const lastValue = lastSession.metrics[metric.key];
-
-      // Only calculate trend if both values exist and are valid
-      if (firstValue && lastValue && firstValue > 0 && lastValue > 0) {
+      // Find the first and last sessions that have valid data for this metric
+      const sessionsWithMetric = filteredTrendData.filter(session => 
+        session.metrics[metric.key] !== null && session.metrics[metric.key] !== undefined && session.metrics[metric.key] > 0
+      );
+      
+      if (sessionsWithMetric.length >= 2) {
+        const firstSessionWithMetric = sessionsWithMetric[0];
+        const lastSessionWithMetric = sessionsWithMetric[sessionsWithMetric.length - 1];
+        
+        const firstValue = firstSessionWithMetric.metrics[metric.key];
+        const lastValue = lastSessionWithMetric.metrics[metric.key];
         const percentChange = ((lastValue - firstValue) / firstValue) * 100;
         const direction = percentChange > 0 ? 'up' : percentChange < 0 ? 'down' : 'flat';
 
@@ -618,6 +622,16 @@ const TrendsTab = ({ data }) => {
           firstValue: Math.round(firstValue * 10) / 10,
           lastValue: Math.round(lastValue * 10) / 10,
           hasData: true
+        };
+      } else if (sessionsWithMetric.length === 1) {
+        // Only one session with this metric
+        const session = sessionsWithMetric[0];
+        acc[metric.key] = {
+          percentChange: null,
+          direction: 'flat',
+          firstValue: session.metrics[metric.key],
+          lastValue: session.metrics[metric.key],
+          hasData: false
         };
       } else {
         // Show N/A when no data
