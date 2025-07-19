@@ -1417,14 +1417,11 @@ const calculateTrends = (progressionData, levelStats) => {
         recentAverage: null,
         gradeChange: null,
         direction: 'stable',
-        hasData: false
+        hasData: false,
+        message: 'Need at least 2 sessions to calculate trends'
       };
       return;
     }
-
-    const firstSession = progressionData[0];
-    const lastSession = progressionData[progressionData.length - 1];
-    const recentSessions = progressionData.slice(-4); // Last 4 sessions
 
     // Find the first and last sessions that have valid data for this metric
     const sessionsWithMetric = progressionData.filter(session => 
@@ -1460,10 +1457,28 @@ const calculateTrends = (progressionData, levelStats) => {
         recentAverage: recentAvg ? parseFloat(recentAvg.toFixed(2)) : null,
         gradeChange,
         direction: change > 0 ? 'up' : change < 0 ? 'down' : 'stable',
-        hasData: true
+        hasData: true,
+        message: `Comparing ${firstSessionWithMetric.sessionType} (${firstSessionWithMetric.sessionDate}) to ${lastSessionWithMetric.sessionType} (${lastSessionWithMetric.sessionDate})`,
+        sessionCount: sessionsWithMetric.length
+      };
+    } else if (sessionsWithMetric.length === 1) {
+      // Only one session with this metric
+      const session = sessionsWithMetric[0];
+      trends[metric] = {
+        firstValue: session.metrics[metric],
+        lastValue: session.metrics[metric],
+        percentChange: null,
+        recentAverage: session.metrics[metric],
+        gradeChange: null,
+        direction: 'stable',
+        hasData: false,
+        message: `Only ${session.sessionType} session available (${session.sessionDate}) - need more ${metric.includes('Ev') || metric.includes('barrel') ? 'Hittrax' : 'Blast'} sessions for trends`,
+        sessionCount: 1
       };
     } else {
-      // Show N/A when no valid data
+      // No sessions with this metric
+      const sessionTypes = [...new Set(progressionData.map(s => s.sessionType))];
+      const metricType = metric.includes('Ev') || metric.includes('barrel') ? 'Hittrax' : 'Blast';
       trends[metric] = {
         firstValue: null,
         lastValue: null,
@@ -1471,7 +1486,9 @@ const calculateTrends = (progressionData, levelStats) => {
         recentAverage: null,
         gradeChange: null,
         direction: 'stable',
-        hasData: false
+        hasData: false,
+        message: `No ${metricType} sessions found. Available session types: ${sessionTypes.join(', ')}`,
+        sessionCount: 0
       };
     }
   });

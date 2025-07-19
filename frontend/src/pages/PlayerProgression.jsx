@@ -785,6 +785,19 @@ const TrendsTab = ({ data }) => {
                 Comparing {filteredTrendData[0]?.sessionDate ? new Date(filteredTrendData[0].sessionDate).toLocaleDateString() : 'first session'} 
                 {' '}to{' '} {filteredTrendData[filteredTrendData.length - 1]?.sessionDate ? new Date(filteredTrendData[filteredTrendData.length - 1].sessionDate).toLocaleDateString() : 'latest session'}
               </Typography>
+              
+              {/* Show session type breakdown */}
+              {(() => {
+                const sessionTypes = [...new Set(filteredTrendData.map(s => s.sessionType))];
+                const hittraxSessions = filteredTrendData.filter(s => s.sessionType === 'hittrax').length;
+                const blastSessions = filteredTrendData.filter(s => s.sessionType === 'blast').length;
+                
+                return (
+                  <Typography variant="body2" sx={{ color: '#666', mt: 1 }}>
+                    Session breakdown: {hittraxSessions} Hittrax, {blastSessions} Blast
+                  </Typography>
+                );
+              })()}
             </Box>
           ) : (
             <Box mt={2} p={2} bgcolor="white" borderRadius={1} border="1px solid #1c2c4d">
@@ -820,6 +833,13 @@ const TrendsTab = ({ data }) => {
                       {!hasData && <TrendingFlat sx={{ color: '#999' }} />}
                     </Box>
                   </Box>
+                  
+                  {/* Show helpful message about data availability */}
+                  {trend.message && (
+                    <Typography variant="body2" sx={{ color: '#666', mb: 2, fontStyle: 'italic' }}>
+                      {trend.message}
+                    </Typography>
+                  )}
 
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
