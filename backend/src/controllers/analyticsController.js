@@ -1297,7 +1297,7 @@ const getPlayerProgression = async (req, res) => {
         id: session.id,
         sessionId: session.id,
         sessionDate: session.session_date,
-        sessionType: session.type,
+        sessionType: session.session_type,
         metrics: {
           avgEv: parseFloat(avgEv?.toFixed(2)) || null,
           maxEv: parseFloat(maxEv?.toFixed(2)) || null,
@@ -1395,25 +1395,47 @@ const calculateLevelStatistics = async (playerLevel) => {
 
 // Helper function to calculate trends
 const calculateTrends = (progressionData, levelStats) => {
-  if (progressionData.length < 2) return {};
-
-  const firstSession = progressionData[0];
-  const lastSession = progressionData[progressionData.length - 1];
-  const recentSessions = progressionData.slice(-4); // Last 4 sessions
-
   const trends = {};
   const metrics = ['avgEv', 'maxEv', 'avgBs', 'maxBs', 'barrelPct'];
 
+  // Always return all metrics, even if no data
   metrics.forEach(metric => {
-    if (firstSession.metrics[metric] && lastSession.metrics[metric]) {
-      const firstValue = firstSession.metrics[metric];
-      const lastValue = lastSession.metrics[metric];
+    // Check if we have enough data to calculate trends
+    if (progressionData.length < 2) {
+      trends[metric] = {
+        firstValue: null,
+        lastValue: null,
+        percentChange: null,
+        recentAverage: null,
+        gradeChange: null,
+        direction: 'stable',
+        hasData: false
+      };
+      return;
+    }
+
+    const firstSession = progressionData[0];
+    const lastSession = progressionData[progressionData.length - 1];
+    const recentSessions = progressionData.slice(-4); // Last 4 sessions
+
+    // Find the first and last sessions that have valid data for this metric
+    const sessionsWithMetric = progressionData.filter(session => 
+      session.metrics[metric] && session.metrics[metric] > 0
+    );
+    
+    if (sessionsWithMetric.length >= 2) {
+      const firstSessionWithMetric = sessionsWithMetric[0];
+      const lastSessionWithMetric = sessionsWithMetric[sessionsWithMetric.length - 1];
+      
+      const firstValue = firstSessionWithMetric.metrics[metric];
+      const lastValue = lastSessionWithMetric.metrics[metric];
       const change = ((lastValue - firstValue) / firstValue) * 100;
       
-      // Calculate recent average
-      const recentValues = recentSessions
+      // Calculate recent average from sessions with this metric
+      const recentSessionsWithMetric = sessionsWithMetric.slice(-4);
+      const recentValues = recentSessionsWithMetric
         .map(s => s.metrics[metric])
-        .filter(v => v !== null);
+        .filter(v => v !== null && v > 0);
       const recentAvg = recentValues.length > 0 ? 
         recentValues.reduce((a, b) => a + b, 0) / recentValues.length : null;
       
@@ -1429,7 +1451,19 @@ const calculateTrends = (progressionData, levelStats) => {
         percentChange: parseFloat(change.toFixed(1)),
         recentAverage: recentAvg ? parseFloat(recentAvg.toFixed(2)) : null,
         gradeChange,
-        direction: change > 0 ? 'up' : change < 0 ? 'down' : 'stable'
+        direction: change > 0 ? 'up' : change < 0 ? 'down' : 'stable',
+        hasData: true
+      };
+    } else {
+      // Show N/A when no valid data
+      trends[metric] = {
+        firstValue: null,
+        lastValue: null,
+        percentChange: null,
+        recentAverage: null,
+        gradeChange: null,
+        direction: 'stable',
+        hasData: false
       };
     }
   });
