@@ -163,16 +163,10 @@ const OverviewTab = ({ data }) => {
   const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [sessionType, setSessionType] = useState('all'); // 'all', 'hittrax', 'blast'
 
-  // Filter data based on time period and session type
+  // Filter data based on time period
   const filteredData = useMemo(() => {
     let filtered = [...progressionData];
-
-    // Apply session type filter first
-    if (sessionType !== 'all') {
-      filtered = filtered.filter(session => session.sessionType === sessionType);
-    }
 
     // Apply time period filter
     const now = new Date();
@@ -198,10 +192,10 @@ const OverviewTab = ({ data }) => {
         }
         break;
       case 'all':
-        // For "all time", use the first session date to the newest session date of the filtered data
-        if (filtered.length > 0) {
-          startDate = new Date(filtered[0].sessionDate);
-          endDate = new Date(filtered[filtered.length - 1].sessionDate);
+        // For "all time", use the first session date to the newest session date
+        if (progressionData.length > 0) {
+          startDate = new Date(progressionData[0].sessionDate);
+          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
         }
         break;
       default:
@@ -217,16 +211,16 @@ const OverviewTab = ({ data }) => {
     }
 
     return filtered;
-  }, [progressionData, timePeriod, customStartDate, customEndDate, sessionType]);
+  }, [progressionData, timePeriod, customStartDate, customEndDate]);
 
   const chartData = useMemo(() => {
     return filteredData.map(session => ({
       date: new Date(session.sessionDate).toLocaleDateString(),
-      avgEv: session.metrics.avgEv,
-      maxEv: session.metrics.maxEv,
-      avgBs: session.metrics.avgBs,
-      maxBs: session.metrics.maxBs,
-      barrelPct: session.metrics.barrelPct,
+      avgEv: session.metrics.avgEv || null,
+      maxEv: session.metrics.maxEv || null,
+      avgBs: session.metrics.avgBs || null,
+      maxBs: session.metrics.maxBs || null,
+      barrelPct: session.metrics.barrelPct || null,
       avgEvGrade: session.grades.avgEv,
       maxEvGrade: session.grades.maxEv,
       avgBsGrade: session.grades.avgBs,
@@ -245,10 +239,12 @@ const OverviewTab = ({ data }) => {
     metrics.forEach(metric => {
       const values = filteredData
         .map(session => session.metrics[metric])
-        .filter(value => value !== null && value !== undefined);
+        .filter(value => value !== null && value !== undefined && value > 0);
       
       if (values.length > 0) {
         averages[metric] = values.reduce((sum, val) => sum + val, 0) / values.length;
+      } else {
+        averages[metric] = null; // Show N/A when no data
       }
     });
 
@@ -281,7 +277,6 @@ const OverviewTab = ({ data }) => {
                          timePeriod === '30d' ? 'Last 30 Days' :
                          timePeriod === '60d' ? 'Last 60 Days' :
                          timePeriod === '90d' ? 'Last 90 Days' : 'Custom Range'}
-            {sessionType !== 'all' && ` • ${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Sessions`}
           </Typography>
           
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
@@ -357,57 +352,7 @@ const OverviewTab = ({ data }) => {
             </Button>
           </Box>
 
-          {/* Session Type Filter */}
-          <Box display="flex" gap={1} mt={2} alignItems="center" flexWrap="wrap">
-            <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600, mr: 1 }}>
-              Session Type:
-            </Typography>
-            <Button
-              variant={sessionType === 'all' ? 'contained' : 'outlined'}
-              onClick={() => setSessionType('all')}
-              size="small"
-              sx={{ 
-                bgcolor: sessionType === 'all' ? '#1c2c4d' : 'transparent',
-                color: sessionType === 'all' ? 'white' : '#1c2c4d',
-                borderColor: '#1c2c4d',
-                '&:hover': {
-                  bgcolor: sessionType === 'all' ? '#0f1a2e' : '#f5f5f5'
-                }
-              }}
-            >
-              All Types
-            </Button>
-            <Button
-              variant={sessionType === 'hittrax' ? 'contained' : 'outlined'}
-              onClick={() => setSessionType('hittrax')}
-              size="small"
-              sx={{ 
-                bgcolor: sessionType === 'hittrax' ? '#1c2c4d' : 'transparent',
-                color: sessionType === 'hittrax' ? 'white' : '#1c2c4d',
-                borderColor: '#1c2c4d',
-                '&:hover': {
-                  bgcolor: sessionType === 'hittrax' ? '#0f1a2e' : '#f5f5f5'
-                }
-              }}
-            >
-              Hittrax
-            </Button>
-            <Button
-              variant={sessionType === 'blast' ? 'contained' : 'outlined'}
-              onClick={() => setSessionType('blast')}
-              size="small"
-              sx={{ 
-                bgcolor: sessionType === 'blast' ? '#1c2c4d' : 'transparent',
-                color: sessionType === 'blast' ? 'white' : '#1c2c4d',
-                borderColor: '#1c2c4d',
-                '&:hover': {
-                  bgcolor: sessionType === 'blast' ? '#0f1a2e' : '#f5f5f5'
-                }
-              }}
-            >
-              Blast
-            </Button>
-          </Box>
+
 
           {/* Custom Date Range Inputs */}
           {timePeriod === 'custom' && (
@@ -587,16 +532,10 @@ const TrendsTab = ({ data }) => {
   const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [sessionType, setSessionType] = useState('all'); // 'all', 'hittrax', 'blast'
 
-  // Filter data based on time period and session type for trends
+  // Filter data based on time period for trends
   const filteredTrendData = useMemo(() => {
     let filtered = [...progressionData];
-
-    // Apply session type filter first
-    if (sessionType !== 'all') {
-      filtered = filtered.filter(session => session.sessionType === sessionType);
-    }
 
     // Apply time period filter
     const now = new Date();
@@ -622,10 +561,10 @@ const TrendsTab = ({ data }) => {
         }
         break;
       case 'all':
-        // For "all time", use the first session date to the newest session date of the filtered data
-        if (filtered.length > 0) {
-          startDate = new Date(filtered[0].sessionDate);
-          endDate = new Date(filtered[filtered.length - 1].sessionDate);
+        // For "all time", use the first session date to the newest session date
+        if (progressionData.length > 0) {
+          startDate = new Date(progressionData[0].sessionDate);
+          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
         }
         break;
       default:
@@ -641,15 +580,14 @@ const TrendsTab = ({ data }) => {
     }
 
     return filtered;
-  }, [progressionData, timePeriod, customStartDate, customEndDate, sessionType]);
+  }, [progressionData, timePeriod, customStartDate, customEndDate]);
 
-  // Calculate trends for each metric
+  // Calculate trends for each metric (first session vs last session)
   const trends = useMemo(() => {
     if (filteredTrendData.length < 2) return {};
 
     const firstSession = filteredTrendData[0];
     const lastSession = filteredTrendData[filteredTrendData.length - 1];
-    const recentSessions = filteredTrendData.slice(-3); // Last 3 sessions
 
     const trendMetrics = [
       { key: 'avgEv', label: 'Average Exit Velocity', unit: 'MPH' },
@@ -662,23 +600,27 @@ const TrendsTab = ({ data }) => {
     return trendMetrics.reduce((acc, metric) => {
       const firstValue = firstSession.metrics[metric.key];
       const lastValue = lastSession.metrics[metric.key];
-      const recentAverage = recentSessions
-        .map(s => s.metrics[metric.key])
-        .filter(Boolean)
-        .reduce((sum, val) => sum + val, 0) / recentSessions.length;
 
-      if (!firstValue || !lastValue) return acc;
+      // Only calculate trend if both values exist
+      if (firstValue && lastValue && firstValue > 0 && lastValue > 0) {
+        const percentChange = ((lastValue - firstValue) / firstValue) * 100;
+        const direction = percentChange > 0 ? 'up' : percentChange < 0 ? 'down' : 'flat';
 
-      const percentChange = ((lastValue - firstValue) / firstValue) * 100;
-      const direction = percentChange > 0 ? 'up' : percentChange < 0 ? 'down' : 'flat';
-
-      acc[metric.key] = {
-        percentChange: Math.round(percentChange * 10) / 10,
-        direction,
-        recentAverage: Math.round(recentAverage * 10) / 10,
-        firstValue: Math.round(firstValue * 10) / 10,
-        lastValue: Math.round(lastValue * 10) / 10
-      };
+        acc[metric.key] = {
+          percentChange: Math.round(percentChange * 10) / 10,
+          direction,
+          firstValue: Math.round(firstValue * 10) / 10,
+          lastValue: Math.round(lastValue * 10) / 10
+        };
+      } else {
+        // Show N/A when no data
+        acc[metric.key] = {
+          percentChange: null,
+          direction: 'flat',
+          firstValue: null,
+          lastValue: null
+        };
+      }
 
       return acc;
     }, {});
@@ -706,7 +648,6 @@ const TrendsTab = ({ data }) => {
                              timePeriod === '30d' ? 'Last 30 Days' :
                              timePeriod === '60d' ? 'Last 60 Days' :
                              timePeriod === '90d' ? 'Last 90 Days' : 'Custom Range'}
-            {sessionType !== 'all' && ` • ${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Sessions`}
           </Typography>
           
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
@@ -782,57 +723,7 @@ const TrendsTab = ({ data }) => {
             </Button>
           </Box>
 
-          {/* Session Type Filter for Trends */}
-          <Box display="flex" gap={1} mt={2} alignItems="center" flexWrap="wrap">
-            <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600, mr: 1 }}>
-              Session Type:
-            </Typography>
-            <Button
-              variant={sessionType === 'all' ? 'contained' : 'outlined'}
-              onClick={() => setSessionType('all')}
-              size="small"
-              sx={{ 
-                bgcolor: sessionType === 'all' ? '#1c2c4d' : 'transparent',
-                color: sessionType === 'all' ? 'white' : '#1c2c4d',
-                borderColor: '#1c2c4d',
-                '&:hover': {
-                  bgcolor: sessionType === 'all' ? '#0f1a2e' : '#f5f5f5'
-                }
-              }}
-            >
-              All Types
-            </Button>
-            <Button
-              variant={sessionType === 'hittrax' ? 'contained' : 'outlined'}
-              onClick={() => setSessionType('hittrax')}
-              size="small"
-              sx={{ 
-                bgcolor: sessionType === 'hittrax' ? '#1c2c4d' : 'transparent',
-                color: sessionType === 'hittrax' ? 'white' : '#1c2c4d',
-                borderColor: '#1c2c4d',
-                '&:hover': {
-                  bgcolor: sessionType === 'hittrax' ? '#0f1a2e' : '#f5f5f5'
-                }
-              }}
-            >
-              Hittrax
-            </Button>
-            <Button
-              variant={sessionType === 'blast' ? 'contained' : 'outlined'}
-              onClick={() => setSessionType('blast')}
-              size="small"
-              sx={{ 
-                bgcolor: sessionType === 'blast' ? '#1c2c4d' : 'transparent',
-                color: sessionType === 'blast' ? 'white' : '#1c2c4d',
-                borderColor: '#1c2c4d',
-                '&:hover': {
-                  bgcolor: sessionType === 'blast' ? '#0f1a2e' : '#f5f5f5'
-                }
-              }}
-            >
-              Blast
-            </Button>
-          </Box>
+
 
           {/* Custom Date Range Inputs */}
           {timePeriod === 'custom' && (
@@ -925,25 +816,16 @@ const TrendsTab = ({ data }) => {
                           fontWeight: 700
                         }}
                       >
-                        {percentChange > 0 ? '+' : ''}{percentChange}%
+                        {trend.percentChange !== null ? `${trend.percentChange > 0 ? '+' : ''}${trend.percentChange}%` : 'N/A'}
                       </Typography>
                     </Grid>
                     
                     <Grid item xs={6}>
                       <Typography variant="body2" sx={{ color: '#666' }}>
-                        Recent Average
-                      </Typography>
-                      <Typography variant="h6" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                        {recentAverage ? `${recentAverage} ${metric.unit}` : 'N/A'}
-                      </Typography>
-                    </Grid>
-
-                    <Grid item xs={6}>
-                      <Typography variant="body2" sx={{ color: '#666' }}>
                         Previous Average
                       </Typography>
                       <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
-                        {trend.firstValue} {metric.unit}
+                        {trend.firstValue !== null ? `${trend.firstValue} ${metric.unit}` : 'N/A'}
                       </Typography>
                     </Grid>
 
@@ -952,14 +834,14 @@ const TrendsTab = ({ data }) => {
                         New Average
                       </Typography>
                       <Typography variant="h6" sx={{ color: '#1c2c4d' }}>
-                        {trend.lastValue} {metric.unit}
+                        {trend.lastValue !== null ? `${trend.lastValue} ${metric.unit}` : 'N/A'}
                       </Typography>
                     </Grid>
                   </Grid>
 
                   <LinearProgress
                     variant="determinate"
-                    value={Math.min(Math.abs(percentChange), 100)}
+                    value={trend.percentChange !== null ? Math.min(Math.abs(trend.percentChange), 100) : 0}
                     sx={{ 
                       mt: 2, 
                       height: 6, 
