@@ -1211,9 +1211,9 @@ const getLeaderboard = async (req, res) => {
 const getPlayerProgression = async (req, res) => {
   try {
     const { playerId } = req.params;
-    const { days = 365 } = req.query;
+    const { days } = req.query;
 
-    console.log(`[PROGRESSION] Fetching progression data for player ${playerId} over ${days} days`);
+    console.log(`[PROGRESSION] Fetching progression data for player ${playerId}${days ? ` over ${days} days` : ' for all time'}`);
 
     // Get player info
     const player = await Player.findByPk(playerId);
@@ -1225,16 +1225,24 @@ const getPlayerProgression = async (req, res) => {
     }
 
     const playerLevel = getPlayerLevel(player);
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
-
-    // Get all sessions for the player within the date range
-    const sessions = await Session.findAll({
-      where: {
-        player_id: playerId,
+    
+    // Build date filter - if days is provided, filter by date range, otherwise get all sessions
+    let dateFilter = {};
+    if (days) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
+      dateFilter = {
         session_date: {
           [Op.gte]: cutoffDate
         }
+      };
+    }
+
+    // Get all sessions for the player (with optional date filter)
+    const sessions = await Session.findAll({
+      where: {
+        player_id: playerId,
+        ...dateFilter
       },
       include: [{
         model: ExitVelocityData,
