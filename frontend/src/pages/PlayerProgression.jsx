@@ -1802,18 +1802,25 @@ const SwingAnalysisTab = ({ data }) => {
     return filtered;
   }, [progressionData, qualityFilter, timePeriod, customStartDate, customEndDate]);
 
-  // Prepare chart data for LA vs EV scatter plot
+  // Prepare chart data for LA vs EV scatter plot with time progression
   const laEvChartData = useMemo(() => {
-    return filteredData
+    const sortedData = filteredData
       .filter(session => session.metrics.avgEv && session.metrics.avgLa)
-      .sort((a, b) => new Date(a.sessionDate) - new Date(b.sessionDate)) // Sort chronologically
-      .map(session => ({
-        avgEv: session.metrics.avgEv,
-        avgLa: session.metrics.avgLa,
-        sessionId: session.id,
-        sessionDate: new Date(session.sessionDate).toLocaleDateString(),
-        avgBs: session.metrics.avgBs
-      }));
+      .sort((a, b) => new Date(a.sessionDate) - new Date(b.sessionDate)); // Sort chronologically
+    
+    return sortedData.map((session, index) => ({
+      avgEv: session.metrics.avgEv,
+      avgLa: session.metrics.avgLa,
+      sessionId: session.id,
+      sessionDate: new Date(session.sessionDate).toLocaleDateString(),
+      avgBs: session.metrics.avgBs,
+      sessionNumber: index + 1,
+      totalSessions: sortedData.length,
+      // Color intensity based on chronological order (lighter to darker)
+      colorIntensity: Math.round(((index + 1) / sortedData.length) * 255),
+      // Time progression indicator
+      timeProgression: `${index + 1}/${sortedData.length}`
+    }));
   }, [filteredData]);
 
   // Prepare chart data for average EV per session (time series)
@@ -1978,75 +1985,115 @@ const SwingAnalysisTab = ({ data }) => {
       <Card sx={{ mb: 3, bgcolor: 'white', border: '2px solid #1c2c4d', borderRadius: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-            Exit Velocity vs Launch Angle Relationship
+            Exit Velocity vs Launch Angle Relationship Over Time
           </Typography>
           {laEvChartData.length > 0 ? (
-            <Box display="flex" justifyContent="center">
-              <ResponsiveContainer width="65%" height={400}>
-              <ScatterChart data={laEvChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis 
-                  dataKey="avgEv" 
-                  stroke="#1c2c4d" 
-                  label={{ value: 'Average Exit Velocity (MPH)', position: 'bottom', offset: 0 }}
-                  domain={[60, 100]}
-                  type="number"
-                  tick={{ fill: '#1c2c4d' }}
-                />
-                <YAxis 
-                  stroke="#1c2c4d" 
-                  label={{ value: 'Average Launch Angle (°)', angle: -90, position: 'left' }}
-                  domain={[-15, 40]}
-                  type="number"
-                  tick={{ fill: '#1c2c4d' }}
-                />
-                <ReferenceLine x={0} stroke="#e0e0e0" strokeDasharray="3 3" />
-                <ReferenceLine y={0} stroke="#e0e0e0" strokeDasharray="3 3" />
-                <RechartsTooltip
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
-                          <Typography variant="subtitle2" sx={{ color: '#1c2c4d' }}>
-                            Session: {data.sessionDate}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                            Exit Velocity: {data.avgEv} MPH
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                            Launch Angle: {data.avgLa}°
-                          </Typography>
-                          {data.avgBs && (
-                            <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                              Bat Speed: {data.avgBs} MPH
+            <Box>
+              {/* Legend */}
+              <Box display="flex" justifyContent="center" mb={2}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Box sx={{ width: 12, height: 12, bgcolor: '#1c2c4d', opacity: 0.3, borderRadius: '50%' }} />
+                    <Typography variant="body2" sx={{ color: '#666' }}>Earlier Sessions</Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Box sx={{ width: 12, height: 12, bgcolor: '#1c2c4d', opacity: 0.7, borderRadius: '50%' }} />
+                    <Typography variant="body2" sx={{ color: '#666' }}>Middle Sessions</Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Box sx={{ width: 12, height: 12, bgcolor: '#1c2c4d', borderRadius: '50%' }} />
+                    <Typography variant="body2" sx={{ color: '#666' }}>Recent Sessions</Typography>
+                  </Box>
+                </Box>
+              </Box>
+              
+              <Box display="flex" justifyContent="center">
+                <ResponsiveContainer width="65%" height={400}>
+                <ScatterChart data={laEvChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis 
+                    dataKey="avgEv" 
+                    stroke="#1c2c4d" 
+                    label={{ value: 'Average Exit Velocity (MPH)', position: 'bottom', offset: 0 }}
+                    domain={[60, 100]}
+                    type="number"
+                    tick={{ fill: '#1c2c4d' }}
+                  />
+                  <YAxis 
+                    stroke="#1c2c4d" 
+                    label={{ value: 'Average Launch Angle (°)', angle: -90, position: 'left' }}
+                    domain={[-15, 40]}
+                    type="number"
+                    tick={{ fill: '#1c2c4d' }}
+                  />
+                  <ReferenceLine x={0} stroke="#e0e0e0" strokeDasharray="3 3" />
+                  <ReferenceLine y={0} stroke="#e0e0e0" strokeDasharray="3 3" />
+                  <RechartsTooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
+                            <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                              Session {data.sessionNumber} of {data.totalSessions}
                             </Typography>
-                          )}
-                        </Card>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Scatter 
-                  dataKey="avgLa" 
-                  fill="#1c2c4d" 
-                  stroke="#1c2c4d" 
-                  strokeWidth={2}
-                  r={6}
-                  name="Launch Angle vs Exit Velocity"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="avgLa" 
-                  stroke="#1c2c4d" 
-                  strokeWidth={1}
-                  strokeDasharray="3 3"
-                  dot={false}
-                  connectNulls={false}
-                />
-              </ScatterChart>
-            </ResponsiveContainer>
+                            <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                              {data.sessionDate}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                              Exit Velocity: {data.avgEv} MPH
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                              Launch Angle: {data.avgLa}°
+                            </Typography>
+                            {data.avgBs && (
+                              <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
+                                Bat Speed: {data.avgBs} MPH
+                              </Typography>
+                            )}
+                            <Typography variant="caption" sx={{ color: '#999', fontStyle: 'italic' }}>
+                              {data.timeProgression} in chronological order
+                            </Typography>
+                          </Card>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  {/* Connection line showing progression */}
+                  <Line 
+                    type="monotone" 
+                    dataKey="avgLa" 
+                    stroke="#1c2c4d" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    connectNulls={true}
+                    name="Progression Path"
+                  />
+                  {/* Scatter points with color intensity based on time */}
+                  <Scatter 
+                    dataKey="avgLa" 
+                    fill={(entry) => {
+                      const intensity = entry.colorIntensity;
+                      return `rgba(28, 44, 77, ${0.3 + (intensity / 255) * 0.7})`;
+                    }}
+                    stroke="#1c2c4d" 
+                    strokeWidth={2}
+                    r={8}
+                    name="Launch Angle vs Exit Velocity"
+                  />
+                </ScatterChart>
+              </ResponsiveContainer>
+              </Box>
+              
+              {/* Progression Summary */}
+              <Box mt={2} p={2} bgcolor="#f8f9fa" borderRadius={1} border="1px solid #e0e3e8">
+                <Typography variant="body2" sx={{ color: '#666', textAlign: 'center' }}>
+                  <strong>Progression Analysis:</strong> Shows {laEvChartData.length} sessions from {laEvChartData[0]?.sessionDate} to {laEvChartData[laEvChartData.length - 1]?.sessionDate}. 
+                  Points are connected chronologically to show your swing development over time.
+                </Typography>
+              </Box>
             </Box>
           ) : (
             <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
@@ -2063,49 +2110,82 @@ const SwingAnalysisTab = ({ data }) => {
             Exit Velocity Trends Over Time
           </Typography>
           {evChartData.length > 0 ? (
-            <Box display="flex" justifyContent="center">
-              <ResponsiveContainer width="65%" height={400}>
-              <LineChart data={evChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="date" stroke="#1c2c4d" />
-                <YAxis stroke="#1c2c4d" />
-                <RechartsTooltip
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
-                          <Typography variant="subtitle2" sx={{ color: '#1c2c4d' }}>{label}</Typography>
-                          {payload.map((entry, index) => (
-                            <Box key={index} sx={{ mt: 1 }}>
-                              <Typography variant="body2" sx={{ color: entry.color }}>
-                                {entry.name}: {entry.value} MPH
-                              </Typography>
-                            </Box>
-                          ))}
-                        </Card>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="avgEv" 
-                  stroke="#1c2c4d" 
-                  strokeWidth={3} 
-                  dot={{ fill: '#1c2c4d', r: 4 }}
-                  name="Average Exit Velocity"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="maxEv" 
-                  stroke="#e53935" 
-                  strokeWidth={2} 
-                  dot={{ fill: '#e53935', r: 3 }}
-                  name="Maximum Exit Velocity"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <Box>
+              <Box display="flex" justifyContent="center">
+                <ResponsiveContainer width="65%" height={400}>
+                <LineChart data={evChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#1c2c4d"
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    stroke="#1c2c4d"
+                    label={{ value: 'Exit Velocity (MPH)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <RechartsTooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <Card sx={{ p: 2, bgcolor: 'white', border: '2px solid #1c2c4d' }}>
+                            <Typography variant="subtitle2" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
+                              {label}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                              Session ID: {data.sessionId}
+                            </Typography>
+                            {payload.map((entry, index) => (
+                              <Box key={index} sx={{ mt: 1 }}>
+                                <Typography variant="body2" sx={{ color: entry.color, fontWeight: 600 }}>
+                                  {entry.name}: {entry.value} MPH
+                                </Typography>
+                              </Box>
+                            ))}
+                          </Card>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="avgEv" 
+                    stroke="#1c2c4d" 
+                    strokeWidth={3} 
+                    dot={{ fill: '#1c2c4d', r: 5, strokeWidth: 2, stroke: '#fff' }}
+                    name="Average Exit Velocity"
+                    connectNulls={true}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="maxEv" 
+                    stroke="#e53935" 
+                    strokeWidth={2} 
+                    dot={{ fill: '#e53935', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                    name="Maximum Exit Velocity"
+                    connectNulls={true}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              </Box>
+              
+              {/* Trend Analysis */}
+              <Box mt={2} p={2} bgcolor="#f8f9fa" borderRadius={1} border="1px solid #e0e3e8">
+                <Typography variant="body2" sx={{ color: '#666', textAlign: 'center' }}>
+                  <strong>Trend Analysis:</strong> Shows exit velocity progression from {evChartData[0]?.date} to {evChartData[evChartData.length - 1]?.date}. 
+                  {evChartData.length > 1 && (
+                    <>
+                      {' '}Average EV trend: {evChartData[0]?.avgEv < evChartData[evChartData.length - 1]?.avgEv ? '↗️ Improving' : evChartData[0]?.avgEv > evChartData[evChartData.length - 1]?.avgEv ? '↘️ Declining' : '→ Stable'} 
+                      ({evChartData[0]?.avgEv?.toFixed(1)} → {evChartData[evChartData.length - 1]?.avgEv?.toFixed(1)} MPH)
+                    </>
+                  )}
+                </Typography>
+              </Box>
             </Box>
           ) : (
             <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#1c2c4d' }}>
