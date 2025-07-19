@@ -1522,6 +1522,7 @@ const SwingAnalysisTab = ({ data }) => {
   const laEvChartData = useMemo(() => {
     return filteredData
       .filter(session => session.metrics.avgEv && session.metrics.avgLa)
+      .sort((a, b) => new Date(a.sessionDate) - new Date(b.sessionDate)) // Sort chronologically
       .map(session => ({
         avgEv: session.metrics.avgEv,
         avgLa: session.metrics.avgLa,
@@ -1535,6 +1536,7 @@ const SwingAnalysisTab = ({ data }) => {
   const evChartData = useMemo(() => {
     return filteredData
       .filter(session => session.metrics.avgEv)
+      .sort((a, b) => new Date(a.sessionDate) - new Date(b.sessionDate)) // Sort chronologically
       .map(session => ({
         date: new Date(session.sessionDate).toLocaleDateString(),
         avgEv: session.metrics.avgEv,
