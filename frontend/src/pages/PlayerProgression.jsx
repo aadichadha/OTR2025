@@ -411,7 +411,7 @@ const OverviewTab = ({ data }) => {
                        metric === 'barrelPct' ? 'Barrel %' : metric}:
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#1c2c4d', fontWeight: 600 }}>
-                      {average.toFixed(1)} {metric.includes('Ev') || metric.includes('Bs') ? 'mph' : '%'}
+                      {average ? average.toFixed(1) : 'N/A'} {metric.includes('Ev') || metric.includes('Bs') ? 'mph' : '%'}
                     </Typography>
                   </Box>
                 ))}
@@ -495,7 +495,7 @@ const OverviewTab = ({ data }) => {
                       <TrendingFlat sx={{ color: '#757575', fontSize: 20 }} />
                     )}
                     <Typography variant="body2" sx={{ color: '#1c2c4d' }}>
-                      {Math.abs(trendPercent).toFixed(1)}% recent trend
+                      {trendPercent ? Math.abs(trendPercent).toFixed(1) : 'N/A'}% recent trend
                     </Typography>
                   </Box>
                   
@@ -1714,7 +1714,7 @@ const SwingAnalysisTab = ({ data }) => {
             {filteredData.map((session) => (
               <Chip
                 key={session.id}
-                label={`${new Date(session.sessionDate).toLocaleDateString()} (${session.metrics.avgEv?.toFixed(1)} EV)`}
+                label={`${new Date(session.sessionDate).toLocaleDateString()} (${session.metrics.avgEv ? session.metrics.avgEv.toFixed(1) : 'N/A'} EV)`}
                 onClick={() => handleSessionSelection(session.id)}
                 sx={{
                   bgcolor: selectedSessions.includes(session.id) ? '#1c2c4d' : 'transparent',
@@ -2006,7 +2006,7 @@ const SwingAnalysisTab = ({ data }) => {
                 if (avgLa && (avgLa < 8 || avgLa > 32)) {
                   alerts.push({
                     type: 'warning',
-                    message: `Launch angle (${avgLa.toFixed(1)}°) outside optimal range (8-32°)`,
+                    message: `Launch angle (${avgLa ? avgLa.toFixed(1) : 'N/A'}°) outside optimal range (8-32°)`,
                     icon: <Warning sx={{ color: '#ffa726' }} />
                   });
                 }
