@@ -163,10 +163,16 @@ const OverviewTab = ({ data }) => {
   const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [sessionType, setSessionType] = useState('all'); // 'all', 'hittrax', 'blast'
 
-  // Filter data based on time period
+  // Filter data based on time period and session type
   const filteredData = useMemo(() => {
     let filtered = [...progressionData];
+
+    // Apply session type filter first
+    if (sessionType !== 'all') {
+      filtered = filtered.filter(session => session.sessionType === sessionType);
+    }
 
     // Apply time period filter
     const now = new Date();
@@ -192,10 +198,10 @@ const OverviewTab = ({ data }) => {
         }
         break;
       case 'all':
-        // For "all time", use the first session date to the newest session date
-        if (progressionData.length > 0) {
-          startDate = new Date(progressionData[0].sessionDate);
-          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
+        // For "all time", use the first session date to the newest session date of the filtered data
+        if (filtered.length > 0) {
+          startDate = new Date(filtered[0].sessionDate);
+          endDate = new Date(filtered[filtered.length - 1].sessionDate);
         }
         break;
       default:
@@ -211,7 +217,7 @@ const OverviewTab = ({ data }) => {
     }
 
     return filtered;
-  }, [progressionData, timePeriod, customStartDate, customEndDate]);
+  }, [progressionData, timePeriod, customStartDate, customEndDate, sessionType]);
 
   const chartData = useMemo(() => {
     return filteredData.map(session => ({
@@ -275,6 +281,7 @@ const OverviewTab = ({ data }) => {
                          timePeriod === '30d' ? 'Last 30 Days' :
                          timePeriod === '60d' ? 'Last 60 Days' :
                          timePeriod === '90d' ? 'Last 90 Days' : 'Custom Range'}
+            {sessionType !== 'all' && ` • ${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Sessions`}
           </Typography>
           
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
@@ -347,6 +354,58 @@ const OverviewTab = ({ data }) => {
               }}
             >
               Custom
+            </Button>
+          </Box>
+
+          {/* Session Type Filter */}
+          <Box display="flex" gap={1} mt={2} alignItems="center" flexWrap="wrap">
+            <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600, mr: 1 }}>
+              Session Type:
+            </Typography>
+            <Button
+              variant={sessionType === 'all' ? 'contained' : 'outlined'}
+              onClick={() => setSessionType('all')}
+              size="small"
+              sx={{ 
+                bgcolor: sessionType === 'all' ? '#1c2c4d' : 'transparent',
+                color: sessionType === 'all' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: sessionType === 'all' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              All Types
+            </Button>
+            <Button
+              variant={sessionType === 'hittrax' ? 'contained' : 'outlined'}
+              onClick={() => setSessionType('hittrax')}
+              size="small"
+              sx={{ 
+                bgcolor: sessionType === 'hittrax' ? '#1c2c4d' : 'transparent',
+                color: sessionType === 'hittrax' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: sessionType === 'hittrax' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              Hittrax
+            </Button>
+            <Button
+              variant={sessionType === 'blast' ? 'contained' : 'outlined'}
+              onClick={() => setSessionType('blast')}
+              size="small"
+              sx={{ 
+                bgcolor: sessionType === 'blast' ? '#1c2c4d' : 'transparent',
+                color: sessionType === 'blast' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: sessionType === 'blast' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              Blast
             </Button>
           </Box>
 
@@ -528,10 +587,16 @@ const TrendsTab = ({ data }) => {
   const [timePeriod, setTimePeriod] = useState('all'); // 'all', '30d', '60d', '90d', 'custom'
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [sessionType, setSessionType] = useState('all'); // 'all', 'hittrax', 'blast'
 
-  // Filter data based on time period for trends
+  // Filter data based on time period and session type for trends
   const filteredTrendData = useMemo(() => {
     let filtered = [...progressionData];
+
+    // Apply session type filter first
+    if (sessionType !== 'all') {
+      filtered = filtered.filter(session => session.sessionType === sessionType);
+    }
 
     // Apply time period filter
     const now = new Date();
@@ -557,10 +622,10 @@ const TrendsTab = ({ data }) => {
         }
         break;
       case 'all':
-        // For "all time", use the first session date to the newest session date
-        if (progressionData.length > 0) {
-          startDate = new Date(progressionData[0].sessionDate);
-          endDate = new Date(progressionData[progressionData.length - 1].sessionDate);
+        // For "all time", use the first session date to the newest session date of the filtered data
+        if (filtered.length > 0) {
+          startDate = new Date(filtered[0].sessionDate);
+          endDate = new Date(filtered[filtered.length - 1].sessionDate);
         }
         break;
       default:
@@ -576,7 +641,7 @@ const TrendsTab = ({ data }) => {
     }
 
     return filtered;
-  }, [progressionData, timePeriod, customStartDate, customEndDate]);
+  }, [progressionData, timePeriod, customStartDate, customEndDate, sessionType]);
 
   // Calculate trends for each metric
   const trends = useMemo(() => {
@@ -641,6 +706,7 @@ const TrendsTab = ({ data }) => {
                              timePeriod === '30d' ? 'Last 30 Days' :
                              timePeriod === '60d' ? 'Last 60 Days' :
                              timePeriod === '90d' ? 'Last 90 Days' : 'Custom Range'}
+            {sessionType !== 'all' && ` • ${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Sessions`}
           </Typography>
           
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
@@ -713,6 +779,58 @@ const TrendsTab = ({ data }) => {
               }}
             >
               Custom
+            </Button>
+          </Box>
+
+          {/* Session Type Filter for Trends */}
+          <Box display="flex" gap={1} mt={2} alignItems="center" flexWrap="wrap">
+            <Typography variant="body2" sx={{ color: '#1c2c4d', fontWeight: 600, mr: 1 }}>
+              Session Type:
+            </Typography>
+            <Button
+              variant={sessionType === 'all' ? 'contained' : 'outlined'}
+              onClick={() => setSessionType('all')}
+              size="small"
+              sx={{ 
+                bgcolor: sessionType === 'all' ? '#1c2c4d' : 'transparent',
+                color: sessionType === 'all' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: sessionType === 'all' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              All Types
+            </Button>
+            <Button
+              variant={sessionType === 'hittrax' ? 'contained' : 'outlined'}
+              onClick={() => setSessionType('hittrax')}
+              size="small"
+              sx={{ 
+                bgcolor: sessionType === 'hittrax' ? '#1c2c4d' : 'transparent',
+                color: sessionType === 'hittrax' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: sessionType === 'hittrax' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              Hittrax
+            </Button>
+            <Button
+              variant={sessionType === 'blast' ? 'contained' : 'outlined'}
+              onClick={() => setSessionType('blast')}
+              size="small"
+              sx={{ 
+                bgcolor: sessionType === 'blast' ? '#1c2c4d' : 'transparent',
+                color: sessionType === 'blast' ? 'white' : '#1c2c4d',
+                borderColor: '#1c2c4d',
+                '&:hover': {
+                  bgcolor: sessionType === 'blast' ? '#0f1a2e' : '#f5f5f5'
+                }
+              }}
+            >
+              Blast
             </Button>
           </Box>
 
